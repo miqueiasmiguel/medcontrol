@@ -1,0 +1,49 @@
+name: Web CI
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - '.github/workflows/web.yml'
+  pull_request:
+    branches: [master, main]
+    paths:
+      - 'apps/web/**'
+      - 'packages/**'
+      - '.github/workflows/web.yml'
+
+jobs:
+  build-and-test:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm nx lint web
+
+      - name: Type check
+        run: pnpm nx run web:type-check
+
+      - name: Test (with coverage)
+        run: pnpm nx test web --coverage --coverageThreshold='{"global":{"lines":75}}'
+
+      - name: Build
+        run: pnpm nx build web --configuration=production
+
+      - name: Vulnerability scan
+        run: pnpm audit --prod

@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MedControl.Api/MedControl.Api.csproj" />
+    <Project Path="src/MedControl.Application/MedControl.Application.csproj" />
+    <Project Path="src/MedControl.Domain/MedControl.Domain.csproj" />
+    <Project Path="src/MedControl.Infrastructure/MedControl.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MedControl.Api.Tests/MedControl.Api.Tests.csproj" />
+    <Project Path="tests/MedControl.Application.Tests/MedControl.Application.Tests.csproj" />
+    <Project Path="tests/MedControl.Architecture.Tests/MedControl.Architecture.Tests.csproj" />
+    <Project Path="tests/MedControl.Domain.Tests/MedControl.Domain.Tests.csproj" />
+    <Project Path="tests/MedControl.Infrastructure.Tests/MedControl.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

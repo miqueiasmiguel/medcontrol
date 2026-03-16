@@ -1,0 +1,11 @@
+{
+  "@parcel/watcher": true,
+  "@swc/core": true,
+  "esbuild": true,
+  "lmdb": true,
+  "msgpackr-extract": true,
+  "nx": true,
+  "unrs-resolver": true,
+  "detox": false,
+  "dtrace-provider": false
+}

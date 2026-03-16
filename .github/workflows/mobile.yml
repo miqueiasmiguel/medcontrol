@@ -1,0 +1,43 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+      - '.github/workflows/mobile.yml'
+  pull_request:
+    branches: [master, main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+      - '.github/workflows/mobile.yml'
+
+jobs:
+  build-and-test:
+    name: Lint, Test & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm nx lint mobile
+
+      - name: Type check
+        run: pnpm nx run mobile:type-check
+
+      - name: Test (with coverage)
+        run: pnpm nx test mobile --coverage --coverageThreshold='{"global":{"lines":70}}'

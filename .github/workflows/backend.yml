@@ -1,0 +1,111 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'apps/backend/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    branches: [master, main]
+    paths:
+      - 'apps/backend/**'
+      - '.github/workflows/backend.yml'
+
+defaults:
+  run:
+    working-directory: apps/backend
+
+jobs:
+  build-and-test:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: medcontrol_test
+          POSTGRES_USER: medcontrol
+          POSTGRES_PASSWORD: medcontrol
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore MedControl.slnx
+
+      - name: Build (warnings as errors)
+        run: dotnet build MedControl.slnx --no-restore --warnaserror -c Release
+
+      - name: Format check
+        run: dotnet format MedControl.slnx --no-restore --verify-no-changes
+
+      - name: Run unit tests
+        run: |
+          dotnet test MedControl.slnx \
+            --no-build \
+            -c Release \
+            --filter "Category!=Integration" \
+            --logger "trx;LogFileName=unit-results.trx" \
+            --collect:"XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+
+      - name: Run architecture tests
+        run: |
+          dotnet test tests/MedControl.Architecture.Tests \
+            --no-build \
+            -c Release \
+            --logger "trx;LogFileName=arch-results.trx"
+
+      - name: Run integration tests
+        run: |
+          dotnet test MedControl.slnx \
+            --no-build \
+            -c Release \
+            --filter "Category=Integration" \
+            --logger "trx;LogFileName=integration-results.trx"
+        env:
+          ConnectionStrings__Database: "Host=localhost;Database=medcontrol_test;Username=medcontrol;Password=medcontrol"
+
+      - name: Vulnerability scan
+        run: dotnet list MedControl.slnx package --vulnerable --include-transitive 2>&1 | tee vuln-report.txt && grep -q "has no vulnerable packages" vuln-report.txt
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: apps/backend/**/*.trx
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: apps/backend/coverage/
+
+      - name: Coverage threshold check
+        run: |
+          dotnet tool install --global dotnet-reportgenerator-globaltool 2>/dev/null || true
+          reportgenerator \
+            -reports:"**/coverage.opencover.xml" \
+            -targetdir:"coverage-report" \
+            -reporttypes:"TextSummary" \
+            -assemblyfilters:"-*Tests*"
+          cat coverage-report/Summary.txt
+          # Fail if line coverage < 80%
+          LINE_COV=$(grep "Line coverage" coverage-report/Summary.txt | grep -oP '\d+\.\d+' | head -1)
+          echo "Line coverage: $LINE_COV%"
+          awk "BEGIN { exit ($LINE_COV < 80) ? 1 : 0 }" || (echo "Coverage below 80%!" && exit 1)

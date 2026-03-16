@@ -1,0 +1,17 @@
+# Default owners for everything
+* @medcontrol-team
+
+# Backend
+apps/backend/ @medcontrol-backend
+apps/backend/src/MedControl.Domain/ @medcontrol-backend
+apps/backend/src/MedControl.Infrastructure/Persistence/Migrations/ @medcontrol-backend @medcontrol-lead
+
+# Frontend
+apps/web/ @medcontrol-frontend
+apps/mobile/ @medcontrol-frontend
+
+# Shared contracts (anyone changing this needs backend + frontend review)
+packages/contracts/ @medcontrol-backend @medcontrol-frontend
+
+# CI/CD and infrastructure config — always needs lead review
+.github/ @medcontrol-lead

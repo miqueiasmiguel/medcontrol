@@ -1,0 +1,60 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  commitlint:
+    name: Commit Message Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Validate commit messages
+        run: pnpm exec commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  branch-name:
+    name: Branch Name Convention
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check branch name
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Branch: $BRANCH"
+          if echo "$BRANCH" | grep -qE '^(feat|fix|chore|docs|test|refactor|ci|perf|revert)/.+'; then
+            echo "Branch name is valid."
+          else
+            echo "Invalid branch name: '$BRANCH'"
+            echo "Must match pattern: (feat|fix|chore|docs|test|refactor|ci|perf|revert)/<description>"
+            exit 1
+          fi
+
+  danger:
+    name: PR Size & Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PR size
+        run: |
+          FILES=$(gh pr view ${{ github.event.number }} --json files --jq '.files | length')
+          ADDITIONS=$(gh pr view ${{ github.event.number }} --json additions --jq '.additions')
+          echo "Files changed: $FILES, Lines added: $ADDITIONS"
+          if [ "$ADDITIONS" -gt 600 ]; then
+            echo "Warning: PR is large ($ADDITIONS additions). Consider splitting into smaller PRs."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

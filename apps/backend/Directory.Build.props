@@ -1,0 +1,31 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>Recommended</AnalysisMode>
+    <!-- Suppress rules that conflict with DDD/mediator patterns or established conventions -->
+    <!-- CA1040: marker interfaces are valid in DDD (IAggregateRoot, IHasTenant) -->
+    <!-- CA1030: Raise() is domain event terminology, not an event in the C# sense -->
+    <!-- CA1711: IDomainEventHandler/RequestHandlerDelegate follow mediator naming conventions -->
+    <!-- CA1716: 'next' is the established name for pipeline continuation delegates -->
+    <!-- CA1848/CA1873: LoggerMessage generators will be added incrementally per feature -->
+    <NoWarn>CA1040;CA1030;CA1711;CA1716;CA1848;CA1873</NoWarn>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>MedControl</RootNamespace>
+  </PropertyGroup>
+
+  <!-- Code coverage with Coverlet -->
+  <PropertyGroup Condition="'$(CollectCoverage)' == 'true'">
+    <CoverletOutputFormat>opencover</CoverletOutputFormat>
+    <CoverletOutput>../../coverage/</CoverletOutput>
+    <Threshold>80</Threshold>
+    <ThresholdType>line,branch,method</ThresholdType>
+    <ThresholdStat>minimum</ThresholdStat>
+    <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
+    <ExcludeByFile>**/Migrations/**,**/Program.cs</ExcludeByFile>
+  </PropertyGroup>
+</Project>
