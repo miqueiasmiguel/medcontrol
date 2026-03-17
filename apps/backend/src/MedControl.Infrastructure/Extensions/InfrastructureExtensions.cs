@@ -1,12 +1,17 @@
+using MedControl.Application.Auth.Settings;
 using MedControl.Application.Common.Interfaces;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
+using MedControl.Infrastructure.Auth;
+using MedControl.Infrastructure.Auth.Settings;
+using MedControl.Infrastructure.Http;
 using MedControl.Infrastructure.Persistence;
 using MedControl.Infrastructure.Persistence.Interceptors;
 using MedControl.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Resend;
 
 namespace MedControl.Infrastructure.Extensions;
 
@@ -16,6 +21,31 @@ public static class InfrastructureExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // HttpContext — fixes DI bug: ApplicationDbContext requires ICurrentUserService
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, HttpContextCurrentUserService>();
+        services.AddScoped<ICurrentTenantService, HttpContextCurrentTenantService>();
+
+        // Settings
+        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<MagicLinkSettings>(configuration.GetSection(MagicLinkSettings.SectionName));
+
+        // Redis
+        services.AddStackExchangeRedisCache(opts =>
+            opts.Configuration = configuration.GetConnectionString("Redis"));
+
+        // Resend
+        services.AddHttpClient<ResendClient>();
+        services.Configure<ResendClientOptions>(opts =>
+            opts.ApiToken = configuration["Resend:ApiKey"]!);
+        services.AddTransient<IResend, ResendClient>();
+
+        // Auth services
+        services.AddScoped<IMagicLinkService, MagicLinkService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ITokenService, TokenService>();
+
+        // Persistence
         services.AddScoped<AuditableEntityInterceptor>();
         services.AddScoped<DomainEventDispatchInterceptor>();
 

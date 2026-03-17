@@ -4,7 +4,7 @@
 
 - .NET 10 / C# | EF Core 10.0.5 | PostgreSQL 16
 - FluentValidation 11 | xUnit + FluentAssertions | NetArchTest.Rules
-- Npgsql | StackExchange.Redis | JwtBearer 10.0.5 | Scalar
+- Npgsql | StackExchange.Redis | JwtBearer 10.0.5 | Resend 0.2.2 | Scalar
 
 ## Estrutura de Pastas
 
@@ -18,26 +18,43 @@ src/
 ├── MedControl.Application/
 │   ├── Mediator/         ← IMediator, Mediator, ICommand, IQuery, IRequest, Unit, IPipelineBehavior, IDomainEventHandler
 │   ├── Behaviors/        ← LoggingBehavior, ValidationBehavior, TransactionBehavior
+│   ├── Auth/
+│   │   ├── Commands/     ← SendMagicLinkCommand(Handler+Validator), VerifyMagicLinkCommand(Handler+Validator)
+│   │   ├── DTOs/         ← AuthTokenDto
+│   │   └── Settings/     ← MagicLinkSettings
 │   └── Common/
 │       ├── Interfaces/   ← IUnitOfWork, ICurrentTenantService, ICurrentUserService,
 │       │                    IEmailService, ITokenService, IMagicLinkService
 │       └── Exceptions/   ← NotFoundException
 ├── MedControl.Infrastructure/
+│   ├── Auth/
+│   │   ├── Settings/     ← JwtSettings
+│   │   ├── MagicLinkService.cs   ← IDistributedCache, token=RandomBytes(32) base64url, one-time
+│   │   ├── TokenService.cs       ← HS256 JWT + refresh token em Redis
+│   │   └── EmailService.cs       ← IResend (Resend 0.2.2)
+│   ├── Http/
+│   │   ├── HttpContextCurrentUserService.cs   ← lê claims JWT do HttpContext
+│   │   └── HttpContextCurrentTenantService.cs ← lê tenant_id do HttpContext
 │   └── Persistence/
 │       ├── ApplicationDbContext.cs
 │       ├── Interceptors/ ← AuditableEntityInterceptor, DomainEventDispatchInterceptor
 │       ├── Repositories/ ← UserRepository, TenantRepository
-│       └── Configurations/ ← UserConfiguration, TenantConfiguration, TenantMemberConfiguration ✅
+│       └── Configurations/ ← UserConfiguration, TenantConfiguration, TenantMemberConfiguration
 └── MedControl.Api/
-    ├── Program.cs
-    └── Controllers/      (vazio)
+    ├── Program.cs              ← ~15 linhas, sem AddControllers
+    ├── Endpoints/
+    │   ├── Auth/               ← MagicLinkEndpoints (minimal API)
+    │   └── EndpointExtensions  ← MapApiEndpoints(WebApplication)
+    └── Extensions/
+        ├── ServiceCollectionExtensions  ← AddApiServices (JWT bearer + ProblemDetails)
+        └── ExceptionHandlerExtensions   ← UseApiExceptionHandler (ValidationException→400)
 
 tests/
 ├── MedControl.Domain.Tests/         ← ResultTests, ErrorTests, TenantTests, UserTests ✅
 ├── MedControl.Architecture.Tests/   ← ArchitectureTests (NetArchTest) ✅
-├── MedControl.Application.Tests/    (vazio — NSubstitute)
-├── MedControl.Infrastructure.Tests/ ← model metadata tests (32 testes) ✅
-└── MedControl.Api.Tests/            (vazio — WebApplicationFactory)
+├── MedControl.Application.Tests/    ← validator + handler tests (Auth/) ✅
+├── MedControl.Infrastructure.Tests/ ← model metadata + Auth service tests ✅
+└── MedControl.Api.Tests/            ← MagicLinkEndpointTests (WebApplicationFactory) ✅
 ```
 
 ---
@@ -152,7 +169,7 @@ IDomainEventHandler<TEvent>                      // para domain events
 
 **Pipeline:** `LoggingBehavior → ValidationBehavior → TransactionBehavior → Handler`
 
-- `TransactionBehavior` só envolve `ICommand` (não queries)
+- `TransactionBehavior` envolve `ICommand` e `ICommand<TResponse>` (não queries)
 - Registro: `services.AddMediator(Assembly.GetAssembly(typeof(IMediator))!)`
 
 ### Interfaces de Application
@@ -165,6 +182,19 @@ ITokenService           // GenerateTokenPair(...) → TokenPair(AccessToken, Ref
                         // ValidateRefreshTokenAsync, RevokeRefreshTokenAsync
 IEmailService           // SendMagicLinkAsync(email, link, ct)
 IMagicLinkService       // GenerateTokenAsync(email) → token | ValidateTokenAsync(token) → email?
+```
+
+### MagicLinkSettings (Application/Auth/Settings/)
+
+Definida em Application (não Infrastructure) para que os handlers possam referenciar via `IOptions<MagicLinkSettings>` sem violar a arquitetura.
+
+```csharp
+public sealed class MagicLinkSettings
+{
+    public const string SectionName = "MagicLink";
+    public string BaseUrl { get; init; }        // URL base do frontend para o link
+    public int TokenExpiryMinutes { get; init; } = 15;
+}
 ```
 
 ---
@@ -212,9 +242,70 @@ Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
 - `ApplicationDbContextFactory` (design-time only) em `Persistence/` — permite rodar `dotnet ef` sem DI completo
 - Migration atual: `InitialSchema` — cria `tenants`, `users`, `tenant_members` com todos os índices
 
+### Auth Services (`Infrastructure/Auth/`)
+
+| Serviço | Implementação |
+|---|---|
+| `MagicLinkService` | Gera token = `RandomBytes(32)` Base64Url; armazena `magic_link:{token}→email` no Redis com TTL 15 min; `ValidateTokenAsync` é one-time (remove após leitura) |
+| `TokenService` | JWT HS256 com claims `sub`, `email`, `tenant_id`, `roles`, `global_roles`; refresh token em Redis com chave `refresh_token:{token}→userId` |
+| `EmailService` | Wraps `IResend` (Resend SDK 0.2.2) — registrado via `services.AddHttpClient<ResendClient>()` + `services.Configure<ResendClientOptions>(...)` + `services.AddTransient<IResend, ResendClient>()` |
+
+### JwtSettings (`Infrastructure/Auth/Settings/`)
+
+```csharp
+public sealed class JwtSettings
+{
+    public const string SectionName = "Jwt";
+    public string Secret { get; init; }
+    public string Issuer { get; init; }
+    public string Audience { get; init; }
+    public int AccessTokenExpiryMinutes { get; init; } = 60;
+    public int RefreshTokenExpiryDays { get; init; } = 30;
+}
+```
+
+### Http Services (`Infrastructure/Http/`)
+
+`HttpContextCurrentUserService` e `HttpContextCurrentTenantService` — lêem claims JWT do `IHttpContextAccessor`. Corrigem o bug pré-existente onde `ApplicationDbContext` precisava de `ICurrentUserService` no DI mas ela não estava registrada.
+
 ### Registro (InfrastructureExtensions.AddInfrastructure)
 
-Registra: interceptors → DbContext (Npgsql) → IUnitOfWork → IUserRepository → ITenantRepository
+Ordem: HttpContext → Settings → Redis → Resend → Auth services → Persistence (interceptors → DbContext → IUnitOfWork → repos)
+
+---
+
+## API Layer
+
+### Minimal APIs (sem Controllers)
+
+Endpoints definidos em `Endpoints/` como static classes com extension methods sobre `RouteGroupBuilder`.
+
+```csharp
+// EndpointExtensions.cs
+app.MapGroup("auth").MapGroup("magic-link").MapMagicLink();
+```
+
+### Endpoints Disponíveis
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/auth/magic-link/send` | Envia magic link; cria usuário se não existir → 204 |
+| `POST` | `/auth/magic-link/verify` | Valida token; retorna JWT + refresh token → 200 |
+
+### Mapeamento Result → IResult
+
+```csharp
+ErrorType.Unauthorized → 401
+ErrorType.NotFound     → 404
+ErrorType.Conflict     → 409
+_                      → 400
+```
+
+### Exception Handling
+
+`UseApiExceptionHandler()` em `ExceptionHandlerExtensions`:
+- `ValidationException` → 400 com `Results.ValidationProblem(errors)`
+- Qualquer outra exceção → 500
 
 ---
 
@@ -227,12 +318,18 @@ Registra: interceptors → DbContext (Npgsql) → IUnitOfWork → IUserRepositor
 
 ---
 
-## Autenticação (a implementar em Infrastructure/Auth/)
+## Autenticação
 
-- **Magic Link**: `IMagicLinkService` → `IDistributedCache`, TTL 15 min, one-time use
-- **Google OAuth**: troca code → user info → `User.CreateFromGoogle()`
-- **JWT**: claims `sub`, `email`, `tenant_id`, `roles`, `global_roles`
-- Troca de tenant: `POST /auth/switch-tenant` re-emite JWT
+### Magic Link ✅
+1. `POST /auth/magic-link/send` → normaliza email, cria usuário se não existe, gera token Redis, envia email via Resend
+2. `POST /auth/magic-link/verify` → valida token (one-time), chama `VerifyEmail()` + `RecordLogin()`, retorna JWT pair
+
+### Google OAuth (a implementar)
+- Troca code → user info → `User.CreateFromGoogle()`
+
+### JWT
+- Claims: `sub`, `email`, `tenant_id`, `roles`, `global_roles`
+- Troca de tenant: `POST /auth/switch-tenant` re-emite JWT (a implementar)
 
 ---
 
@@ -257,8 +354,9 @@ public string Name { get; private set; } = default!;
 
 // ❌ throw em domain logic → usar Result.Failure
 // ❌ public setters em entidades
-// ❌ lógica de negócio em controllers
+// ❌ lógica de negócio em controllers ou endpoints
 // ❌ DbContext fora de Infrastructure
+// ❌ AddControllers / MapControllers — usar Minimal APIs em Endpoints/
 ```
 
 ---
@@ -273,12 +371,31 @@ public string Name { get; private set; } = default!;
 
 ---
 
+## Testes de Integração (Api.Tests)
+
+`TestWebApplicationFactory` substitui serviços de infraestrutura por mocks NSubstitute e injeta configuração via `ConfigureAppConfiguration` (não `UseSetting`, que vai para host config e não app config):
+
+```csharp
+builder.ConfigureAppConfiguration((_, config) =>
+{
+    config.AddInMemoryCollection(new Dictionary<string, string?>
+    {
+        ["Jwt:Secret"] = "...",
+        ["Jwt:Issuer"] = "...",
+        ["Jwt:Audience"] = "...",
+        ["ConnectionStrings:Database"] = "Host=localhost;Database=test",
+        ["ConnectionStrings:Redis"] = "localhost",
+    });
+});
+```
+
+---
+
 ## O que Ainda Não Foi Implementado
 
-- Controllers (Api/Controllers/ vazio)
-- Auth Infrastructure: JWT, MagicLink, Google OAuth (Infrastructure/Auth/ vazio)
-- Application Handlers: nenhum command/query handler
-- Testes de Application e Api (projetos vazios)
+- Google OAuth (`POST /auth/google`)
+- Troca de tenant (`POST /auth/switch-tenant`)
+- Endpoints de tenant e usuário
 
 ---
 
