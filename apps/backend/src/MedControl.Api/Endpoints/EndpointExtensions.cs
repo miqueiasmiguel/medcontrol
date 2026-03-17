@@ -8,6 +8,7 @@ public static class EndpointExtensions
     {
         var auth = app.MapGroup("auth");
         auth.MapGroup("magic-link").MapMagicLink();
+        auth.MapGroup("google").MapGoogleAuth();
 
         return app;
     }
