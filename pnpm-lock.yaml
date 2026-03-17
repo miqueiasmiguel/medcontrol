@@ -228,9 +228,6 @@ importers:
       '@expo/metro-config':
         specifier: '*'
         version: 0.20.18
-      '@testing-library/react-native':
-        specifier: '*'
-        version: 13.2.2(jest@29.7.0(@types/node@18.16.9)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.29(@swc/helpers@0.5.19))(@types/node@18.16.9)(typescript@5.9.3)))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react-test-renderer@19.0.0(react@19.0.0))(react@19.0.0)
       expo:
         specifier: '*'
         version: 53.0.27(@babel/core@7.29.0)(@expo/metro-runtime@5.0.5(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0)))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
@@ -243,9 +240,6 @@ importers:
       expo-system-ui:
         specifier: '*'
         version: 5.0.11(expo@53.0.27(@babel/core@7.29.0)(@expo/metro-runtime@5.0.5(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0)))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(react-native-web@0.20.0(encoding@0.1.13)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))
-      jest-expo:
-        specifier: '*'
-        version: 53.0.14(@babel/core@7.29.0)(expo@53.0.27(@babel/core@7.29.0)(@expo/metro-runtime@5.0.5(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0)))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(jest@29.7.0(@types/node@18.16.9)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.29(@swc/helpers@0.5.19))(@types/node@18.16.9)(typescript@5.9.3)))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
       metro-config:
         specifier: '*'
         version: 0.82.5
@@ -267,6 +261,13 @@ importers:
       react-native-web:
         specifier: '*'
         version: 0.20.0(encoding@0.1.13)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+    devDependencies:
+      '@testing-library/react-native':
+        specifier: '*'
+        version: 13.2.2(jest@29.7.0(@types/node@18.16.9)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.29(@swc/helpers@0.5.19))(@types/node@18.16.9)(typescript@5.9.3)))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react-test-renderer@19.0.0(react@19.0.0))(react@19.0.0)
+      jest-expo:
+        specifier: '*'
+        version: 53.0.14(@babel/core@7.29.0)(expo@53.0.27(@babel/core@7.29.0)(@expo/metro-runtime@5.0.5(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0)))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0))(jest@29.7.0(@types/node@18.16.9)(babel-plugin-macros@3.1.0)(ts-node@10.9.1(@swc/core@1.5.29(@swc/helpers@0.5.19))(@types/node@18.16.9)(typescript@5.9.3)))(react-native@0.79.3(@babel/core@7.29.0)(@types/react@19.0.14)(react@19.0.0))(react@19.0.0)
 
   packages/contracts:
     dependencies:

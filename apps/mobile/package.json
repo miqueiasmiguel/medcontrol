@@ -7,12 +7,10 @@
   },
   "dependencies": {
     "@expo/metro-config": "*",
-    "@testing-library/react-native": "*",
     "expo": "*",
     "expo-splash-screen": "*",
     "expo-status-bar": "*",
     "expo-system-ui": "*",
-    "jest-expo": "*",
     "metro-config": "*",
     "metro-resolver": "*",
     "react": "*",
@@ -20,5 +18,9 @@
     "react-native-svg": "*",
     "react-native-svg-transformer": "*",
     "react-native-web": "*"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "*",
+    "jest-expo": "*"
   }
 }
