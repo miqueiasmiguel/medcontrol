@@ -88,6 +88,7 @@ public record CreateTenantCommand(string Name) : ICommand<TenantDto>;
 | `/commit` | Para gerar mensagem conventional commit |
 | `/migration` | Para criar/aplicar EF Core migration |
 | `/arch` | Para validar decisão de arquitetura |
+| `/pr` | Para criar pull request (checks, título, body, `gh pr create`) |
 
 ## Conventional Commits — Regras do commitlint
 
