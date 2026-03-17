@@ -19,18 +19,20 @@ src/
 │   ├── Mediator/         ← IMediator, Mediator, ICommand, IQuery, IRequest, Unit, IPipelineBehavior, IDomainEventHandler
 │   ├── Behaviors/        ← LoggingBehavior, ValidationBehavior, TransactionBehavior
 │   ├── Auth/
-│   │   ├── Commands/     ← SendMagicLinkCommand(Handler+Validator), VerifyMagicLinkCommand(Handler+Validator)
+│   │   ├── Commands/     ← SendMagicLinkCommand(Handler+Validator), VerifyMagicLinkCommand(Handler+Validator),
+│   │   │                    GoogleLoginCommand(Handler+Validator)
 │   │   ├── DTOs/         ← AuthTokenDto
 │   │   └── Settings/     ← MagicLinkSettings
 │   └── Common/
 │       ├── Interfaces/   ← IUnitOfWork, ICurrentTenantService, ICurrentUserService,
-│       │                    IEmailService, ITokenService, IMagicLinkService
+│       │                    IEmailService, ITokenService, IMagicLinkService, IGoogleAuthService
 │       └── Exceptions/   ← NotFoundException
 ├── MedControl.Infrastructure/
 │   ├── Auth/
-│   │   ├── Settings/     ← JwtSettings
+│   │   ├── Settings/     ← JwtSettings, GoogleAuthSettings
 │   │   ├── MagicLinkService.cs   ← IDistributedCache, token=RandomBytes(32) base64url, one-time
 │   │   ├── TokenService.cs       ← HS256 JWT + refresh token em Redis
+│   │   ├── GoogleAuthService.cs  ← HttpClient, troca code→token→userinfo via Google APIs
 │   │   └── EmailService.cs       ← IResend (Resend 0.2.2)
 │   ├── Http/
 │   │   ├── HttpContextCurrentUserService.cs   ← lê claims JWT do HttpContext
@@ -43,7 +45,7 @@ src/
 └── MedControl.Api/
     ├── Program.cs              ← ~15 linhas, sem AddControllers
     ├── Endpoints/
-    │   ├── Auth/               ← MagicLinkEndpoints (minimal API)
+    │   ├── Auth/               ← MagicLinkEndpoints, GoogleAuthEndpoints (minimal API)
     │   └── EndpointExtensions  ← MapApiEndpoints(WebApplication)
     └── Extensions/
         ├── ServiceCollectionExtensions  ← AddApiServices (JWT bearer + ProblemDetails)
@@ -54,7 +56,7 @@ tests/
 ├── MedControl.Architecture.Tests/   ← ArchitectureTests (NetArchTest) ✅
 ├── MedControl.Application.Tests/    ← validator + handler tests (Auth/) ✅
 ├── MedControl.Infrastructure.Tests/ ← model metadata + Auth service tests ✅
-└── MedControl.Api.Tests/            ← MagicLinkEndpointTests (WebApplicationFactory) ✅
+└── MedControl.Api.Tests/            ← MagicLinkEndpointTests, GoogleAuthEndpointTests (WebApplicationFactory) ✅
 ```
 
 ---
@@ -182,6 +184,7 @@ ITokenService           // GenerateTokenPair(...) → TokenPair(AccessToken, Ref
                         // ValidateRefreshTokenAsync, RevokeRefreshTokenAsync
 IEmailService           // SendMagicLinkAsync(email, link, ct)
 IMagicLinkService       // GenerateTokenAsync(email) → token | ValidateTokenAsync(token) → email?
+IGoogleAuthService      // ExchangeCodeAsync(code, redirectUri) → GoogleUserInfo? { Email, DisplayName, AvatarUrl }
 ```
 
 ### MagicLinkSettings (Application/Auth/Settings/)
@@ -248,6 +251,7 @@ Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
 |---|---|
 | `MagicLinkService` | Gera token = `RandomBytes(32)` Base64Url; armazena `magic_link:{token}→email` no Redis com TTL 15 min; `ValidateTokenAsync` é one-time (remove após leitura) |
 | `TokenService` | JWT HS256 com claims `sub`, `email`, `tenant_id`, `roles`, `global_roles`; refresh token em Redis com chave `refresh_token:{token}→userId` |
+| `GoogleAuthService` | Registrado via `AddHttpClient<IGoogleAuthService, GoogleAuthService>()`; troca `code` pelo access token no endpoint `https://oauth2.googleapis.com/token`; busca userinfo em `https://www.googleapis.com/oauth2/v3/userinfo`; retorna `GoogleUserInfo` ou `null` em caso de falha |
 | `EmailService` | Wraps `IResend` (Resend SDK 0.2.2) — registrado via `services.AddHttpClient<ResendClient>()` + `services.Configure<ResendClientOptions>(...)` + `services.AddTransient<IResend, ResendClient>()` |
 
 ### JwtSettings (`Infrastructure/Auth/Settings/`)
@@ -264,13 +268,26 @@ public sealed class JwtSettings
 }
 ```
 
+### GoogleAuthSettings (`Infrastructure/Auth/Settings/`)
+
+```csharp
+public sealed class GoogleAuthSettings
+{
+    public const string SectionName = "Google";
+    public string ClientId { get; init; }
+    public string ClientSecret { get; init; }
+}
+```
+
 ### Http Services (`Infrastructure/Http/`)
 
 `HttpContextCurrentUserService` e `HttpContextCurrentTenantService` — lêem claims JWT do `IHttpContextAccessor`. Corrigem o bug pré-existente onde `ApplicationDbContext` precisava de `ICurrentUserService` no DI mas ela não estava registrada.
 
 ### Registro (InfrastructureExtensions.AddInfrastructure)
 
-Ordem: HttpContext → Settings → Redis → Resend → Auth services → Persistence (interceptors → DbContext → IUnitOfWork → repos)
+Ordem: HttpContext → Settings → Redis → Auth services → Email (condicional por ambiente) → Persistence (interceptors → DbContext → IUnitOfWork → repos)
+
+`IGoogleAuthService` registrado via `AddHttpClient<IGoogleAuthService, GoogleAuthService>()` (typed HttpClient).
 
 ---
 
@@ -282,7 +299,9 @@ Endpoints definidos em `Endpoints/` como static classes com extension methods so
 
 ```csharp
 // EndpointExtensions.cs
-app.MapGroup("auth").MapGroup("magic-link").MapMagicLink();
+var auth = app.MapGroup("auth");
+auth.MapGroup("magic-link").MapMagicLink();
+auth.MapGroup("google").MapGoogleAuth();
 ```
 
 ### Endpoints Disponíveis
@@ -291,6 +310,7 @@ app.MapGroup("auth").MapGroup("magic-link").MapMagicLink();
 |---|---|---|
 | `POST` | `/auth/magic-link/send` | Envia magic link; cria usuário se não existir → 204 |
 | `POST` | `/auth/magic-link/verify` | Valida token; retorna JWT + refresh token → 200 |
+| `POST` | `/auth/google/callback` | Troca code Google por JWT; cria usuário se não existir → 200 |
 
 ### Mapeamento Result → IResult
 
@@ -324,8 +344,16 @@ _                      → 400
 1. `POST /auth/magic-link/send` → normaliza email, cria usuário se não existe, gera token Redis, envia email via Resend
 2. `POST /auth/magic-link/verify` → valida token (one-time), chama `VerifyEmail()` + `RecordLogin()`, retorna JWT pair
 
-### Google OAuth (a implementar)
-- Troca code → user info → `User.CreateFromGoogle()`
+### Google OAuth ✅
+1. `POST /auth/google/callback` `{ code, redirectUri }` → `GoogleLoginCommandHandler`
+   - Chama `IGoogleAuthService.ExchangeCodeAsync(code, redirectUri)` → `GoogleUserInfo?`
+   - Se null → `Error.Unauthorized("Auth.GoogleAuthFailed")` → 401
+   - Se usuário não existe → `User.CreateFromGoogle(email, displayName, avatarUrl)` + `AddAsync`
+   - Se usuário existe → `UpdateAsync`
+   - Sempre chama `RecordLogin()` + `SaveChangesAsync`
+   - Retorna JWT pair via `ITokenService.GenerateTokenPair`
+2. `GoogleAuthService` (Infrastructure): typed `HttpClient`; POST para `https://oauth2.googleapis.com/token`; GET para `https://www.googleapis.com/oauth2/v3/userinfo`
+3. Credenciais em `appsettings.json` seção `"Google": { "ClientId", "ClientSecret" }`
 
 ### JWT
 - Claims: `sub`, `email`, `tenant_id`, `roles`, `global_roles`
@@ -393,7 +421,6 @@ builder.ConfigureAppConfiguration((_, config) =>
 
 ## O que Ainda Não Foi Implementado
 
-- Google OAuth (`POST /auth/google`)
 - Troca de tenant (`POST /auth/switch-tenant`)
 - Endpoints de tenant e usuário
 
