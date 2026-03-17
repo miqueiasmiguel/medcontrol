@@ -278,6 +278,12 @@ importers:
         specifier: '*'
         version: 5.9.3
 
+  packages/design-system:
+    devDependencies:
+      typescript:
+        specifier: '*'
+        version: 5.9.3
+
 packages:
 
   '@0no-co/graphql.web@1.2.0':
