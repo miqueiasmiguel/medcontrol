@@ -16,8 +16,8 @@ public sealed class User : BaseAuditableEntity, IAggregateRoot
 
     public static class Errors
     {
-        public static readonly Error EmailRequired = new("User.EmailRequired", "Email is required.");
-        public static readonly Error DisplayNameRequired = new("User.DisplayNameRequired", "Display name is required.");
+        public static readonly Error EmailRequired = Error.Validation("User.EmailRequired", "Email is required.");
+        public static readonly Error DisplayNameRequired = Error.Validation("User.DisplayNameRequired", "Display name is required.");
     }
 
     public static Result<User> Create(string email, string? displayName = null)

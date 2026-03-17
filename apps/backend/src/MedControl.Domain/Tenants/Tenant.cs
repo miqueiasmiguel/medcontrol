@@ -17,10 +17,10 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
 
     public static class Errors
     {
-        public static readonly Error NameRequired = new("Tenant.NameRequired", "Tenant name is required.");
-        public static readonly Error MemberAlreadyExists = new("Tenant.MemberAlreadyExists", "User is already a member of this tenant.");
-        public static readonly Error MemberNotFound = new("Tenant.MemberNotFound", "User is not a member of this tenant.");
-        public static readonly Error RoleRequired = new("Tenant.RoleRequired", "Role is required.");
+        public static readonly Error NameRequired = Error.Validation("Tenant.NameRequired", "Tenant name is required.");
+        public static readonly Error MemberAlreadyExists = Error.Conflict("Tenant.MemberAlreadyExists", "User is already a member of this tenant.");
+        public static readonly Error MemberNotFound = Error.NotFound("Tenant.MemberNotFound", "User is not a member of this tenant.");
+        public static readonly Error RoleRequired = Error.Validation("Tenant.RoleRequired", "Role is required.");
     }
 
     public static Result<Tenant> Create(string name)

@@ -18,7 +18,7 @@ public class ResultTests
     [Fact]
     public void Failure_ShouldNotBeSuccessAndShouldContainError()
     {
-        var error = new Error("Domain.Error", "Something went wrong.");
+        var error = Error.Failure("Domain.Error", "Something went wrong.");
 
         var result = Result.Failure(error);
 
@@ -51,7 +51,7 @@ public class ResultTTests
     [Fact]
     public void Failure_ShouldNotBeSuccessAndContainError()
     {
-        var error = new Error("Domain.Error", "Something went wrong.");
+        var error = Error.Failure("Domain.Error", "Something went wrong.");
 
         var result = Result.Failure<int>(error);
 
@@ -63,7 +63,7 @@ public class ResultTTests
     [Fact]
     public void Value_WhenFailure_ShouldThrowInvalidOperationException()
     {
-        var result = Result.Failure<int>(new Error("X", "desc"));
+        var result = Result.Failure<int>(Error.Failure("X", "desc"));
 
         var act = () => result.Value;
 
