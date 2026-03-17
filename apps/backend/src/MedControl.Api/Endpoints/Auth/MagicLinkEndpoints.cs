@@ -49,9 +49,9 @@ public static class MagicLinkEndpoints
         : result.Error.Type switch
         {
             ErrorType.Unauthorized => Results.Problem(result.Error.Description, statusCode: 401),
-            ErrorType.NotFound     => Results.Problem(result.Error.Description, statusCode: 404),
-            ErrorType.Conflict     => Results.Problem(result.Error.Description, statusCode: 409),
-            _                      => Results.Problem(result.Error.Description, statusCode: 400),
+            ErrorType.NotFound => Results.Problem(result.Error.Description, statusCode: 404),
+            ErrorType.Conflict => Results.Problem(result.Error.Description, statusCode: 409),
+            _ => Results.Problem(result.Error.Description, statusCode: 400),
         };
 }
 
