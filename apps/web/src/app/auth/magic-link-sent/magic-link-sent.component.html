@@ -1,0 +1,13 @@
+<div class="magic-link-sent-page">
+  <div class="magic-link-sent-card">
+    <div class="icon">✉️</div>
+    <h1>Verifique seu e-mail</h1>
+    @if (email) {
+      <p>Enviamos um link de acesso para <strong>{{ email }}</strong>.</p>
+    } @else {
+      <p>Enviamos um link de acesso para o seu e-mail.</p>
+    }
+    <p class="hint">O link expira em 15 minutos.</p>
+    <a routerLink="/auth/login" class="try-again">Tentar novamente</a>
+  </div>
+</div>
