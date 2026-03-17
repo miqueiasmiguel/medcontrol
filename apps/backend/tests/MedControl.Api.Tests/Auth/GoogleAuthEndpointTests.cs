@@ -43,9 +43,9 @@ public sealed class GoogleAuthEndpointTests : IClassFixture<TestWebApplicationFa
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var cookies = response.Headers.GetValues("Set-Cookie").ToList();
-        cookies.Should().Contain(c => c.StartsWith("mmc_access_token=") && c.Contains("HttpOnly"));
-        cookies.Should().Contain(c => c.StartsWith("mmc_refresh_token=") && c.Contains("HttpOnly"));
-        cookies.Should().Contain(c => c.StartsWith("mmc_session=1") && !c.Contains("HttpOnly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_access_token=") && c.Contains("httponly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_refresh_token=") && c.Contains("httponly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_session=1") && !c.Contains("httponly"));
     }
 
     [Fact]
