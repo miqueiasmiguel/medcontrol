@@ -1,4 +1,5 @@
 using FluentAssertions;
+using MedControl.Domain.Common;
 using MedControl.Domain.Users;
 using MedControl.Domain.Users.Events;
 
@@ -16,6 +17,7 @@ public class UserCreateTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(User.Errors.EmailRequired);
+        result.Error.Type.Should().Be(ErrorType.Validation);
     }
 
     [Fact]
@@ -50,6 +52,7 @@ public class UserCreateFromGoogleTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(User.Errors.EmailRequired);
+        result.Error.Type.Should().Be(ErrorType.Validation);
     }
 
     [Theory]
@@ -62,6 +65,7 @@ public class UserCreateFromGoogleTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(User.Errors.DisplayNameRequired);
+        result.Error.Type.Should().Be(ErrorType.Validation);
     }
 
     [Fact]
