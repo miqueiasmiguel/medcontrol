@@ -31,6 +31,7 @@ public static class InfrastructureExtensions
         // Settings
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<MagicLinkSettings>(configuration.GetSection(MagicLinkSettings.SectionName));
+        services.Configure<GoogleAuthSettings>(configuration.GetSection(GoogleAuthSettings.SectionName));
 
         // Redis
         services.AddStackExchangeRedisCache(opts =>
@@ -39,6 +40,7 @@ public static class InfrastructureExtensions
         // Auth services
         services.AddScoped<IMagicLinkService, MagicLinkService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
 
         if (environment.IsDevelopment())
         {

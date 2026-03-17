@@ -17,6 +17,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     public ITokenService TokenService { get; } = Substitute.For<ITokenService>();
     public IUserRepository UserRepository { get; } = Substitute.For<IUserRepository>();
     public IUnitOfWork UnitOfWork { get; } = Substitute.For<IUnitOfWork>();
+    public IGoogleAuthService GoogleAuthService { get; } = Substitute.For<IGoogleAuthService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -42,6 +43,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IUserRepository>();
             services.RemoveAll<IUnitOfWork>();
             services.RemoveAll<IDistributedCache>();
+            services.RemoveAll<IGoogleAuthService>();
 
             services.AddSingleton(MagicLinkService);
             services.AddSingleton(EmailService);
@@ -49,6 +51,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton(UserRepository);
             services.AddSingleton(UnitOfWork);
             services.AddSingleton<IDistributedCache>(Substitute.For<IDistributedCache>());
+            services.AddSingleton(GoogleAuthService);
         });
     }
 }
