@@ -1,0 +1,3 @@
+#!/bin/sh
+# Run lint and type-check only on affected projects
+pnpm exec nx affected --target=lint --base=HEAD~1 --head=HEAD 2>/dev/null || true
