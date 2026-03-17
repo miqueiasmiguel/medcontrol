@@ -27,7 +27,7 @@ src/
 │       ├── ApplicationDbContext.cs
 │       ├── Interceptors/ ← AuditableEntityInterceptor, DomainEventDispatchInterceptor
 │       ├── Repositories/ ← UserRepository, TenantRepository
-│       └── Configurations/ (vazio — EF entity configs)
+│       └── Configurations/ ← UserConfiguration, TenantConfiguration, TenantMemberConfiguration ✅
 └── MedControl.Api/
     ├── Program.cs
     └── Controllers/      (vazio)
@@ -36,7 +36,7 @@ tests/
 ├── MedControl.Domain.Tests/         ← ResultTests, ErrorTests, TenantTests, UserTests ✅
 ├── MedControl.Architecture.Tests/   ← ArchitectureTests (NetArchTest) ✅
 ├── MedControl.Application.Tests/    (vazio — NSubstitute)
-├── MedControl.Infrastructure.Tests/ (vazio — Testcontainers.PostgreSql)
+├── MedControl.Infrastructure.Tests/ ← model metadata tests (32 testes) ✅
 └── MedControl.Api.Tests/            (vazio — WebApplicationFactory)
 ```
 
@@ -195,6 +195,23 @@ TenantRepository: GetByIdAsync (Include Members), GetBySlugAsync, AddAsync, Upda
                   ListByUserAsync → usa .IgnoreQueryFilters() para bypass do filtro multi-tenant
 ```
 
+### Entity Configurations (`Persistence/Configurations/`)
+
+snake_case em tudo (convenção PostgreSQL). Tabelas: `users`, `tenants`, `tenant_members`.
+
+| Entidade | Destaques |
+|---|---|
+| `UserConfiguration` | `avatar_url`: `Uri → string` converter, max 2048; índice único `ix_users_email` |
+| `TenantConfiguration` | índice único `ix_tenants_slug`; `Members` com `PropertyAccessMode.Field` |
+| `TenantMemberConfiguration` | FK→Tenant: `Cascade`; FK→User: `Restrict`; índice composto único `(tenant_id, user_id)` + índice simples `user_id` |
+
+Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
+
+### Migrations
+
+- `ApplicationDbContextFactory` (design-time only) em `Persistence/` — permite rodar `dotnet ef` sem DI completo
+- Migration atual: `InitialSchema` — cria `tenants`, `users`, `tenant_members` com todos os índices
+
 ### Registro (InfrastructureExtensions.AddInfrastructure)
 
 Registra: interceptors → DbContext (Npgsql) → IUnitOfWork → IUserRepository → ITenantRepository
@@ -259,10 +276,9 @@ public string Name { get; private set; } = default!;
 ## O que Ainda Não Foi Implementado
 
 - Controllers (Api/Controllers/ vazio)
-- EF Entity Configurations (Infrastructure/Persistence/Configurations/ vazio)
 - Auth Infrastructure: JWT, MagicLink, Google OAuth (Infrastructure/Auth/ vazio)
 - Application Handlers: nenhum command/query handler
-- Testes de Application, Infrastructure e Api (projetos vazios)
+- Testes de Application e Api (projetos vazios)
 
 ---
 

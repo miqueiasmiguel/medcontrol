@@ -88,6 +88,26 @@ public record CreateTenantCommand(string Name) : ICommand<TenantDto>;
 | `/commit` | Para gerar mensagem conventional commit |
 | `/migration` | Para criar/aplicar EF Core migration |
 | `/arch` | Para validar decisão de arquitetura |
+| `/pr` | Para criar pull request (checks, título, body, `gh pr create`) |
+
+## Conventional Commits — Regras do commitlint
+
+O hook de commit valida a mensagem com `commitlint`. Regras obrigatórias:
+
+- **scope** deve ser um de: `domain`, `app`, `infra`, `api`, `web`, `mobile`, `contracts`, `ci`, `deps`, `auth`, `tenants`, `users`
+- **subject** deve ser 100% minúsculo — sem exceções, incluindo siglas e nomes de arquivo
+
+```bash
+# ✅ correto
+feat(infra): add ef core entity configurations
+fix(users): handle null avatar url in converter
+docs(infra): update backend docs with migration info
+
+# ❌ errado — maiúsculas no subject
+feat(infra): add EF Core entity configurations   # "EF Core" → "ef core"
+docs(infra): update backend CLAUDE.md            # "CLAUDE.md" → "claude.md"
+feat(infra): configure tenant_member FKs         # "FKs" → "fks"
+```
 
 ## Comandos de Dev Frequentes
 
