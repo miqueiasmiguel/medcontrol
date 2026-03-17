@@ -2,6 +2,54 @@
 
 > Detalhes de implementação do backend em `apps/backend/CLAUDE.md`
 
+## Domínio de Negócio
+
+MedControl é um SaaS para médicos, clínicas, hospitais e empresas de faturamento médico.
+
+### Módulos
+
+| Módulo | Status | Descrição |
+|---|---|---|
+| **Controle de Pagamento** | 🔨 em desenvolvimento | Operador registra pagamentos; médico consulta via mobile |
+| Faturamento | 🔜 futuro | Geração de lotes TISS, envio a convênios |
+| Recurso de Glosa | 🔜 futuro | Contestação de pagamentos recusados |
+
+### Bounded Contexts
+
+```
+Payments     ← aggregate root Payment (core domain)
+Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
+HealthPlans  ← Convênio (nome, código TISS)
+Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor)
+```
+
+### Roles de Tenant
+
+| Role | Quem | Permissões |
+|---|---|---|
+| `operator` | Operador/secretaria | CRUD completo de pagamentos, cadastros |
+| `doctor` | Médico | Leitura dos próprios pagamentos, relatórios |
+| `admin` | Administrador do tenant | Gerencia membros e configurações |
+
+### Payment — Campos
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| DoctorId | Guid | Ref. ao User com role `doctor` |
+| HealthPlanId | Guid | Convênio |
+| ProcedureId | Guid | Procedimento (TUSS/CBHPM) |
+| ExecutionDate | DateOnly | Data de execução do procedimento |
+| AppointmentNumber | string | Número do atendimento |
+| AuthorizationCode | string? | Senha de autorização do convênio |
+| BeneficiaryCard | string | Carteira do beneficiário |
+| BeneficiaryName | string | Nome do beneficiário |
+| ExecutionLocation | string | Local de execução |
+| PaymentLocation | string | Local de pagamento |
+| Status | enum | `Pending` / `Paid` / `Refused` |
+| Notes | string? | Observações |
+
+---
+
 ## Stack
 
 | Camada | Tecnologia | Versão |
@@ -94,7 +142,7 @@ public record CreateTenantCommand(string Name) : ICommand<TenantDto>;
 
 O hook de commit valida a mensagem com `commitlint`. Regras obrigatórias:
 
-- **scope** deve ser um de: `domain`, `app`, `infra`, `api`, `web`, `mobile`, `contracts`, `ci`, `deps`, `auth`, `tenants`, `users`
+- **scope** deve ser um de: `domain`, `app`, `infra`, `api`, `web`, `mobile`, `contracts`, `ci`, `deps`, `auth`, `tenants`, `users`, `payments`, `doctors`, `health-plans`, `procedures`
 - **subject** deve ser 100% minúsculo — sem exceções, incluindo siglas e nomes de arquivo
 
 ```bash
