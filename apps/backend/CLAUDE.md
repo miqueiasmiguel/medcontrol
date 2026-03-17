@@ -457,3 +457,50 @@ dotnet ef migrations add NomeMigration \
   --project src/MedControl.Infrastructure \
   --startup-project src/MedControl.Api
 ```
+
+---
+
+## Auth — HttpOnly Cookies (atualizado)
+
+Os endpoints de auth agora setam cookies HttpOnly em vez de retornar tokens no body.
+
+### Cookies
+
+| Cookie | HttpOnly | Descrição |
+|---|---|---|
+| `mmc_access_token` | ✅ | JWT access token — nunca acessível via JS |
+| `mmc_refresh_token` | ✅ | Refresh token — nunca acessível via JS |
+| `mmc_session` | ❌ | Indicador de sessão (`1`); lido pelo JS para verificar se está logado |
+
+### Endpoints
+
+- `POST /auth/magic-link/verify` → retorna 204 + Set-Cookie (não retorna body)
+- `POST /auth/google/callback` → retorna 204 + Set-Cookie (não retorna body)
+- `POST /auth/logout` → expira os 3 cookies com `Max-Age=0` (não requer autenticação)
+
+### CORS
+
+Configurado via `AddCors("WebApp")` em `ServiceCollectionExtensions`:
+- `Cors:WebOrigin` em `appsettings.Development.json` = `http://localhost:4200`
+- `AllowCredentials()` habilitado
+
+### JWT Bearer lê do cookie
+
+```csharp
+options.Events = new JwtBearerEvents
+{
+    OnMessageReceived = ctx =>
+    {
+        if (ctx.Request.Cookies.TryGetValue("mmc_access_token", out var token))
+        {
+            ctx.Token = token;
+        }
+        return Task.CompletedTask;
+    }
+};
+```
+
+### Utilitário
+
+`CookieHelper.SetAuthCookies(HttpContext, AuthTokenDto)` — seta os 3 cookies.
+`CookieHelper.ClearAuthCookies(HttpContext)` — expira os 3 cookies.
