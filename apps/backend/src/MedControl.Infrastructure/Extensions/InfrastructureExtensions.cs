@@ -11,6 +11,7 @@ using MedControl.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Resend;
 
 namespace MedControl.Infrastructure.Extensions;
@@ -19,7 +20,8 @@ public static class InfrastructureExtensions
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IHostEnvironment environment)
     {
         // HttpContext — fixes DI bug: ApplicationDbContext requires ICurrentUserService
         services.AddHttpContextAccessor();
@@ -34,16 +36,24 @@ public static class InfrastructureExtensions
         services.AddStackExchangeRedisCache(opts =>
             opts.Configuration = configuration.GetConnectionString("Redis"));
 
-        // Resend
-        services.AddHttpClient<ResendClient>();
-        services.Configure<ResendClientOptions>(opts =>
-            opts.ApiToken = configuration["Resend:ApiKey"]!);
-        services.AddTransient<IResend, ResendClient>();
-
         // Auth services
         services.AddScoped<IMagicLinkService, MagicLinkService>();
-        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ITokenService, TokenService>();
+
+        if (environment.IsDevelopment())
+        {
+            services.AddScoped<IEmailService, DevelopmentEmailService>();
+        }
+        else
+        {
+            // Resend
+            services.AddHttpClient<ResendClient>();
+            services.Configure<ResendClientOptions>(opts =>
+                opts.ApiToken = configuration["Resend:ApiKey"]!);
+            services.AddTransient<IResend, ResendClient>();
+
+            services.AddScoped<IEmailService, EmailService>();
+        }
 
         // Persistence
         services.AddScoped<AuditableEntityInterceptor>();
