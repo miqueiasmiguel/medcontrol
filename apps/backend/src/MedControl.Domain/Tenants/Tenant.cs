@@ -20,7 +20,7 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
         public static readonly Error NameRequired = Error.Validation("Tenant.NameRequired", "Tenant name is required.");
         public static readonly Error MemberAlreadyExists = Error.Conflict("Tenant.MemberAlreadyExists", "User is already a member of this tenant.");
         public static readonly Error MemberNotFound = Error.NotFound("Tenant.MemberNotFound", "User is not a member of this tenant.");
-        public static readonly Error RoleRequired = Error.Validation("Tenant.RoleRequired", "Role is required.");
+        public static readonly Error InvalidRole = Error.Validation("Tenant.InvalidRole", "The specified role is not valid.");
     }
 
     public static Result<Tenant> Create(string name)
@@ -52,11 +52,11 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
         return Result.Success();
     }
 
-    public Result AddMember(Guid userId, string role)
+    public Result AddMember(Guid userId, TenantRole role)
     {
-        if (string.IsNullOrWhiteSpace(role))
+        if (!Enum.IsDefined(role))
         {
-            return Result.Failure(Errors.RoleRequired);
+            return Result.Failure(Errors.InvalidRole);
         }
 
         if (_members.Any(m => m.UserId == userId))
