@@ -247,6 +247,9 @@ Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
 - `ApplicationDbContextFactory` (design-time only) em `Persistence/` — permite rodar `dotnet ef` sem DI completo
 - Migration atual: `InitialSchema` — cria `tenants`, `users`, `tenant_members` com todos os índices
 
+> ⚠️ **Após cada `dotnet ef migrations add`, execute imediatamente `dotnet format`.**
+> O gerador do EF Core produz arquivos com block-scoped namespace, BOM e CRLF — todos rejeitados pelo `--warnaserror` do projeto. O `dotnet format` corrige os três de uma vez. Nunca edite os arquivos de migration manualmente para corrigir esses erros.
+
 ### Auth Services (`Infrastructure/Auth/`)
 
 | Serviço | Implementação |
