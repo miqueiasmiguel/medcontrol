@@ -2,6 +2,7 @@ using MedControl.Application.Common.Interfaces;
 using MedControl.Infrastructure.Persistence.Interceptors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MedControl.Infrastructure.Persistence;
@@ -14,9 +15,19 @@ internal sealed class ApplicationDbContextFactory : IDesignTimeDbContextFactory<
 {
     public ApplicationDbContext CreateDbContext(string[] args)
     {
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "MedControl.Api"))
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        var connectionString = configuration.GetConnectionString("Database")
+            ?? "Host=localhost;Port=5432;Database=medcontrol;Username=medcontrol;Password=medcontrol";
+
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseNpgsql(
-                "Host=localhost;Database=medcontrol_design",
+                connectionString,
                 npgsql => npgsql.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName))
             .Options;
 
