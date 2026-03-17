@@ -11,7 +11,7 @@ public static class GoogleAuthEndpoints
     {
         group.MapPost("/callback", GoogleCallback)
              .WithName("GoogleCallback")
-             .Produces<AuthTokenDto>(StatusCodes.Status200OK)
+             .Produces(StatusCodes.Status204NoContent)
              .Produces(StatusCodes.Status400BadRequest)
              .Produces(StatusCodes.Status401Unauthorized);
 
@@ -20,24 +20,27 @@ public static class GoogleAuthEndpoints
 
     private static async Task<IResult> GoogleCallback(
         GoogleCallbackRequest request,
+        HttpContext ctx,
         IMediator mediator,
         CancellationToken ct)
     {
         var result = await mediator.Send<Result<AuthTokenDto>>(
             new GoogleLoginCommand(request.Code, request.RedirectUri), ct);
 
-        return ToResult(result);
+        if (!result.IsSuccess)
+            return ToErrorResult(result.Error);
+
+        CookieHelper.SetAuthCookies(ctx, result.Value!);
+        return Results.NoContent();
     }
 
-    private static IResult ToResult<T>(Result<T> result) => result.IsSuccess
-        ? Results.Ok(result.Value)
-        : result.Error.Type switch
-        {
-            ErrorType.Unauthorized => Results.Problem(result.Error.Description, statusCode: 401),
-            ErrorType.NotFound => Results.Problem(result.Error.Description, statusCode: 404),
-            ErrorType.Conflict => Results.Problem(result.Error.Description, statusCode: 409),
-            _ => Results.Problem(result.Error.Description, statusCode: 400),
-        };
+    private static IResult ToErrorResult(Error error) => error.Type switch
+    {
+        ErrorType.Unauthorized => Results.Problem(error.Description, statusCode: 401),
+        ErrorType.NotFound => Results.Problem(error.Description, statusCode: 404),
+        ErrorType.Conflict => Results.Problem(error.Description, statusCode: 409),
+        _ => Results.Problem(error.Description, statusCode: 400),
+    };
 }
 
 public record GoogleCallbackRequest(string Code, string RedirectUri);

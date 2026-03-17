@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using MedControl.Api.Tests.Helpers;
-using MedControl.Application.Auth.DTOs;
 using MedControl.Application.Common.Interfaces;
 using MedControl.Domain.Users;
 using NSubstitute;
@@ -21,7 +20,7 @@ public sealed class GoogleAuthEndpointTests : IClassFixture<TestWebApplicationFa
     }
 
     [Fact]
-    public async Task POST_auth_google_callback_ValoresValidos_Retorna200ComToken()
+    public async Task POST_auth_google_callback_ValoresValidos_Retorna204ComCookies()
     {
         var email = "user@example.com";
         var user = User.CreateFromGoogle(email, "User Name", null).Value;
@@ -41,10 +40,12 @@ public sealed class GoogleAuthEndpointTests : IClassFixture<TestWebApplicationFa
         var response = await _client.PostAsJsonAsync("/auth/google/callback",
             new { code = "valid-code", redirectUri = "http://localhost:4200/auth/callback" });
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var dto = await response.Content.ReadFromJsonAsync<AuthTokenDto>();
-        dto!.AccessToken.Should().Be("access-token");
-        dto.RefreshToken.Should().Be("refresh-token");
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var cookies = response.Headers.GetValues("Set-Cookie").ToList();
+        cookies.Should().Contain(c => c.StartsWith("mmc_access_token=") && c.Contains("HttpOnly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_refresh_token=") && c.Contains("HttpOnly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_session=1") && !c.Contains("HttpOnly"));
     }
 
     [Fact]
