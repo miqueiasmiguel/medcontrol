@@ -76,28 +76,37 @@ public class TenantAddMemberTests
     {
         var tenant = Tenant.Create("Clínica").Value;
         var userId = Guid.NewGuid();
-        tenant.AddMember(userId, "admin");
+        tenant.AddMember(userId, TenantRole.Admin);
 
-        var result = tenant.AddMember(userId, "admin");
+        var result = tenant.AddMember(userId, TenantRole.Admin);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Tenant.Errors.MemberAlreadyExists);
         result.Error.Type.Should().Be(ErrorType.Conflict);
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void AddMember_WithInvalidRole_ShouldReturnFailure(string? role)
+    [Fact]
+    public void AddMember_WithOperatorRole_ShouldSetRoleCorrectly()
     {
-        var tenant = Tenant.Create("Clínica").Value;
+        var tenant = Tenant.Create("Clinic").Value;
+        var userId = Guid.NewGuid();
 
-        var result = tenant.AddMember(Guid.NewGuid(), role!);
+        var result = tenant.AddMember(userId, TenantRole.Operator);
+
+        result.IsSuccess.Should().BeTrue();
+        tenant.Members.Should().ContainSingle(m =>
+            m.UserId == userId && m.Role == TenantRole.Operator);
+    }
+
+    [Fact]
+    public void AddMember_WithUndefinedRole_ShouldReturnInvalidRoleError()
+    {
+        var tenant = Tenant.Create("Clinic").Value;
+
+        var result = tenant.AddMember(Guid.NewGuid(), (TenantRole)999);
 
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Be(Tenant.Errors.RoleRequired);
-        result.Error.Type.Should().Be(ErrorType.Validation);
+        result.Error.Should().Be(Tenant.Errors.InvalidRole);
     }
 
     [Fact]
@@ -106,10 +115,39 @@ public class TenantAddMemberTests
         var tenant = Tenant.Create("Clínica").Value;
         var userId = Guid.NewGuid();
 
-        var result = tenant.AddMember(userId, "member");
+        var result = tenant.AddMember(userId, TenantRole.Operator);
 
         result.IsSuccess.Should().BeTrue();
-        tenant.Members.Should().ContainSingle(m => m.UserId == userId && m.Role == "member");
+        tenant.Members.Should().ContainSingle(m => m.UserId == userId && m.Role == TenantRole.Operator);
+    }
+}
+
+public class TenantMemberUpdateRoleTests
+{
+    [Fact]
+    public void UpdateRole_WithUndefinedRole_ShouldReturnInvalidRoleError()
+    {
+        var tenant = Tenant.Create("Clinic").Value;
+        var userId = Guid.NewGuid();
+        tenant.AddMember(userId, TenantRole.Operator);
+
+        var result = tenant.Members[0].UpdateRole((TenantRole)999);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(Tenant.Errors.InvalidRole);
+    }
+
+    [Fact]
+    public void UpdateRole_WithValidRole_ShouldUpdateRole()
+    {
+        var tenant = Tenant.Create("Clinic").Value;
+        var userId = Guid.NewGuid();
+        tenant.AddMember(userId, TenantRole.Operator);
+
+        var result = tenant.Members[0].UpdateRole(TenantRole.Doctor);
+
+        result.IsSuccess.Should().BeTrue();
+        tenant.Members[0].Role.Should().Be(TenantRole.Doctor);
     }
 }
 
@@ -132,7 +170,7 @@ public class TenantRemoveMemberTests
     {
         var tenant = Tenant.Create("Clínica").Value;
         var userId = Guid.NewGuid();
-        tenant.AddMember(userId, "member");
+        tenant.AddMember(userId, TenantRole.Operator);
 
         var result = tenant.RemoveMember(userId);
 

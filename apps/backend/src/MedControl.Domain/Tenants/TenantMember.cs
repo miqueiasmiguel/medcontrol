@@ -8,10 +8,10 @@ public sealed class TenantMember : BaseEntity
 
     public Guid TenantId { get; private set; }
     public Guid UserId { get; private set; }
-    public string Role { get; private set; } = default!;
+    public TenantRole Role { get; private set; }
     public DateTimeOffset JoinedAt { get; private set; }
 
-    internal static TenantMember Create(Guid tenantId, Guid userId, string role)
+    internal static TenantMember Create(Guid tenantId, Guid userId, TenantRole role)
     {
         return new TenantMember
         {
@@ -22,11 +22,11 @@ public sealed class TenantMember : BaseEntity
         };
     }
 
-    public Result UpdateRole(string role)
+    public Result UpdateRole(TenantRole role)
     {
-        if (string.IsNullOrWhiteSpace(role))
+        if (!Enum.IsDefined(role))
         {
-            return Result.Failure(Tenant.Errors.RoleRequired);
+            return Result.Failure(Tenant.Errors.InvalidRole);
         }
 
         Role = role;

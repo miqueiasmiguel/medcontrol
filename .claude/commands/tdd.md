@@ -163,3 +163,21 @@ Extrair template do email para constante, melhorar mensagem, etc.
 
 **Passo 4 — COMMIT:**
 `feat(auth): add send magic link command with email notification`
+
+---
+
+## 📝 PÓS-IMPLEMENTAÇÃO — Atualizar CLAUDE.md
+
+Após todos os ciclos RED → GREEN → REFACTOR → COMMIT da feature:
+
+1. Atualizar `apps/backend/CLAUDE.md` com:
+   - Novas entidades/enums criados (estrutura de campos, comportamentos)
+   - Novos endpoints adicionados
+   - Novos serviços ou interfaces de Application/Infrastructure
+   - Atualizar a seção "O que ainda não foi implementado" removendo o que foi feito
+
+2. Atualizar `CLAUDE.md` raiz (se pertinente) com:
+   - Mudanças de escopo ou decisões de domínio relevantes
+   - Novos scopes de commit (se adicionados)
+
+3. Apenas informações que **não são deriváveis do código** — não duplicar o que já está no código fonte.
