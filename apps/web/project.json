@@ -21,7 +21,10 @@
             "input": "apps/web/public"
           }
         ],
-        "styles": ["apps/web/src/styles.scss"]
+        "styles": [
+          "node_modules/@angular/material/prebuilt-themes/azure-blue.css",
+          "apps/web/src/styles.scss"
+        ]
       },
       "configurations": {
         "production": {
@@ -50,6 +53,9 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "options": {
+        "proxyConfig": "apps/web/proxy.conf.json"
+      },
       "configurations": {
         "production": {
           "buildTarget": "web:build:production"
