@@ -1,1 +1,10 @@
-/* You can add global styles to this file, and also import other style files */
+// =============================================================================
+// MedControl Web — Global Styles
+// =============================================================================
+// Design System MM Fature: tokens CSS, reset e mixins globais
+// =============================================================================
+
+// Resolve o caminho via tsconfig paths ou node_modules do workspace
+@use '../../../packages/design-system/src/web/tokens' as *;
+@use '../../../packages/design-system/src/web/reset' as *;
+@use '../../../packages/design-system/src/web/components' as *;

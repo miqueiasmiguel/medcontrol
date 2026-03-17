@@ -1,0 +1,264 @@
+// =============================================================================
+// MM Fature — Component Tokens (SCSS Mixins & Utility Classes)
+// =============================================================================
+// Mixins reutilizáveis para componentes Angular.
+// Importe via: @use '@medcontrol/design-system/web/components' as ds;
+// =============================================================================
+
+// ---------------------------------------------------------------------------
+// Mixin: Card
+// ---------------------------------------------------------------------------
+@mixin card($padding: var(--mmc-space-6)) {
+  background: var(--mmc-bg-card);
+  border: 1px solid var(--mmc-border);
+  border-radius: var(--mmc-radius-lg);
+  box-shadow: var(--mmc-shadow-sm);
+  padding: $padding;
+}
+
+@mixin card-hover {
+  transition: box-shadow 200ms ease, transform 200ms ease;
+
+  &:hover {
+    box-shadow: var(--mmc-shadow-md);
+    transform: translateY(-1px);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mixin: Button Primary
+// ---------------------------------------------------------------------------
+@mixin btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mmc-space-2);
+  padding: var(--mmc-space-2-5) var(--mmc-space-5);
+  height: 40px;
+  font-size: var(--mmc-text-sm);
+  font-weight: var(--mmc-font-weight-semibold);
+  color: var(--mmc-action-primary-text);
+  background: var(--mmc-action-primary);
+  border: none;
+  border-radius: var(--mmc-radius-md);
+  cursor: pointer;
+  transition: background 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: var(--mmc-action-primary-hover);
+    box-shadow: var(--mmc-shadow-brand);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--mmc-action-primary-active);
+    transform: translateY(1px);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    box-shadow: var(--mmc-shadow-focus);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mixin: Button Secondary (Navy)
+// ---------------------------------------------------------------------------
+@mixin btn-secondary {
+  @include btn-primary;
+  background: var(--mmc-action-secondary);
+  color: var(--mmc-action-secondary-text);
+
+  &:hover:not(:disabled) {
+    background: var(--mmc-action-secondary-hover);
+    box-shadow: var(--mmc-shadow-md);
+  }
+
+  &:active:not(:disabled) {
+    background: var(--mmc-action-secondary-hover);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mixin: Button Ghost
+// ---------------------------------------------------------------------------
+@mixin btn-ghost {
+  @include btn-primary;
+  background: transparent;
+  color: var(--mmc-text-primary);
+  border: 1px solid var(--mmc-border);
+
+  &:hover:not(:disabled) {
+    background: var(--mmc-bg-card-hover);
+    border-color: var(--mmc-border-strong);
+    box-shadow: none;
+  }
+
+  &:active:not(:disabled) {
+    background: var(--mmc-neutral-200);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mixin: Input
+// ---------------------------------------------------------------------------
+@mixin input {
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--mmc-space-3);
+  font-size: var(--mmc-text-sm);
+  color: var(--mmc-text-primary);
+  background: var(--mmc-bg-card);
+  border: 1px solid var(--mmc-border);
+  border-radius: var(--mmc-radius-md);
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+
+  &::placeholder {
+    color: var(--mmc-text-tertiary);
+  }
+
+  &:hover {
+    border-color: var(--mmc-border-strong);
+  }
+
+  &:focus {
+    border-color: var(--mmc-orange-400);
+    box-shadow: var(--mmc-shadow-focus);
+  }
+
+  &:disabled {
+    background: var(--mmc-neutral-100);
+    color: var(--mmc-text-disabled);
+    cursor: not-allowed;
+  }
+
+  &.error {
+    border-color: var(--mmc-error);
+
+    &:focus {
+      box-shadow: 0px 0px 0px 3px rgba(239, 68, 68, 0.20);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mixin: Badge de Status de Pagamento
+// ---------------------------------------------------------------------------
+@mixin payment-badge($status: 'pending') {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mmc-space-1-5);
+  padding: var(--mmc-space-1) var(--mmc-space-2-5);
+  font-size: var(--mmc-text-xs);
+  font-weight: var(--mmc-font-weight-medium);
+  border-radius: var(--mmc-radius-full);
+  border: 1px solid;
+
+  &::before {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+}
+
+.badge-pending {
+  @include payment-badge('pending');
+  background: var(--mmc-status-pending-bg);
+  color: var(--mmc-status-pending-text);
+  border-color: var(--mmc-status-pending-border);
+
+  &::before { background: var(--mmc-status-pending-dot); }
+}
+
+.badge-paid {
+  @include payment-badge('paid');
+  background: var(--mmc-status-paid-bg);
+  color: var(--mmc-status-paid-text);
+  border-color: var(--mmc-status-paid-border);
+
+  &::before { background: var(--mmc-status-paid-dot); }
+}
+
+.badge-refused {
+  @include payment-badge('refused');
+  background: var(--mmc-status-refused-bg);
+  color: var(--mmc-status-refused-text);
+  border-color: var(--mmc-status-refused-border);
+
+  &::before { background: var(--mmc-status-refused-dot); }
+}
+
+// ---------------------------------------------------------------------------
+// Mixin: Layout de app (sidebar + content)
+// ---------------------------------------------------------------------------
+@mixin app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--mmc-bg);
+}
+
+@mixin sidebar {
+  width: var(--mmc-sidebar-width);
+  min-height: 100vh;
+  background: var(--mmc-sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 50;
+}
+
+@mixin main-content {
+  flex: 1;
+  margin-left: var(--mmc-sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+@mixin topbar {
+  height: var(--mmc-topbar-height);
+  background: var(--mmc-bg-card);
+  border-bottom: 1px solid var(--mmc-border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--mmc-space-6);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: var(--mmc-shadow-sm);
+}
+
+@mixin page-content {
+  padding: var(--mmc-space-6);
+  max-width: var(--mmc-content-max-width);
+  width: 100%;
+}
+
+// ---------------------------------------------------------------------------
+// Utilitários de texto
+// ---------------------------------------------------------------------------
+.text-primary   { color: var(--mmc-text-primary); }
+.text-secondary { color: var(--mmc-text-secondary); }
+.text-tertiary  { color: var(--mmc-text-tertiary); }
+.text-disabled  { color: var(--mmc-text-disabled); }
+.text-brand     { color: var(--mmc-orange-500); }
+
+// Numérico (valores monetários)
+.text-numeric {
+  font-family: var(--mmc-font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}

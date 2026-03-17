@@ -1,0 +1,97 @@
+// =============================================================================
+// MM Fature — CSS Reset & Base Styles
+// =============================================================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--mmc-font-sans);
+  font-size: var(--mmc-text-md);
+  font-weight: var(--mmc-font-weight-regular);
+  line-height: 1.5;
+  color: var(--mmc-text-primary);
+  background-color: var(--mmc-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Tipografia base
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--mmc-font-weight-semibold);
+  line-height: 1.375;
+  color: var(--mmc-text-primary);
+}
+
+h1 { font-size: var(--mmc-text-2xl); }
+h2 { font-size: var(--mmc-text-xl); }
+h3 { font-size: var(--mmc-text-lg); }
+h4 { font-size: var(--mmc-text-md); }
+
+p {
+  color: var(--mmc-text-secondary);
+  line-height: 1.625;
+}
+
+a {
+  color: var(--mmc-text-link);
+  text-decoration: none;
+  transition: color 150ms ease;
+
+  &:hover {
+    color: var(--mmc-text-link-hover);
+  }
+}
+
+// Imagens responsivas
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+// Inputs base
+input, button, textarea, select {
+  font: inherit;
+}
+
+// Focus global acessível
+:focus-visible {
+  outline: none;
+  box-shadow: var(--mmc-shadow-focus);
+  border-radius: var(--mmc-radius-sm);
+}
+
+// Scroll
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--mmc-neutral-100);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--mmc-neutral-300);
+  border-radius: var(--mmc-radius-full);
+
+  &:hover {
+    background: var(--mmc-neutral-400);
+  }
+}
+
+// Seleção de texto
+::selection {
+  background-color: var(--mmc-orange-100);
+  color: var(--mmc-orange-800);
+}

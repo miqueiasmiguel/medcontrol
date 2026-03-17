@@ -1,0 +1,2307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MM Fature — Design System Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================================
+       TOKENS
+    ========================================================================= */
+    :root {
+      --mmc-orange-50:  #FFF4ED; --mmc-orange-100: #FFE6D5; --mmc-orange-200: #FFCBA9;
+      --mmc-orange-300: #FEA472; --mmc-orange-400: #FD7A38; --mmc-orange-500: #F97316;
+      --mmc-orange-600: #EA6310; --mmc-orange-700: #C24E0D; --mmc-orange-800: #9A3F11;
+      --mmc-orange-900: #7C3412; --mmc-orange-950: #431807;
+
+      --mmc-navy-50:  #EEF2FF; --mmc-navy-100: #E0E7FF; --mmc-navy-200: #C7D2FE;
+      --mmc-navy-300: #A5B4FC; --mmc-navy-400: #818CF8; --mmc-navy-500: #6366F1;
+      --mmc-navy-600: #4F46E5; --mmc-navy-700: #3730A3; --mmc-navy-800: #2D2A8A;
+      --mmc-navy-900: #1B2E63; --mmc-navy-950: #0F1A40;
+
+      --mmc-neutral-0:    #FFFFFF; --mmc-neutral-50:  #F8F9FA; --mmc-neutral-100: #F1F3F5;
+      --mmc-neutral-200:  #E9ECEF; --mmc-neutral-300: #DEE2E6; --mmc-neutral-400: #CED4DA;
+      --mmc-neutral-500:  #ADB5BD; --mmc-neutral-600: #868E96; --mmc-neutral-700: #495057;
+      --mmc-neutral-800:  #343A40; --mmc-neutral-900: #212529; --mmc-neutral-1000:#0D0F12;
+
+      --mmc-success-light: #ECFDF5; --mmc-success: #10B981; --mmc-success-dark: #065F46;
+      --mmc-warning-light: #FFFBEB; --mmc-warning: #F59E0B; --mmc-warning-dark: #92400E;
+      --mmc-error-light:   #FEF2F2; --mmc-error:   #EF4444; --mmc-error-dark:   #991B1B;
+      --mmc-info-light:    #EFF6FF; --mmc-info:    #3B82F6; --mmc-info-dark:    #1E40AF;
+
+      --mmc-bg:           var(--mmc-neutral-50);
+      --mmc-bg-card:      var(--mmc-neutral-0);
+      --mmc-border:       var(--mmc-neutral-200);
+      --mmc-border-strong:var(--mmc-neutral-300);
+      --mmc-text-primary: var(--mmc-neutral-900);
+      --mmc-text-secondary:var(--mmc-neutral-600);
+      --mmc-text-tertiary:var(--mmc-neutral-500);
+
+      --mmc-shadow-sm: 0px 1px 2px 0px rgba(15,26,64,.05);
+      --mmc-shadow-md: 0px 4px 6px -1px rgba(15,26,64,.08),0px 2px 4px -1px rgba(15,26,64,.04);
+      --mmc-shadow-lg: 0px 10px 15px -3px rgba(15,26,64,.08),0px 4px 6px -2px rgba(15,26,64,.04);
+      --mmc-shadow-brand: 0px 4px 14px 0px rgba(249,115,22,.30);
+      --mmc-shadow-focus: 0px 0px 0px 3px rgba(249,115,22,.25);
+
+      --mmc-radius-xs: 2px; --mmc-radius-sm: 4px; --mmc-radius-md: 8px;
+      --mmc-radius-lg: 12px; --mmc-radius-xl: 16px; --mmc-radius-full: 9999px;
+
+      --mmc-font-sans: 'Inter', system-ui, sans-serif;
+      --mmc-font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+      --mmc-sidebar-width: 240px;
+      --mmc-topbar-height: 64px;
+    }
+
+    /* =========================================================================
+       RESET & BASE
+    ========================================================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: var(--mmc-font-sans);
+      font-size: 1rem;
+      color: var(--mmc-text-primary);
+      background: var(--mmc-bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--mmc-neutral-100); }
+    ::-webkit-scrollbar-thumb { background: var(--mmc-neutral-300); border-radius: 9999px; }
+
+    /* =========================================================================
+       LAYOUT DA PREVIEW
+    ========================================================================= */
+    .preview-layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar de navegação da preview */
+    .preview-nav {
+      width: 220px;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      background: var(--mmc-navy-950);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      z-index: 50;
+      overflow-y: auto;
+    }
+    .preview-nav__logo {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      margin-bottom: 16px;
+    }
+    .preview-nav__logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .preview-nav__logo-icon {
+      width: 36px; height: 36px;
+      background: var(--mmc-orange-500);
+      border-radius: var(--mmc-radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      color: white;
+      font-size: 14px;
+      letter-spacing: -1px;
+    }
+    .preview-nav__logo-text {
+      display: flex; flex-direction: column;
+    }
+    .preview-nav__logo-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: white;
+      line-height: 1.2;
+    }
+    .preview-nav__logo-sub {
+      font-size: 10px;
+      color: rgba(255,255,255,.45);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .preview-nav__section {
+      padding: 0 12px;
+      margin-bottom: 4px;
+    }
+    .preview-nav__section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.35);
+      padding: 8px 8px 4px;
+    }
+    .preview-nav__link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--mmc-radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,.65);
+      text-decoration: none;
+      transition: all 150ms;
+      margin-bottom: 2px;
+    }
+    .preview-nav__link:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.9); }
+    .preview-nav__link.active { background: rgba(249,115,22,.15); color: var(--mmc-orange-400); }
+    .preview-nav__dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: currentColor; opacity: .6; flex-shrink: 0;
+    }
+
+    /* Conteúdo principal */
+    .preview-content {
+      margin-left: 220px;
+      flex: 1;
+      padding: 48px 56px;
+      max-width: 1100px;
+    }
+
+    /* =========================================================================
+       SECTION LAYOUT
+    ========================================================================= */
+    .ds-section {
+      margin-bottom: 72px;
+      scroll-margin-top: 32px;
+    }
+    .ds-section__header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .ds-section__title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--mmc-text-primary);
+    }
+    .ds-section__tag {
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mmc-font-mono);
+      color: var(--mmc-orange-600);
+      background: var(--mmc-orange-50);
+      padding: 2px 8px;
+      border-radius: var(--mmc-radius-full);
+      border: 1px solid var(--mmc-orange-100);
+    }
+    .ds-section__desc {
+      font-size: 14px;
+      color: var(--mmc-text-secondary);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .ds-divider {
+      border: none;
+      border-top: 1px solid var(--mmc-border);
+      margin-bottom: 72px;
+    }
+
+    /* =========================================================================
+       PAGE HEADER
+    ========================================================================= */
+    .page-header {
+      margin-bottom: 64px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--mmc-border);
+    }
+    .page-header__eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--mmc-orange-500);
+      margin-bottom: 12px;
+    }
+    .page-header__title {
+      font-size: 40px;
+      font-weight: 800;
+      color: var(--mmc-text-primary);
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .page-header__title span { color: var(--mmc-orange-500); }
+    .page-header__sub {
+      font-size: 16px;
+      color: var(--mmc-text-secondary);
+      line-height: 1.6;
+      max-width: 540px;
+    }
+    .page-header__meta {
+      margin-top: 20px;
+      display: flex;
+      gap: 24px;
+    }
+    .page-header__meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .page-header__meta-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--mmc-text-tertiary);
+    }
+    .page-header__meta-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--mmc-text-primary);
+      font-family: var(--mmc-font-mono);
+    }
+
+    /* =========================================================================
+       CORES
+    ========================================================================= */
+    .color-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .color-row { display: flex; flex-direction: column; gap: 8px; }
+    .color-row__label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--mmc-text-tertiary);
+    }
+    .color-swatches {
+      display: grid;
+      grid-template-columns: repeat(11, 1fr);
+      gap: 6px;
+    }
+    .color-swatch {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .color-swatch__block {
+      height: 56px;
+      border-radius: var(--mmc-radius-md);
+      border: 1px solid rgba(0,0,0,.06);
+      transition: transform 150ms, box-shadow 150ms;
+      cursor: default;
+    }
+    .color-swatch__block:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--mmc-shadow-md);
+    }
+    .color-swatch__step {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--mmc-text-tertiary);
+      text-align: center;
+      font-family: var(--mmc-font-mono);
+    }
+
+    /* Semânticas */
+    .semantic-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .semantic-card {
+      border-radius: var(--mmc-radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--mmc-border);
+    }
+    .semantic-card__bar { height: 8px; }
+    .semantic-card__body { padding: 16px; }
+    .semantic-card__name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--mmc-text-primary);
+      margin-bottom: 4px;
+    }
+    .semantic-card__hex {
+      font-size: 11px;
+      font-family: var(--mmc-font-mono);
+      color: var(--mmc-text-tertiary);
+    }
+    .semantic-card__swatches {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .semantic-card__swatch {
+      flex: 1;
+      height: 28px;
+      border-radius: var(--mmc-radius-sm);
+      border: 1px solid rgba(0,0,0,.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      font-family: var(--mmc-font-mono);
+      color: rgba(0,0,0,.35);
+    }
+
+    /* =========================================================================
+       TIPOGRAFIA
+    ========================================================================= */
+    .type-sample {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 16px 24px;
+      align-items: baseline;
+    }
+    .type-sample__meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-top: 4px;
+    }
+    .type-sample__name {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--mmc-font-mono);
+      color: var(--mmc-orange-600);
+    }
+    .type-sample__detail {
+      font-size: 11px;
+      color: var(--mmc-text-tertiary);
+      font-family: var(--mmc-font-mono);
+    }
+    .type-sample__divider {
+      grid-column: 1 / -1;
+      height: 1px;
+      background: var(--mmc-border);
+    }
+    .type-display-lg  { font-size: 48px;  font-weight: 800; letter-spacing: -2px; line-height: 1.1; }
+    .type-display-md  { font-size: 36px;  font-weight: 800; letter-spacing: -1.5px; line-height: 1.1; }
+    .type-display-sm  { font-size: 30px;  font-weight: 700; letter-spacing: -1px; line-height: 1.2; }
+    .type-h1          { font-size: 24px;  font-weight: 700; }
+    .type-h2          { font-size: 20px;  font-weight: 600; }
+    .type-h3          { font-size: 18px;  font-weight: 600; }
+    .type-h4          { font-size: 16px;  font-weight: 600; }
+    .type-body-lg     { font-size: 18px;  font-weight: 400; line-height: 1.625; color: var(--mmc-text-secondary); }
+    .type-body-md     { font-size: 16px;  font-weight: 400; line-height: 1.5; color: var(--mmc-text-secondary); }
+    .type-body-sm     { font-size: 14px;  font-weight: 400; line-height: 1.5; color: var(--mmc-text-secondary); }
+    .type-label       { font-size: 14px;  font-weight: 500; letter-spacing: .02em; }
+    .type-caption     { font-size: 12px;  font-weight: 400; color: var(--mmc-text-tertiary); }
+    .type-numeric-lg  { font-family: var(--mmc-font-mono); font-size: 24px; font-weight: 700; letter-spacing: -1px; }
+    .type-numeric-md  { font-family: var(--mmc-font-mono); font-size: 18px; font-weight: 600; }
+    .type-numeric-sm  { font-family: var(--mmc-font-mono); font-size: 14px; font-weight: 500; }
+
+    /* =========================================================================
+       ESPAÇAMENTO
+    ========================================================================= */
+    .spacing-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .spacing-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .spacing-row__label {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--mmc-font-mono);
+      color: var(--mmc-orange-600);
+      width: 60px;
+      flex-shrink: 0;
+    }
+    .spacing-row__bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .spacing-row__bar {
+      height: 20px;
+      background: linear-gradient(90deg, var(--mmc-orange-400), var(--mmc-orange-300));
+      border-radius: var(--mmc-radius-sm);
+      opacity: .85;
+      flex-shrink: 0;
+    }
+    .spacing-row__px {
+      font-size: 11px;
+      font-family: var(--mmc-font-mono);
+      color: var(--mmc-text-tertiary);
+    }
+
+    /* =========================================================================
+       SOMBRAS
+    ========================================================================= */
+    .shadow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .shadow-card {
+      background: var(--mmc-bg-card);
+      border-radius: var(--mmc-radius-xl);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid var(--mmc-border);
+    }
+    .shadow-card--sm    { box-shadow: 0px 1px 2px 0px rgba(15,26,64,.05); }
+    .shadow-card--md    { box-shadow: 0px 4px 6px -1px rgba(15,26,64,.08),0px 2px 4px -1px rgba(15,26,64,.04); }
+    .shadow-card--lg    { box-shadow: 0px 10px 15px -3px rgba(15,26,64,.08),0px 4px 6px -2px rgba(15,26,64,.04); }
+    .shadow-card--xl    { box-shadow: 0px 20px 25px -5px rgba(15,26,64,.10),0px 10px 10px -5px rgba(15,26,64,.04); }
+    .shadow-card--brand { box-shadow: 0px 4px 14px 0px rgba(249,115,22,.30); border-color: var(--mmc-orange-200); }
+    .shadow-card__name  { font-size: 13px; font-weight: 700; color: var(--mmc-text-primary); }
+    .shadow-card__token {
+      font-size: 11px;
+      font-family: var(--mmc-font-mono);
+      color: var(--mmc-orange-600);
+      background: var(--mmc-orange-50);
+      padding: 4px 8px;
+      border-radius: var(--mmc-radius-sm);
+      width: fit-content;
+    }
+
+    /* =========================================================================
+       BORDER RADIUS
+    ========================================================================= */
+    .radius-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .radius-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .radius-item__block {
+      background: var(--mmc-navy-900);
+      opacity: .85;
+    }
+    .radius-item__label {
+      font-size: 11px;
+      font-family: var(--mmc-font-mono);
+      color: var(--mmc-text-secondary);
+      text-align: center;
+    }
+    .radius-item__value {
+      font-size: 10px;
+      color: var(--mmc-orange-500);
+      font-family: var(--mmc-font-mono);
+      text-align: center;
+    }
+
+    /* =========================================================================
+       BOTÕES
+    ========================================================================= */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--mmc-font-sans);
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: all 150ms ease;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn:focus-visible { outline: none; box-shadow: var(--mmc-shadow-focus); }
+
+    /* Tamanhos */
+    .btn--sm  { height: 32px; padding: 0 14px; font-size: 13px; border-radius: var(--mmc-radius-sm); }
+    .btn--md  { height: 40px; padding: 0 20px; border-radius: var(--mmc-radius-md); }
+    .btn--lg  { height: 48px; padding: 0 28px; font-size: 15px; border-radius: var(--mmc-radius-md); }
+    .btn--xl  { height: 56px; padding: 0 36px; font-size: 16px; border-radius: var(--mmc-radius-lg); }
+
+    /* Variantes */
+    .btn--primary {
+      background: var(--mmc-orange-500);
+      color: white;
+    }
+    .btn--primary:hover {
+      background: var(--mmc-orange-600);
+      box-shadow: var(--mmc-shadow-brand);
+    }
+
+    .btn--secondary {
+      background: var(--mmc-navy-900);
+      color: white;
+    }
+    .btn--secondary:hover { background: var(--mmc-navy-950); box-shadow: var(--mmc-shadow-md); }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--mmc-text-primary);
+      border: 1px solid var(--mmc-border);
+    }
+    .btn--ghost:hover { background: var(--mmc-neutral-100); border-color: var(--mmc-border-strong); }
+
+    .btn--danger {
+      background: var(--mmc-error);
+      color: white;
+    }
+    .btn--danger:hover { background: var(--mmc-error-dark); }
+
+    .btn--disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+
+    .btn-icon { font-size: 16px; line-height: 1; }
+
+    /* =========================================================================
+       INPUTS
+    ========================================================================= */
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--mmc-text-primary);
+    }
+    .form-hint {
+      font-size: 12px;
+      color: var(--mmc-text-tertiary);
+      margin-top: 4px;
+    }
+    .form-error-msg {
+      font-size: 12px;
+      color: var(--mmc-error);
+      margin-top: 4px;
+    }
+    .input {
+      width: 100%;
+      font-family: var(--mmc-font-sans);
+      font-size: 14px;
+      color: var(--mmc-text-primary);
+      background: var(--mmc-bg-card);
+      border: 1px solid var(--mmc-border);
+      outline: none;
+      transition: border-color 150ms, box-shadow 150ms;
+    }
+    .input::placeholder { color: var(--mmc-text-tertiary); }
+    .input:hover { border-color: var(--mmc-border-strong); }
+    .input:focus { border-color: var(--mmc-orange-400); box-shadow: var(--mmc-shadow-focus); }
+    .input--md { height: 40px; padding: 0 12px; border-radius: var(--mmc-radius-md); }
+    .input--sm { height: 32px; padding: 0 10px; font-size: 13px; border-radius: var(--mmc-radius-sm); }
+    .input--lg { height: 48px; padding: 0 16px; font-size: 15px; border-radius: var(--mmc-radius-md); }
+    .input--error { border-color: var(--mmc-error) !important; }
+    .input--error:focus { box-shadow: 0 0 0 3px rgba(239,68,68,.20) !important; }
+    .input--disabled { background: var(--mmc-neutral-100); color: var(--mmc-text-disabled); cursor: not-allowed; }
+    .input-icon-wrap { position: relative; }
+    .input-icon-wrap .input { padding-left: 40px; }
+    .input-icon-wrap .icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--mmc-text-tertiary);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    /* =========================================================================
+       BADGES DE STATUS
+    ========================================================================= */
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--mmc-radius-full);
+      border: 1px solid;
+    }
+    .badge__dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .badge--pending { background:#FFFBEB; color:#92400E; border-color:#FDE68A; }
+    .badge--pending .badge__dot { background: var(--mmc-warning); }
+    .badge--paid    { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
+    .badge--paid .badge__dot    { background: var(--mmc-success); }
+    .badge--refused { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
+    .badge--refused .badge__dot { background: var(--mmc-error); }
+
+    /* Badge genérico */
+    .badge--info    { background:var(--mmc-info-light); color:var(--mmc-info-dark); border-color:#BFDBFE; }
+    .badge--warning { background:var(--mmc-warning-light); color:var(--mmc-warning-dark); border-color:#FDE68A; }
+    .badge--success { background:var(--mmc-success-light); color:var(--mmc-success-dark); border-color:#A7F3D0; }
+    .badge--error   { background:var(--mmc-error-light); color:var(--mmc-error-dark); border-color:#FECACA; }
+    .badge--neutral { background:var(--mmc-neutral-100); color:var(--mmc-neutral-700); border-color:var(--mmc-neutral-200); }
+
+    /* =========================================================================
+       CARDS
+    ========================================================================= */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--mmc-bg-card);
+      border: 1px solid var(--mmc-border);
+      border-radius: var(--mmc-radius-lg);
+      box-shadow: var(--mmc-shadow-sm);
+      padding: 24px;
+      transition: box-shadow 200ms, transform 200ms;
+    }
+    .card:hover { box-shadow: var(--mmc-shadow-md); transform: translateY(-2px); }
+    .card--selected {
+      border-color: var(--mmc-orange-300);
+      box-shadow: var(--mmc-shadow-brand);
+    }
+    .card__label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--mmc-text-tertiary);
+      margin-bottom: 8px;
+    }
+    .card__value {
+      font-family: var(--mmc-font-mono);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--mmc-text-primary);
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+    .card__meta {
+      font-size: 12px;
+      color: var(--mmc-text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .card__trend { font-weight: 700; }
+    .card__trend--up   { color: var(--mmc-success); }
+    .card__trend--down { color: var(--mmc-error); }
+    .card__icon {
+      width: 40px; height: 40px;
+      border-radius: var(--mmc-radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+    .card__icon--orange { background: var(--mmc-orange-50); color: var(--mmc-orange-500); }
+    .card__icon--green  { background: var(--mmc-success-light); color: var(--mmc-success); }
+    .card__icon--red    { background: var(--mmc-error-light); color: var(--mmc-error); }
+    .card__icon--navy   { background: var(--mmc-navy-50); color: var(--mmc-navy-600); }
+
+    /* =========================================================================
+       TABELA (Payment list preview)
+    ========================================================================= */
+    .table-card {
+      background: var(--mmc-bg-card);
+      border: 1px solid var(--mmc-border);
+      border-radius: var(--mmc-radius-xl);
+      box-shadow: var(--mmc-shadow-sm);
+      overflow: hidden;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--mmc-border);
+    }
+    .table-header__title { font-size: 15px; font-weight: 700; color: var(--mmc-text-primary); }
+    .table-header__actions { display: flex; gap: 8px; }
+    .table-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 12px;
+      background: var(--mmc-neutral-50);
+      border: 1px solid var(--mmc-border);
+      border-radius: var(--mmc-radius-md);
+      font-size: 13px;
+      color: var(--mmc-text-tertiary);
+      font-family: var(--mmc-font-sans);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    thead tr {
+      background: var(--mmc-neutral-50);
+    }
+    th {
+      padding: 10px 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--mmc-text-tertiary);
+      text-align: left;
+      border-bottom: 1px solid var(--mmc-border);
+    }
+    td {
+      padding: 14px 20px;
+      font-size: 13px;
+      color: var(--mmc-text-primary);
+      border-bottom: 1px solid var(--mmc-divider, #F1F3F5);
+    }
+    tr:last-child td { border-bottom: none; }
+    tbody tr { transition: background 100ms; }
+    tbody tr:hover { background: var(--mmc-neutral-50); }
+    tbody tr.selected { background: var(--mmc-orange-50); }
+    .td-mono {
+      font-family: var(--mmc-font-mono);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .td-secondary { color: var(--mmc-text-secondary); }
+    .td-name { font-weight: 600; color: var(--mmc-text-primary); }
+
+    /* =========================================================================
+       MINI DASHBOARD (Painel completo de preview)
+    ========================================================================= */
+    .dashboard-preview {
+      background: var(--mmc-neutral-50);
+      border: 1px solid var(--mmc-border);
+      border-radius: var(--mmc-radius-xl);
+      overflow: hidden;
+      box-shadow: var(--mmc-shadow-lg);
+    }
+    .dashboard-preview__inner {
+      display: flex;
+      height: 560px;
+    }
+
+    /* Sidebar mini */
+    .dash-sidebar {
+      width: 200px;
+      flex-shrink: 0;
+      background: var(--mmc-navy-950);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+    }
+    .dash-sidebar__logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      margin-bottom: 12px;
+    }
+    .dash-sidebar__logo-icon {
+      width: 28px; height: 28px;
+      background: var(--mmc-orange-500);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 11px; color: white; letter-spacing: -1px;
+    }
+    .dash-sidebar__logo-text {
+      font-size: 12px; font-weight: 700; color: white;
+    }
+    .dash-sidebar__section {
+      padding: 0 10px;
+    }
+    .dash-sidebar__section-label {
+      font-size: 9px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .08em; color: rgba(255,255,255,.3);
+      padding: 6px 6px 3px;
+    }
+    .dash-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,.55);
+      margin-bottom: 2px;
+      transition: all 150ms;
+      cursor: default;
+    }
+    .dash-nav-item:hover { background: rgba(255,255,255,.06); color: rgba(255,255,255,.85); }
+    .dash-nav-item.active {
+      background: rgba(249,115,22,.15);
+      color: var(--mmc-orange-400);
+    }
+    .dash-nav-icon { font-size: 14px; line-height: 1; }
+
+    /* Main mini */
+    .dash-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .dash-topbar {
+      height: 52px;
+      background: var(--mmc-bg-card);
+      border-bottom: 1px solid var(--mmc-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    .dash-topbar__breadcrumb {
+      font-size: 12px;
+      color: var(--mmc-text-tertiary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .dash-topbar__breadcrumb span { color: var(--mmc-text-primary); font-weight: 600; }
+    .dash-topbar__actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .dash-topbar__search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      height: 30px;
+      padding: 0 10px;
+      background: var(--mmc-neutral-50);
+      border: 1px solid var(--mmc-border);
+      border-radius: var(--mmc-radius-md);
+      font-size: 11px;
+      color: var(--mmc-text-tertiary);
+    }
+    .dash-avatar {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--mmc-orange-400), var(--mmc-navy-600));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: white;
+    }
+    .dash-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+    }
+    .dash-page-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--mmc-text-primary);
+      margin-bottom: 14px;
+      letter-spacing: -0.5px;
+    }
+    .dash-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .dash-kpi {
+      background: var(--mmc-bg-card);
+      border: 1px solid var(--mmc-border);
+      border-radius: var(--mmc-radius-lg);
+      padding: 14px;
+      box-shadow: var(--mmc-shadow-sm);
+    }
+    .dash-kpi__label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--mmc-text-tertiary);
+      margin-bottom: 6px;
+    }
+    .dash-kpi__value {
+      font-family: var(--mmc-font-mono);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--mmc-text-primary);
+      letter-spacing: -0.5px;
+    }
+    .dash-kpi__trend {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--mmc-success);
+      margin-top: 4px;
+    }
+    .dash-table-card {
+      background: var(--mmc-bg-card);
+      border: 1px solid var(--mmc-border);
+      border-radius: var(--mmc-radius-lg);
+      overflow: hidden;
+      box-shadow: var(--mmc-shadow-sm);
+    }
+    .dash-table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--mmc-border);
+    }
+    .dash-table-title { font-size: 12px; font-weight: 700; color: var(--mmc-text-primary); }
+    .dash-table-btn {
+      display: flex; align-items: center; gap: 4px;
+      height: 26px; padding: 0 10px;
+      background: var(--mmc-orange-500);
+      color: white;
+      border: none; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+      cursor: default;
+    }
+    .dash-mini-table { width: 100%; border-collapse: collapse; }
+    .dash-mini-table th {
+      padding: 7px 14px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--mmc-text-tertiary);
+      background: var(--mmc-neutral-50);
+      border-bottom: 1px solid var(--mmc-border);
+      text-align: left;
+    }
+    .dash-mini-table td {
+      padding: 9px 14px;
+      font-size: 11px;
+      color: var(--mmc-text-primary);
+      border-bottom: 1px solid #F1F3F5;
+    }
+    .dash-mini-table tr:last-child td { border-bottom: none; }
+    .dash-mini-table tbody tr:hover { background: var(--mmc-neutral-50); }
+    .dash-mini-table tbody tr.selected { background: var(--mmc-orange-50); }
+
+    /* =========================================================================
+       UTILITÁRIOS DA PREVIEW
+    ========================================================================= */
+    code {
+      font-family: var(--mmc-font-mono);
+      font-size: 12px;
+      background: var(--mmc-neutral-100);
+      color: var(--mmc-orange-700);
+      padding: 2px 6px;
+      border-radius: var(--mmc-radius-sm);
+    }
+
+    /* =========================================================================
+       DARK MODE — variáveis sobrescritas quando [data-theme="dark"]
+    ========================================================================= */
+    [data-theme="dark"] {
+      /* Superfícies */
+      --mmc-bg:            #0C1322;
+      --mmc-bg-card:       #111E35;
+      --mmc-bg-card-hover: #172542;
+      --mmc-overlay:       rgba(0, 0, 0, 0.65);
+
+      /* Sidebar */
+      --mmc-sidebar-bg:     #070E1D;
+      --mmc-sidebar-active: #0F1A3A;
+      --mmc-sidebar-hover:  rgba(255, 255, 255, 0.05);
+
+      /* Bordas */
+      --mmc-border:        rgba(255, 255, 255, 0.09);
+      --mmc-border-strong: rgba(255, 255, 255, 0.16);
+      --mmc-divider:       rgba(255, 255, 255, 0.05);
+
+      /* Texto */
+      --mmc-text-primary:       rgba(255, 255, 255, 0.90);
+      --mmc-text-secondary:     rgba(255, 255, 255, 0.55);
+      --mmc-text-tertiary:      rgba(255, 255, 255, 0.35);
+      --mmc-text-disabled:      rgba(255, 255, 255, 0.22);
+      --mmc-text-inverse:       #0C1322;
+      --mmc-text-link:          var(--mmc-orange-400);
+      --mmc-text-link-hover:    var(--mmc-orange-300);
+
+      /* Ações — laranja um tom mais claro para contraste no dark */
+      --mmc-action-primary:        var(--mmc-orange-400);
+      --mmc-action-primary-hover:  var(--mmc-orange-500);
+      --mmc-action-primary-active: var(--mmc-orange-600);
+      --mmc-action-secondary:      var(--mmc-navy-700);
+      --mmc-action-secondary-hover:var(--mmc-navy-600);
+      --mmc-action-danger:         #F87171;
+      --mmc-action-danger-hover:   #EF4444;
+
+      /* Semânticas — mais luminosas para dark */
+      --mmc-success-light: rgba(52, 211, 153, 0.12);
+      --mmc-success:       #34D399;
+      --mmc-success-dark:  #A7F3D0;
+      --mmc-warning-light: rgba(251, 191, 36, 0.12);
+      --mmc-warning:       #FBBF24;
+      --mmc-warning-dark:  #FDE68A;
+      --mmc-error-light:   rgba(248, 113, 113, 0.12);
+      --mmc-error:         #F87171;
+      --mmc-error-dark:    #FECACA;
+      --mmc-info-light:    rgba(96, 165, 250, 0.12);
+      --mmc-info:          #60A5FA;
+      --mmc-info-dark:     #BFDBFE;
+
+      /* Status de pagamento — dark */
+      --mmc-status-pending-bg:     rgba(251, 191, 36, 0.12);
+      --mmc-status-pending-text:   #FBBF24;
+      --mmc-status-pending-border: rgba(251, 191, 36, 0.28);
+      --mmc-status-pending-dot:    #FBBF24;
+
+      --mmc-status-paid-bg:        rgba(52, 211, 153, 0.12);
+      --mmc-status-paid-text:      #34D399;
+      --mmc-status-paid-border:    rgba(52, 211, 153, 0.28);
+      --mmc-status-paid-dot:       #34D399;
+
+      --mmc-status-refused-bg:     rgba(248, 113, 113, 0.12);
+      --mmc-status-refused-text:   #F87171;
+      --mmc-status-refused-border: rgba(248, 113, 113, 0.28);
+      --mmc-status-refused-dot:    #F87171;
+
+      /* Sombras — mais profundas no dark */
+      --mmc-shadow-sm:    0px 1px 3px 0px rgba(0, 0, 0, 0.35);
+      --mmc-shadow-md:    0px 4px 8px -1px rgba(0, 0, 0, 0.40), 0px 2px 4px -1px rgba(0, 0, 0, 0.25);
+      --mmc-shadow-lg:    0px 10px 20px -3px rgba(0, 0, 0, 0.45), 0px 4px 8px -2px rgba(0, 0, 0, 0.25);
+      --mmc-shadow-xl:    0px 20px 30px -5px rgba(0, 0, 0, 0.50), 0px 10px 12px -5px rgba(0, 0, 0, 0.25);
+      --mmc-shadow-brand: 0px 4px 18px 0px rgba(249, 115, 22, 0.45);
+      --mmc-shadow-focus: 0px 0px 0px 3px rgba(249, 115, 22, 0.38);
+    }
+
+    /* -------------------------------------------------------------------------
+       Dark mode — overrides pontuais de componentes
+    ------------------------------------------------------------------------- */
+
+    /* Body */
+    [data-theme="dark"] body { background: var(--mmc-bg); color: var(--mmc-text-primary); }
+
+    /* código inline */
+    [data-theme="dark"] code {
+      background: rgba(255, 255, 255, 0.07);
+      color: var(--mmc-orange-300);
+    }
+
+    /* Page header divider */
+    [data-theme="dark"] .page-header { border-bottom-color: var(--mmc-border); }
+
+    /* Divider */
+    [data-theme="dark"] .ds-divider { border-top-color: var(--mmc-border); }
+
+    /* Section tag */
+    [data-theme="dark"] .ds-section__tag {
+      background: rgba(249, 115, 22, 0.12);
+      border-color: rgba(249, 115, 22, 0.22);
+      color: var(--mmc-orange-300);
+    }
+
+    /* Cabeçalho de metadados */
+    [data-theme="dark"] .page-header__meta-value { color: rgba(255,255,255,.87); }
+
+    /* Swatches — borda visível no dark */
+    [data-theme="dark"] .color-swatch__block { border-color: rgba(255,255,255,0.08) !important; }
+
+    /* Semantic cards */
+    [data-theme="dark"] .semantic-card {
+      background: var(--mmc-bg-card);
+      border-color: var(--mmc-border);
+    }
+    [data-theme="dark"] .semantic-card__name { color: var(--mmc-text-primary); }
+    [data-theme="dark"] .semantic-card__hex  { color: var(--mmc-text-tertiary); }
+
+    /* Sombras — cards de exemplo */
+    [data-theme="dark"] .shadow-card {
+      background: var(--mmc-bg-card);
+      border-color: var(--mmc-border);
+    }
+    [data-theme="dark"] .shadow-card--sm  { box-shadow: 0px 1px 3px rgba(0,0,0,.35); }
+    [data-theme="dark"] .shadow-card--md  { box-shadow: 0px 4px 8px -1px rgba(0,0,0,.40); }
+    [data-theme="dark"] .shadow-card--lg  { box-shadow: 0px 10px 20px -3px rgba(0,0,0,.45); }
+    [data-theme="dark"] .shadow-card--xl  { box-shadow: 0px 20px 30px -5px rgba(0,0,0,.50); }
+    [data-theme="dark"] .shadow-card--brand { box-shadow: 0px 4px 18px rgba(249,115,22,.45); border-color: rgba(249,115,22,.2); }
+    [data-theme="dark"] .shadow-card__token { background: rgba(249,115,22,.12); }
+
+    /* Radius blocks */
+    [data-theme="dark"] .radius-item__block { background: var(--mmc-navy-800); }
+    [data-theme="dark"] .radius-item__label { color: var(--mmc-text-secondary); }
+
+    /* Spacing bars */
+    [data-theme="dark"] .spacing-row__label { color: var(--mmc-orange-300); }
+
+    /* Type sample */
+    [data-theme="dark"] .type-sample__divider { background: var(--mmc-border); }
+    [data-theme="dark"] .type-sample__name    { color: var(--mmc-orange-300); }
+    [data-theme="dark"] .type-sample__detail  { color: var(--mmc-text-tertiary); }
+
+    /* Botões */
+    [data-theme="dark"] .btn--ghost {
+      border-color: var(--mmc-border);
+      color: var(--mmc-text-primary);
+    }
+    [data-theme="dark"] .btn--ghost:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--mmc-border-strong);
+    }
+    [data-theme="dark"] .btn--secondary { background: var(--mmc-navy-700); }
+    [data-theme="dark"] .btn--secondary:hover { background: var(--mmc-navy-600); }
+
+    /* Inputs */
+    [data-theme="dark"] .input {
+      background: var(--mmc-bg-card-hover);
+      border-color: var(--mmc-border);
+      color: var(--mmc-text-primary);
+    }
+    [data-theme="dark"] .input::placeholder { color: var(--mmc-text-tertiary); }
+    [data-theme="dark"] .input:hover        { border-color: var(--mmc-border-strong); }
+    [data-theme="dark"] .input:focus        { border-color: var(--mmc-orange-400); box-shadow: var(--mmc-shadow-focus); }
+    [data-theme="dark"] .input--disabled    { background: rgba(255,255,255,0.04); color: var(--mmc-text-disabled); }
+    [data-theme="dark"] .input--error       { border-color: var(--mmc-error); }
+
+    /* Cards KPI */
+    [data-theme="dark"] .card {
+      background: var(--mmc-bg-card);
+      border-color: var(--mmc-border);
+    }
+    [data-theme="dark"] .card--selected {
+      border-color: rgba(249,115,22,.35);
+      box-shadow: var(--mmc-shadow-brand);
+    }
+    [data-theme="dark"] .card__icon--orange { background: rgba(249,115,22,.14); }
+    [data-theme="dark"] .card__icon--green  { background: rgba(52,211,153,.14); }
+    [data-theme="dark"] .card__icon--red    { background: rgba(248,113,113,.14); }
+    [data-theme="dark"] .card__icon--navy   { background: rgba(129,140,248,.10); color: var(--mmc-navy-300); }
+    [data-theme="dark"] .card__label        { color: var(--mmc-text-tertiary); }
+    [data-theme="dark"] .card__meta         { color: var(--mmc-text-tertiary); }
+
+    /* Tabela de pagamentos */
+    [data-theme="dark"] .table-card {
+      background: var(--mmc-bg-card);
+      border-color: var(--mmc-border);
+    }
+    [data-theme="dark"] .table-header { border-bottom-color: var(--mmc-border); }
+    [data-theme="dark"] .table-search {
+      background: var(--mmc-bg-card-hover);
+      border-color: var(--mmc-border);
+      color: var(--mmc-text-tertiary);
+    }
+    [data-theme="dark"] thead tr { background: var(--mmc-bg-card-hover); }
+    [data-theme="dark"] th        { border-bottom-color: var(--mmc-border); }
+    [data-theme="dark"] td        { border-bottom-color: rgba(255,255,255,.05); }
+    [data-theme="dark"] tbody tr:hover   { background: var(--mmc-bg-card-hover); }
+    [data-theme="dark"] tbody tr.selected { background: rgba(249,115,22,.08); }
+
+    /* Dashboard preview */
+    [data-theme="dark"] .dashboard-preview {
+      border-color: var(--mmc-border);
+    }
+    [data-theme="dark"] .dashboard-preview__inner { background: var(--mmc-bg); }
+    [data-theme="dark"] .dash-sidebar { background: var(--mmc-sidebar-bg); }
+    [data-theme="dark"] .dash-topbar  { background: var(--mmc-bg-card); border-bottom-color: var(--mmc-border); }
+    [data-theme="dark"] .dash-content { background: var(--mmc-bg); }
+    [data-theme="dark"] .dash-topbar__search {
+      background: var(--mmc-bg-card-hover);
+      border-color: var(--mmc-border);
+    }
+    [data-theme="dark"] .dash-kpi        { background: var(--mmc-bg-card); border-color: var(--mmc-border); }
+    [data-theme="dark"] .dash-table-card { background: var(--mmc-bg-card); border-color: var(--mmc-border); }
+    [data-theme="dark"] .dash-table-header { border-bottom-color: var(--mmc-border); }
+    [data-theme="dark"] .dash-mini-table th {
+      background: var(--mmc-bg-card-hover);
+      border-bottom-color: var(--mmc-border);
+    }
+    [data-theme="dark"] .dash-mini-table td    { border-bottom-color: rgba(255,255,255,.05); }
+    [data-theme="dark"] .dash-mini-table tbody tr:hover   { background: var(--mmc-bg-card-hover); }
+    [data-theme="dark"] .dash-mini-table tbody tr.selected { background: rgba(249,115,22,.09); }
+    [data-theme="dark"] .dash-page-title { color: var(--mmc-text-primary); }
+    [data-theme="dark"] .dash-kpi__label { color: var(--mmc-text-tertiary); }
+    [data-theme="dark"] .dash-kpi__trend { color: var(--mmc-text-tertiary); }
+    [data-theme="dark"] .dash-kpi__trend--up { color: var(--mmc-success); }
+
+    /* -------------------------------------------------------------------------
+       Toggle de tema
+    ------------------------------------------------------------------------- */
+    .theme-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 999;
+      width: 48px;
+      height: 48px;
+      border-radius: var(--mmc-radius-full);
+      border: 1px solid var(--mmc-border);
+      background: var(--mmc-bg-card);
+      color: var(--mmc-text-primary);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--mmc-shadow-lg);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+      line-height: 1;
+    }
+    .theme-toggle:hover {
+      transform: scale(1.10);
+      box-shadow: var(--mmc-shadow-xl);
+    }
+    .theme-toggle:active { transform: scale(0.95); }
+  </style>
+</head>
+<body>
+
+<!-- Botão de alternância de tema -->
+<button class="theme-toggle" id="themeToggle" title="Alternar dark/light mode" aria-label="Alternar tema"></button>
+
+<div class="preview-layout">
+
+  <!-- ========== SIDEBAR DE NAVEGAÇÃO DA PREVIEW ========== -->
+  <nav class="preview-nav">
+    <div class="preview-nav__logo">
+      <div class="preview-nav__logo-mark">
+        <div class="preview-nav__logo-icon">MM</div>
+        <div class="preview-nav__logo-text">
+          <span class="preview-nav__logo-name">MM Fature</span>
+          <span class="preview-nav__logo-sub">Design System</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-nav__section">
+      <div class="preview-nav__section-label">Fundação</div>
+      <a class="preview-nav__link active" href="#cores">
+        <span class="preview-nav__dot"></span> Cores
+      </a>
+      <a class="preview-nav__link" href="#tipografia">
+        <span class="preview-nav__dot"></span> Tipografia
+      </a>
+      <a class="preview-nav__link" href="#espacamento">
+        <span class="preview-nav__dot"></span> Espaçamento
+      </a>
+      <a class="preview-nav__link" href="#sombras">
+        <span class="preview-nav__dot"></span> Sombras
+      </a>
+      <a class="preview-nav__link" href="#radii">
+        <span class="preview-nav__dot"></span> Border Radius
+      </a>
+    </div>
+
+    <div class="preview-nav__section" style="margin-top:12px">
+      <div class="preview-nav__section-label">Componentes</div>
+      <a class="preview-nav__link" href="#botoes">
+        <span class="preview-nav__dot"></span> Botões
+      </a>
+      <a class="preview-nav__link" href="#inputs">
+        <span class="preview-nav__dot"></span> Inputs
+      </a>
+      <a class="preview-nav__link" href="#badges">
+        <span class="preview-nav__dot"></span> Badges de Status
+      </a>
+      <a class="preview-nav__link" href="#cards">
+        <span class="preview-nav__dot"></span> Cards
+      </a>
+      <a class="preview-nav__link" href="#tabela">
+        <span class="preview-nav__dot"></span> Tabela
+      </a>
+    </div>
+
+    <div class="preview-nav__section" style="margin-top:12px">
+      <div class="preview-nav__section-label">Composição</div>
+      <a class="preview-nav__link" href="#dashboard">
+        <span class="preview-nav__dot"></span> Dashboard Preview
+      </a>
+    </div>
+  </nav>
+
+  <!-- ========== CONTEÚDO PRINCIPAL ========== -->
+  <main class="preview-content">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-header__eyebrow">MedControl — Design System v1.0</div>
+      <h1 class="page-header__title">MM Fature<br/><span>Visual Identity</span></h1>
+      <p class="page-header__sub">
+        Tokens de design compartilhados entre Web (Angular) e Mobile (React Native/Expo).
+        Baseado no branding MM Fature — laranja vibrante + navy profundo — modernizados para SaaS.
+      </p>
+      <div class="page-header__meta">
+        <div class="page-header__meta-item">
+          <span class="page-header__meta-label">Cor Primária</span>
+          <span class="page-header__meta-value" style="color:var(--mmc-orange-500)">#F97316</span>
+        </div>
+        <div class="page-header__meta-item">
+          <span class="page-header__meta-label">Cor Secundária</span>
+          <span class="page-header__meta-value" style="color:var(--mmc-navy-900)">#1B2E63</span>
+        </div>
+        <div class="page-header__meta-item">
+          <span class="page-header__meta-label">Fonte</span>
+          <span class="page-header__meta-value">Inter + JetBrains Mono</span>
+        </div>
+        <div class="page-header__meta-item">
+          <span class="page-header__meta-label">Grid Base</span>
+          <span class="page-header__meta-value">4px</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================================================================
+         CORES
+    ================================================================ -->
+    <section class="ds-section" id="cores">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Cores</h2>
+        <span class="ds-section__tag">tokens/colors.ts</span>
+      </div>
+      <p class="ds-section__desc">
+        Paleta derivada do logo MM Fature. O laranja <code>#F97316</code> é a cor de ação primária.
+        O navy <code>#1B2E63</code> estrutura superfícies escuras e navegação.
+      </p>
+
+      <div class="color-grid">
+
+        <!-- Orange -->
+        <div class="color-row">
+          <div class="color-row__label">Orange — Primária</div>
+          <div class="color-swatches">
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#FFF4ED" title="#FFF4ED"></div>
+              <div class="color-swatch__step">50</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#FFE6D5" title="#FFE6D5"></div>
+              <div class="color-swatch__step">100</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#FFCBA9" title="#FFCBA9"></div>
+              <div class="color-swatch__step">200</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#FEA472" title="#FEA472"></div>
+              <div class="color-swatch__step">300</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#FD7A38" title="#FD7A38"></div>
+              <div class="color-swatch__step">400</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#F97316;border:2px solid #EA6310;box-shadow:0 0 0 2px #FFF4ED" title="#F97316 ★ Base"></div>
+              <div class="color-swatch__step" style="color:var(--mmc-orange-500);font-weight:700">500 ★</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#EA6310" title="#EA6310"></div>
+              <div class="color-swatch__step">600</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#C24E0D" title="#C24E0D"></div>
+              <div class="color-swatch__step">700</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#9A3F11" title="#9A3F11"></div>
+              <div class="color-swatch__step">800</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#7C3412" title="#7C3412"></div>
+              <div class="color-swatch__step">900</div>
+            </div>
+            <div class="color-swatch">
+              <div class="color-swatch__block" style="background:#431807" title="#431807"></div>
+              <div class="color-swatch__step">950</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navy -->
+        <div class="color-row">
+          <div class="color-row__label">Navy — Secundária</div>
+          <div class="color-swatches">
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#EEF2FF"></div><div class="color-swatch__step">50</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#E0E7FF"></div><div class="color-swatch__step">100</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#C7D2FE"></div><div class="color-swatch__step">200</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#A5B4FC"></div><div class="color-swatch__step">300</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#818CF8"></div><div class="color-swatch__step">400</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#6366F1"></div><div class="color-swatch__step">500</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#4F46E5"></div><div class="color-swatch__step">600</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#3730A3"></div><div class="color-swatch__step">700</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#2D2A8A"></div><div class="color-swatch__step">800</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#1B2E63;border:2px solid #0F1A40;box-shadow:0 0 0 2px #EEF2FF"></div><div class="color-swatch__step" style="color:var(--mmc-navy-900);font-weight:700">900 ★</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#0F1A40"></div><div class="color-swatch__step">950</div></div>
+          </div>
+        </div>
+
+        <!-- Neutral -->
+        <div class="color-row">
+          <div class="color-row__label">Neutral — Escala de UI</div>
+          <div class="color-swatches">
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#FFFFFF;border:1px solid #E9ECEF"></div><div class="color-swatch__step">0</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#F8F9FA"></div><div class="color-swatch__step">50</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#F1F3F5"></div><div class="color-swatch__step">100</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#E9ECEF"></div><div class="color-swatch__step">200</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#DEE2E6"></div><div class="color-swatch__step">300</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#CED4DA"></div><div class="color-swatch__step">400</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#ADB5BD"></div><div class="color-swatch__step">500</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#868E96"></div><div class="color-swatch__step">600</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#495057"></div><div class="color-swatch__step">700</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#343A40"></div><div class="color-swatch__step">800</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#212529"></div><div class="color-swatch__step">900</div></div>
+            <div class="color-swatch"><div class="color-swatch__block" style="background:#0D0F12"></div><div class="color-swatch__step">1000</div></div>
+          </div>
+        </div>
+
+        <!-- Semânticas -->
+        <div class="color-row">
+          <div class="color-row__label">Semânticas</div>
+          <div class="semantic-grid">
+            <div class="semantic-card">
+              <div class="semantic-card__bar" style="background:#10B981"></div>
+              <div class="semantic-card__body">
+                <div class="semantic-card__name">Success</div>
+                <div class="semantic-card__hex">#10B981</div>
+                <div class="semantic-card__swatches">
+                  <div class="semantic-card__swatch" style="background:#ECFDF5;color:#065F46">light</div>
+                  <div class="semantic-card__swatch" style="background:#10B981">·</div>
+                  <div class="semantic-card__swatch" style="background:#065F46;color:white">dark</div>
+                </div>
+              </div>
+            </div>
+            <div class="semantic-card">
+              <div class="semantic-card__bar" style="background:#F59E0B"></div>
+              <div class="semantic-card__body">
+                <div class="semantic-card__name">Warning</div>
+                <div class="semantic-card__hex">#F59E0B</div>
+                <div class="semantic-card__swatches">
+                  <div class="semantic-card__swatch" style="background:#FFFBEB;color:#92400E">light</div>
+                  <div class="semantic-card__swatch" style="background:#F59E0B">·</div>
+                  <div class="semantic-card__swatch" style="background:#92400E;color:white">dark</div>
+                </div>
+              </div>
+            </div>
+            <div class="semantic-card">
+              <div class="semantic-card__bar" style="background:#EF4444"></div>
+              <div class="semantic-card__body">
+                <div class="semantic-card__name">Error</div>
+                <div class="semantic-card__hex">#EF4444</div>
+                <div class="semantic-card__swatches">
+                  <div class="semantic-card__swatch" style="background:#FEF2F2;color:#991B1B">light</div>
+                  <div class="semantic-card__swatch" style="background:#EF4444">·</div>
+                  <div class="semantic-card__swatch" style="background:#991B1B;color:white">dark</div>
+                </div>
+              </div>
+            </div>
+            <div class="semantic-card">
+              <div class="semantic-card__bar" style="background:#3B82F6"></div>
+              <div class="semantic-card__body">
+                <div class="semantic-card__name">Info</div>
+                <div class="semantic-card__hex">#3B82F6</div>
+                <div class="semantic-card__swatches">
+                  <div class="semantic-card__swatch" style="background:#EFF6FF;color:#1E40AF">light</div>
+                  <div class="semantic-card__swatch" style="background:#3B82F6">·</div>
+                  <div class="semantic-card__swatch" style="background:#1E40AF;color:white">dark</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /color-grid -->
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         TIPOGRAFIA
+    ================================================================ -->
+    <section class="ds-section" id="tipografia">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Tipografia</h2>
+        <span class="ds-section__tag">tokens/typography.ts</span>
+      </div>
+      <p class="ds-section__desc">
+        <strong>Inter</strong> para toda a UI (títulos, body, labels).
+        <strong>JetBrains Mono</strong> para valores numéricos e monetários — proporção fixa garante alinhamento em tabelas.
+      </p>
+
+      <div class="type-sample">
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">displayLg</span>
+          <span class="type-sample__detail">48px / 800 / -2px</span>
+        </div>
+        <div class="type-display-lg">R$ 128.540,00</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">displayMd</span>
+          <span class="type-sample__detail">36px / 800 / -1.5px</span>
+        </div>
+        <div class="type-display-md">Pagamentos do Mês</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">displaySm</span>
+          <span class="type-sample__detail">30px / 700 / -1px</span>
+        </div>
+        <div class="type-display-sm">Visão Geral Financeira</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">h1</span>
+          <span class="type-sample__detail">24px / 700</span>
+        </div>
+        <div class="type-h1">Controle de Pagamentos</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">h2</span>
+          <span class="type-sample__detail">20px / 600</span>
+        </div>
+        <div class="type-h2">Registro de Atendimentos</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">h3</span>
+          <span class="type-sample__detail">18px / 600</span>
+        </div>
+        <div class="type-h3">Detalhes do Pagamento</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">bodyLg</span>
+          <span class="type-sample__detail">18px / 400 / 1.625</span>
+        </div>
+        <div class="type-body-lg">O sistema gerencia pagamentos entre convênios e médicos, com rastreamento em tempo real do status de cada procedimento realizado.</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">bodyMd</span>
+          <span class="type-sample__detail">16px / 400 / 1.5</span>
+        </div>
+        <div class="type-body-md">Acompanhe todos os pagamentos pendentes, aprovados e recusados pelos convênios médicos.</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">labelLg</span>
+          <span class="type-sample__detail">14px / 500</span>
+        </div>
+        <div class="type-label">Número do Atendimento</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">caption</span>
+          <span class="type-sample__detail">12px / 400</span>
+        </div>
+        <div class="type-caption">Última atualização: 17 mar 2026, 14h32</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">numericLg</span>
+          <span class="type-sample__detail">JetBrains / 24px / 700</span>
+        </div>
+        <div class="type-numeric-lg">R$ 32.872,99</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">numericMd</span>
+          <span class="type-sample__detail">JetBrains / 18px / 600</span>
+        </div>
+        <div class="type-numeric-md">R$ 1.250,00</div>
+
+        <div class="type-sample__divider"></div>
+
+        <div class="type-sample__meta">
+          <span class="type-sample__name">numericSm</span>
+          <span class="type-sample__detail">JetBrains / 14px / 500</span>
+        </div>
+        <div class="type-numeric-sm">ATD-2931 · 08/03/2025</div>
+
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         ESPAÇAMENTO
+    ================================================================ -->
+    <section class="ds-section" id="espacamento">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Espaçamento</h2>
+        <span class="ds-section__tag">tokens/spacing.ts</span>
+      </div>
+      <p class="ds-section__desc">Grid base de 4px. Todos os valores são múltiplos inteiros ou meios-passos do grid.</p>
+
+      <div class="spacing-grid">
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-1</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:4px"></div>
+            <div class="spacing-row__px">4px</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-2</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:8px"></div>
+            <div class="spacing-row__px">8px</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-3</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:12px"></div>
+            <div class="spacing-row__px">12px</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-4</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:16px"></div>
+            <div class="spacing-row__px">16px</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-5</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:20px"></div>
+            <div class="spacing-row__px">20px</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-6</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:24px"></div>
+            <div class="spacing-row__px">24px — card padding padrão</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-8</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:32px"></div>
+            <div class="spacing-row__px">32px</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-10</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:40px"></div>
+            <div class="spacing-row__px">40px — altura de input/botão</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-12</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:48px"></div>
+            <div class="spacing-row__px">48px</div>
+          </div>
+        </div>
+        <div class="spacing-row">
+          <div class="spacing-row__label">space-16</div>
+          <div class="spacing-row__bar-wrap">
+            <div class="spacing-row__bar" style="width:64px"></div>
+            <div class="spacing-row__px">64px — topbar height</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         SOMBRAS
+    ================================================================ -->
+    <section class="ds-section" id="sombras">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Sombras</h2>
+        <span class="ds-section__tag">tokens/shadows.ts</span>
+      </div>
+      <p class="ds-section__desc">Sombras com leve toque azulado derivado do navy, criando profundidade coerente com a marca.</p>
+
+      <div class="shadow-grid">
+        <div class="shadow-card shadow-card--sm">
+          <div class="shadow-card__name">shadow-sm</div>
+          <div class="shadow-card__token">--mmc-shadow-sm</div>
+          <div style="font-size:11px;color:var(--mmc-text-tertiary)">Cards em repouso, inputs</div>
+        </div>
+        <div class="shadow-card shadow-card--md">
+          <div class="shadow-card__name">shadow-md</div>
+          <div class="shadow-card__token">--mmc-shadow-md</div>
+          <div style="font-size:11px;color:var(--mmc-text-tertiary)">Cards hover, dropdowns</div>
+        </div>
+        <div class="shadow-card shadow-card--lg">
+          <div class="shadow-card__name">shadow-lg</div>
+          <div class="shadow-card__token">--mmc-shadow-lg</div>
+          <div style="font-size:11px;color:var(--mmc-text-tertiary)">Modais, sidepanels</div>
+        </div>
+        <div class="shadow-card shadow-card--xl">
+          <div class="shadow-card__name">shadow-xl</div>
+          <div class="shadow-card__token">--mmc-shadow-xl</div>
+          <div style="font-size:11px;color:var(--mmc-text-tertiary)">Toasts, overlays</div>
+        </div>
+        <div class="shadow-card shadow-card--brand" style="grid-column: span 2">
+          <div class="shadow-card__name" style="color:var(--mmc-orange-600)">shadow-brand ✦</div>
+          <div class="shadow-card__token">--mmc-shadow-brand</div>
+          <div style="font-size:11px;color:var(--mmc-text-tertiary)">Botão primary hover, card selecionado — glow laranja</div>
+        </div>
+        <div class="shadow-card" style="grid-column: span 2; box-shadow: 0px 0px 0px 3px rgba(249,115,22,.25); border-color: var(--mmc-orange-200);">
+          <div class="shadow-card__name">shadow-focus</div>
+          <div class="shadow-card__token">--mmc-shadow-focus</div>
+          <div style="font-size:11px;color:var(--mmc-text-tertiary)">Focus ring acessível em botões e inputs</div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         BORDER RADIUS
+    ================================================================ -->
+    <section class="ds-section" id="radii">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Border Radius</h2>
+        <span class="ds-section__tag">tokens/border-radius.ts</span>
+      </div>
+      <p class="ds-section__desc">Escala progressiva. Inputs e badges usam <code>md (8px)</code>. Cards usam <code>lg (12px)</code>. Avatares e pills usam <code>full</code>.</p>
+
+      <div class="radius-grid">
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:48px;height:48px;border-radius:0"></div>
+          <div class="radius-item__label">none</div>
+          <div class="radius-item__value">0px</div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:52px;height:52px;border-radius:2px"></div>
+          <div class="radius-item__label">xs</div>
+          <div class="radius-item__value">2px</div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:56px;height:56px;border-radius:4px"></div>
+          <div class="radius-item__label">sm</div>
+          <div class="radius-item__value">4px</div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:64px;height:64px;border-radius:8px"></div>
+          <div class="radius-item__label">md</div>
+          <div class="radius-item__value">8px — inputs</div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:72px;height:72px;border-radius:12px"></div>
+          <div class="radius-item__label">lg</div>
+          <div class="radius-item__value">12px — cards</div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:80px;height:80px;border-radius:16px"></div>
+          <div class="radius-item__label">xl</div>
+          <div class="radius-item__value">16px</div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:88px;height:88px;border-radius:20px"></div>
+          <div class="radius-item__label">2xl</div>
+          <div class="radius-item__value">20px</div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:96px;height:96px;border-radius:24px"></div>
+          <div class="radius-item__label">3xl</div>
+          <div class="radius-item__value">24px</div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-item__block" style="width:72px;height:72px;border-radius:9999px"></div>
+          <div class="radius-item__label">full</div>
+          <div class="radius-item__value">9999px — pill</div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         BOTÕES
+    ================================================================ -->
+    <section class="ds-section" id="botoes">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Botões</h2>
+        <span class="ds-section__tag">web/_components.scss</span>
+      </div>
+      <p class="ds-section__desc">Variantes e tamanhos. Mixin SCSS <code>@include btn-primary</code> / <code>btn-secondary</code> / <code>btn-ghost</code>.</p>
+
+      <!-- Variantes -->
+      <div style="margin-bottom:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mmc-text-tertiary)">Variantes</div>
+      <div class="btn-row">
+        <button class="btn btn--primary btn--md">Registrar Pagamento</button>
+        <button class="btn btn--secondary btn--md">Exportar Relatório</button>
+        <button class="btn btn--ghost btn--md">Cancelar</button>
+        <button class="btn btn--danger btn--md">Excluir</button>
+        <button class="btn btn--primary btn--md btn--disabled">Desabilitado</button>
+      </div>
+
+      <!-- Tamanhos -->
+      <div style="margin-bottom:8px;margin-top:24px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mmc-text-tertiary)">Tamanhos</div>
+      <div class="btn-row">
+        <button class="btn btn--primary btn--sm">Pequeno</button>
+        <button class="btn btn--primary btn--md">Médio</button>
+        <button class="btn btn--primary btn--lg">Grande</button>
+        <button class="btn btn--primary btn--xl">Extra Grande</button>
+      </div>
+
+      <!-- Com ícone -->
+      <div style="margin-bottom:8px;margin-top:24px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mmc-text-tertiary)">Com ícone</div>
+      <div class="btn-row">
+        <button class="btn btn--primary btn--md"><span class="btn-icon">＋</span> Novo Pagamento</button>
+        <button class="btn btn--ghost btn--md"><span class="btn-icon">⤓</span> Exportar CSV</button>
+        <button class="btn btn--secondary btn--md"><span class="btn-icon">🔍</span> Buscar</button>
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         INPUTS
+    ================================================================ -->
+    <section class="ds-section" id="inputs">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Inputs</h2>
+        <span class="ds-section__tag">web/_components.scss</span>
+      </div>
+      <p class="ds-section__desc">Mixin <code>@include input</code>. Focus ring laranja, estados de erro, desabilitado e com ícone.</p>
+
+      <div class="input-grid">
+        <div class="form-group">
+          <label class="form-label">Número do Atendimento</label>
+          <input class="input input--md" type="text" placeholder="ex: ATD-2931" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Senha de Autorização</label>
+          <input class="input input--md" type="text" placeholder="Código do convênio (opcional)" />
+          <span class="form-hint">Preenchido apenas para procedimentos que exigem autorização prévia.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Beneficiário</label>
+          <div class="input-icon-wrap">
+            <span class="icon">🔍</span>
+            <input class="input input--md" type="text" placeholder="Nome ou carteira do beneficiário" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Código TUSS / Procedimento <span style="color:var(--mmc-error)">*</span></label>
+          <input class="input input--md input--error" type="text" value="3140103" />
+          <span class="form-error-msg">Procedimento não encontrado na tabela TUSS.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Data de Execução</label>
+          <input class="input input--md" type="date" value="2025-03-08" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Campo desabilitado</label>
+          <input class="input input--md input--disabled" type="text" value="Não editável" disabled />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tamanho sm</label>
+          <input class="input input--sm" type="text" placeholder="Busca rápida…" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tamanho lg</label>
+          <input class="input input--lg" type="text" placeholder="Campo largo" />
+        </div>
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         BADGES DE STATUS
+    ================================================================ -->
+    <section class="ds-section" id="badges">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Badges de Status</h2>
+        <span class="ds-section__tag">web/_components.scss</span>
+      </div>
+      <p class="ds-section__desc">
+        Badges do domínio <strong>Payment</strong> (Pending / Paid / Refused) + badges genéricos para uso em toda a UI.
+      </p>
+
+      <div style="margin-bottom:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mmc-text-tertiary)">Domínio Payment</div>
+      <div class="badge-row" style="margin-bottom:24px">
+        <span class="badge badge--pending"><span class="badge__dot"></span>Pendente</span>
+        <span class="badge badge--paid"><span class="badge__dot"></span>Pago</span>
+        <span class="badge badge--refused"><span class="badge__dot"></span>Recusado</span>
+      </div>
+
+      <div style="margin-bottom:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--mmc-text-tertiary)">Genéricos</div>
+      <div class="badge-row">
+        <span class="badge badge--success">Aprovado</span>
+        <span class="badge badge--warning">Em análise</span>
+        <span class="badge badge--error">Erro</span>
+        <span class="badge badge--info">Informação</span>
+        <span class="badge badge--neutral">Rascunho</span>
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         CARDS
+    ================================================================ -->
+    <section class="ds-section" id="cards">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Cards — KPIs</h2>
+        <span class="ds-section__tag">web/_components.scss · @include card</span>
+      </div>
+      <p class="ds-section__desc">Cards de métricas financeiras com valores em JetBrains Mono. Hover eleva a sombra.</p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card__icon card__icon--orange">💰</div>
+          <div class="card__label">Total Faturado</div>
+          <div class="card__value">R$ 32.872</div>
+          <div class="card__meta">
+            <span class="card__trend card__trend--up">↑ 8%</span> vs. mês anterior
+          </div>
+        </div>
+        <div class="card card--selected">
+          <div class="card__icon card__icon--green">✓</div>
+          <div class="card__label">Pagamentos Recebidos</div>
+          <div class="card__value">R$ 31.200</div>
+          <div class="card__meta">
+            <span class="card__trend card__trend--up">↑ 8%</span> · 13 pagamentos
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__icon card__icon--red">⏳</div>
+          <div class="card__label">Pendente / Recusado</div>
+          <div class="card__value">R$ 1.672</div>
+          <div class="card__meta">
+            <span class="card__trend card__trend--down">↓ 2%</span> · 6 atendimentos
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         TABELA
+    ================================================================ -->
+    <section class="ds-section" id="tabela">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Tabela de Pagamentos</h2>
+        <span class="ds-section__tag">Componente de lista</span>
+      </div>
+      <p class="ds-section__desc">Exemplo de lista de pagamentos com ordenação, busca e status badges. Linha selecionada usa o laranja da marca.</p>
+
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-header__title">Todos os Pagamentos</div>
+          <div class="table-header__actions">
+            <div class="table-search">🔍 Buscar por beneficiário, convênio…</div>
+            <button class="btn btn--primary btn--sm">＋ Novo</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nº Atendimento</th>
+              <th>Beneficiário</th>
+              <th>Convênio</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th style="text-align:right">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-mono">ATD-2931</td>
+              <td><span class="td-name">Carlos Eduardo Silva</span></td>
+              <td class="td-secondary">Unimed</td>
+              <td class="td-secondary td-mono">08/03/2025</td>
+              <td><span class="badge badge--paid"><span class="badge__dot"></span>Pago</span></td>
+              <td class="td-mono" style="text-align:right">R$ 450,00</td>
+            </tr>
+            <tr class="selected">
+              <td class="td-mono">ATD-0192</td>
+              <td><span class="td-name">Ana Paula Rodrigues</span></td>
+              <td class="td-secondary">Bradesco Saúde</td>
+              <td class="td-secondary td-mono">08/03/2025</td>
+              <td><span class="badge badge--pending"><span class="badge__dot"></span>Pendente</span></td>
+              <td class="td-mono" style="text-align:right">R$ 1.200,00</td>
+            </tr>
+            <tr>
+              <td class="td-mono">ATD-2910</td>
+              <td><span class="td-name">Roberto Mendes</span></td>
+              <td class="td-secondary">SulAmérica</td>
+              <td class="td-secondary td-mono">08/03/2025</td>
+              <td><span class="badge badge--paid"><span class="badge__dot"></span>Pago</span></td>
+              <td class="td-mono" style="text-align:right">R$ 320,00</td>
+            </tr>
+            <tr>
+              <td class="td-mono">ATD-1293</td>
+              <td><span class="td-name">Fernanda Costa</span></td>
+              <td class="td-secondary">Amil</td>
+              <td class="td-secondary td-mono">08/03/2025</td>
+              <td><span class="badge badge--refused"><span class="badge__dot"></span>Recusado</span></td>
+              <td class="td-mono" style="text-align:right">R$ 580,00</td>
+            </tr>
+            <tr>
+              <td class="td-mono">ATD-3933</td>
+              <td><span class="td-name">Marcos Oliveira</span></td>
+              <td class="td-secondary">Unimed</td>
+              <td class="td-secondary td-mono">04/03/2025</td>
+              <td><span class="badge badge--paid"><span class="badge__dot"></span>Pago</span></td>
+              <td class="td-mono" style="text-align:right">R$ 890,00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr class="ds-divider" />
+
+    <!-- ================================================================
+         DASHBOARD PREVIEW
+    ================================================================ -->
+    <section class="ds-section" id="dashboard">
+      <div class="ds-section__header">
+        <h2 class="ds-section__title">Dashboard Preview</h2>
+        <span class="ds-section__tag">Composição completa</span>
+      </div>
+      <p class="ds-section__desc">
+        Visualização composicional dos tokens aplicados: sidebar navy + topbar branca + conteúdo com cards e tabela.
+        Inspiração: layout Payfast adaptado ao branding MM Fature.
+      </p>
+
+      <div class="dashboard-preview">
+        <div class="dashboard-preview__inner">
+
+          <!-- Sidebar mini -->
+          <div class="dash-sidebar">
+            <div class="dash-sidebar__logo">
+              <div class="dash-sidebar__logo-icon">MM</div>
+              <span class="dash-sidebar__logo-text">MedControl</span>
+            </div>
+
+            <div class="dash-sidebar__section">
+              <div class="dash-sidebar__section-label">Menu</div>
+              <div class="dash-nav-item">
+                <span class="dash-nav-icon">⊞</span> Dashboard
+              </div>
+              <div class="dash-nav-item active">
+                <span class="dash-nav-icon">💳</span> Pagamentos
+              </div>
+              <div class="dash-nav-item">
+                <span class="dash-nav-icon">👤</span> Médicos
+              </div>
+              <div class="dash-nav-item">
+                <span class="dash-nav-icon">🏥</span> Convênios
+              </div>
+              <div class="dash-nav-item">
+                <span class="dash-nav-icon">⚕</span> Procedimentos
+              </div>
+            </div>
+
+            <div class="dash-sidebar__section" style="margin-top:16px">
+              <div class="dash-sidebar__section-label">Sistema</div>
+              <div class="dash-nav-item">
+                <span class="dash-nav-icon">📊</span> Relatórios
+              </div>
+              <div class="dash-nav-item">
+                <span class="dash-nav-icon">⚙</span> Configurações
+              </div>
+            </div>
+
+            <div style="margin-top:auto;padding:0 10px">
+              <div class="dash-nav-item">
+                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#F97316,#1B2E63);display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700">Dr</div>
+                <div style="display:flex;flex-direction:column;gap:1px">
+                  <span style="font-size:11px;color:rgba(255,255,255,.8);font-weight:600">Dr. Ana Lima</span>
+                  <span style="font-size:9px;color:rgba(255,255,255,.35)">doctor</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main -->
+          <div class="dash-main">
+            <div class="dash-topbar">
+              <div class="dash-topbar__breadcrumb">
+                MedControl › <span>Pagamentos</span>
+              </div>
+              <div class="dash-topbar__actions">
+                <div class="dash-topbar__search">🔍 Buscar</div>
+                <div class="dash-avatar">Dr</div>
+              </div>
+            </div>
+
+            <div class="dash-content">
+              <div class="dash-page-title">Pagamentos</div>
+
+              <!-- KPIs -->
+              <div class="dash-kpi-row">
+                <div class="dash-kpi">
+                  <div class="dash-kpi__label">Total Faturado</div>
+                  <div class="dash-kpi__value">R$ 32.872</div>
+                  <div class="dash-kpi__trend">↑ 8% este mês</div>
+                </div>
+                <div class="dash-kpi" style="border-color:var(--mmc-orange-200);box-shadow:0 0 0 1px var(--mmc-orange-100)">
+                  <div class="dash-kpi__label">Recebido</div>
+                  <div class="dash-kpi__value" style="color:var(--mmc-success)">R$ 31.200</div>
+                  <div class="dash-kpi__trend">13 pagamentos</div>
+                </div>
+                <div class="dash-kpi">
+                  <div class="dash-kpi__label">Pendente</div>
+                  <div class="dash-kpi__value" style="color:var(--mmc-warning);font-size:16px">R$ 1.672</div>
+                  <div class="dash-kpi__trend" style="color:var(--mmc-text-tertiary)">6 atendimentos</div>
+                </div>
+              </div>
+
+              <!-- Mini table -->
+              <div class="dash-table-card">
+                <div class="dash-table-header">
+                  <span class="dash-table-title">Últimos Pagamentos</span>
+                  <button class="dash-table-btn">＋ Registrar</button>
+                </div>
+                <table class="dash-mini-table">
+                  <thead>
+                    <tr>
+                      <th>Nº Atend.</th>
+                      <th>Beneficiário</th>
+                      <th>Convênio</th>
+                      <th>Status</th>
+                      <th style="text-align:right">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="font-family:var(--mmc-font-mono);font-size:10px;color:var(--mmc-text-secondary)">ATD-2931</td>
+                      <td style="font-weight:600;font-size:11px">Carlos Eduardo</td>
+                      <td style="font-size:10px;color:var(--mmc-text-secondary)">Unimed</td>
+                      <td><span class="badge badge--paid" style="font-size:10px;padding:2px 7px"><span class="badge__dot"></span>Pago</span></td>
+                      <td style="font-family:var(--mmc-font-mono);font-size:11px;font-weight:600;text-align:right">R$ 450</td>
+                    </tr>
+                    <tr class="selected">
+                      <td style="font-family:var(--mmc-font-mono);font-size:10px;color:var(--mmc-text-secondary)">ATD-0192</td>
+                      <td style="font-weight:600;font-size:11px">Ana Paula R.</td>
+                      <td style="font-size:10px;color:var(--mmc-text-secondary)">Bradesco</td>
+                      <td><span class="badge badge--pending" style="font-size:10px;padding:2px 7px"><span class="badge__dot"></span>Pendente</span></td>
+                      <td style="font-family:var(--mmc-font-mono);font-size:11px;font-weight:600;text-align:right">R$ 1.200</td>
+                    </tr>
+                    <tr>
+                      <td style="font-family:var(--mmc-font-mono);font-size:10px;color:var(--mmc-text-secondary)">ATD-1293</td>
+                      <td style="font-weight:600;font-size:11px">Fernanda Costa</td>
+                      <td style="font-size:10px;color:var(--mmc-text-secondary)">Amil</td>
+                      <td><span class="badge badge--refused" style="font-size:10px;padding:2px 7px"><span class="badge__dot"></span>Recusado</span></td>
+                      <td style="font-family:var(--mmc-font-mono);font-size:11px;font-weight:600;text-align:right">R$ 580</td>
+                    </tr>
+                    <tr>
+                      <td style="font-family:var(--mmc-font-mono);font-size:10px;color:var(--mmc-text-secondary)">ATD-3933</td>
+                      <td style="font-weight:600;font-size:11px">Marcos Oliveira</td>
+                      <td style="font-size:10px;color:var(--mmc-text-secondary)">Unimed</td>
+                      <td><span class="badge badge--paid" style="font-size:10px;padding:2px 7px"><span class="badge__dot"></span>Pago</span></td>
+                      <td style="font-family:var(--mmc-font-mono);font-size:11px;font-weight:600;text-align:right">R$ 890</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div><!-- /dashboard-preview -->
+    </section>
+
+    <div style="padding-bottom:64px;text-align:center;color:var(--mmc-text-tertiary);font-size:12px">
+      MM Fature Design System — MedControl v1.0 · <span style="font-family:var(--mmc-font-mono)">#F97316 · #1B2E63 · Inter</span>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  (function () {
+    const STORAGE_KEY = 'mmc-theme';
+    const root   = document.documentElement;
+    const toggle = document.getElementById('themeToggle');
+
+    const ICONS = { light: '🌙', dark: '☀️' };
+
+    function getTheme()  { return localStorage.getItem(STORAGE_KEY) || 'light'; }
+    function setTheme(t) {
+      localStorage.setItem(STORAGE_KEY, t);
+      if (t === 'dark') {
+        root.setAttribute('data-theme', 'dark');
+      } else {
+        root.removeAttribute('data-theme');
+      }
+      toggle.textContent = ICONS[t];
+      toggle.setAttribute('aria-label', t === 'dark' ? 'Ativar light mode' : 'Ativar dark mode');
+    }
+
+    // Aplica preferência salva ou respeita a preferência do sistema
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      setTheme(saved);
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark');
+    } else {
+      toggle.textContent = ICONS['light'];
+    }
+
+    toggle.addEventListener('click', () => {
+      setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+    });
+
+    // Atualiza quando o sistema muda (se não houver preferência salva)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        setTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+
+    // Smooth scroll para links da nav
+    document.querySelectorAll('.preview-nav__link[href^="#"]').forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+
+        document.querySelectorAll('.preview-nav__link').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+      });
+    });
+  })();
+</script>
+</body>
+</html>

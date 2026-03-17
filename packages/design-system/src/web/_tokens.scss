@@ -1,0 +1,303 @@
+// =============================================================================
+// MM Fature — Design Tokens (CSS Custom Properties)
+// =============================================================================
+// Importe este arquivo UMA VEZ no styles.scss raiz do Angular.
+// Todos os componentes podem consumir via var(--mmc-*).
+// =============================================================================
+
+:root {
+  // ---------------------------------------------------------------------------
+  // Paleta — Orange (Primary)
+  // ---------------------------------------------------------------------------
+  --mmc-orange-50:  #FFF4ED;
+  --mmc-orange-100: #FFE6D5;
+  --mmc-orange-200: #FFCBA9;
+  --mmc-orange-300: #FEA472;
+  --mmc-orange-400: #FD7A38;
+  --mmc-orange-500: #F97316;
+  --mmc-orange-600: #EA6310;
+  --mmc-orange-700: #C24E0D;
+  --mmc-orange-800: #9A3F11;
+  --mmc-orange-900: #7C3412;
+  --mmc-orange-950: #431807;
+
+  // ---------------------------------------------------------------------------
+  // Paleta — Navy (Secondary)
+  // ---------------------------------------------------------------------------
+  --mmc-navy-50:  #EEF2FF;
+  --mmc-navy-100: #E0E7FF;
+  --mmc-navy-200: #C7D2FE;
+  --mmc-navy-300: #A5B4FC;
+  --mmc-navy-400: #818CF8;
+  --mmc-navy-500: #6366F1;
+  --mmc-navy-600: #4F46E5;
+  --mmc-navy-700: #3730A3;
+  --mmc-navy-800: #2D2A8A;
+  --mmc-navy-900: #1B2E63;
+  --mmc-navy-950: #0F1A40;
+
+  // ---------------------------------------------------------------------------
+  // Paleta — Neutral
+  // ---------------------------------------------------------------------------
+  --mmc-neutral-0:    #FFFFFF;
+  --mmc-neutral-50:   #F8F9FA;
+  --mmc-neutral-100:  #F1F3F5;
+  --mmc-neutral-200:  #E9ECEF;
+  --mmc-neutral-300:  #DEE2E6;
+  --mmc-neutral-400:  #CED4DA;
+  --mmc-neutral-500:  #ADB5BD;
+  --mmc-neutral-600:  #868E96;
+  --mmc-neutral-700:  #495057;
+  --mmc-neutral-800:  #343A40;
+  --mmc-neutral-900:  #212529;
+  --mmc-neutral-1000: #0D0F12;
+
+  // ---------------------------------------------------------------------------
+  // Semânticas
+  // ---------------------------------------------------------------------------
+  --mmc-success-light: #ECFDF5;
+  --mmc-success:       #10B981;
+  --mmc-success-dark:  #065F46;
+
+  --mmc-warning-light: #FFFBEB;
+  --mmc-warning:       #F59E0B;
+  --mmc-warning-dark:  #92400E;
+
+  --mmc-error-light: #FEF2F2;
+  --mmc-error:       #EF4444;
+  --mmc-error-dark:  #991B1B;
+
+  --mmc-info-light: #EFF6FF;
+  --mmc-info:       #3B82F6;
+  --mmc-info-dark:  #1E40AF;
+
+  // ---------------------------------------------------------------------------
+  // Superfícies
+  // ---------------------------------------------------------------------------
+  --mmc-bg:             var(--mmc-neutral-50);
+  --mmc-bg-card:        var(--mmc-neutral-0);
+  --mmc-bg-card-hover:  var(--mmc-neutral-100);
+  --mmc-overlay:        rgba(15, 26, 64, 0.48);
+
+  --mmc-sidebar-bg:       var(--mmc-navy-950);
+  --mmc-sidebar-active:   var(--mmc-navy-900);
+  --mmc-sidebar-hover:    rgba(255, 255, 255, 0.06);
+
+  --mmc-border:        var(--mmc-neutral-200);
+  --mmc-border-strong: var(--mmc-neutral-300);
+  --mmc-divider:       var(--mmc-neutral-100);
+
+  // ---------------------------------------------------------------------------
+  // Texto
+  // ---------------------------------------------------------------------------
+  --mmc-text-primary:   var(--mmc-neutral-900);
+  --mmc-text-secondary: var(--mmc-neutral-600);
+  --mmc-text-tertiary:  var(--mmc-neutral-500);
+  --mmc-text-disabled:  var(--mmc-neutral-400);
+  --mmc-text-inverse:   var(--mmc-neutral-0);
+  --mmc-text-on-dark:   rgba(255, 255, 255, 0.87);
+  --mmc-text-on-dark-subtle: rgba(255, 255, 255, 0.55);
+  --mmc-text-link:      var(--mmc-orange-600);
+  --mmc-text-link-hover: var(--mmc-orange-700);
+
+  // ---------------------------------------------------------------------------
+  // Ações (Botões)
+  // ---------------------------------------------------------------------------
+  --mmc-action-primary:       var(--mmc-orange-500);
+  --mmc-action-primary-hover: var(--mmc-orange-600);
+  --mmc-action-primary-active: var(--mmc-orange-700);
+  --mmc-action-primary-text:  var(--mmc-neutral-0);
+
+  --mmc-action-secondary:       var(--mmc-navy-900);
+  --mmc-action-secondary-hover: var(--mmc-navy-950);
+  --mmc-action-secondary-text:  var(--mmc-neutral-0);
+
+  --mmc-action-danger:       var(--mmc-error);
+  --mmc-action-danger-hover: var(--mmc-error-dark);
+  --mmc-action-danger-text:  var(--mmc-neutral-0);
+
+  // ---------------------------------------------------------------------------
+  // Status de Pagamento
+  // ---------------------------------------------------------------------------
+  --mmc-status-pending-bg:     #FFFBEB;
+  --mmc-status-pending-text:   #92400E;
+  --mmc-status-pending-border: #FDE68A;
+  --mmc-status-pending-dot:    var(--mmc-warning);
+
+  --mmc-status-paid-bg:     #ECFDF5;
+  --mmc-status-paid-text:   #065F46;
+  --mmc-status-paid-border: #A7F3D0;
+  --mmc-status-paid-dot:    var(--mmc-success);
+
+  --mmc-status-refused-bg:     #FEF2F2;
+  --mmc-status-refused-text:   #991B1B;
+  --mmc-status-refused-border: #FECACA;
+  --mmc-status-refused-dot:    var(--mmc-error);
+
+  // ---------------------------------------------------------------------------
+  // Tipografia
+  // ---------------------------------------------------------------------------
+  --mmc-font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, sans-serif;
+  --mmc-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  --mmc-font-weight-regular:   400;
+  --mmc-font-weight-medium:    500;
+  --mmc-font-weight-semibold:  600;
+  --mmc-font-weight-bold:      700;
+  --mmc-font-weight-extrabold: 800;
+
+  --mmc-text-xs:   0.75rem;    // 12px
+  --mmc-text-sm:   0.875rem;   // 14px
+  --mmc-text-md:   1rem;       // 16px
+  --mmc-text-lg:   1.125rem;   // 18px
+  --mmc-text-xl:   1.25rem;    // 20px
+  --mmc-text-2xl:  1.5rem;     // 24px
+  --mmc-text-3xl:  1.875rem;   // 30px
+  --mmc-text-4xl:  2.25rem;    // 36px
+  --mmc-text-5xl:  3rem;       // 48px
+
+  // ---------------------------------------------------------------------------
+  // Espaçamento (base 4px)
+  // ---------------------------------------------------------------------------
+  --mmc-space-0:   0px;
+  --mmc-space-0-5: 2px;
+  --mmc-space-1:   4px;
+  --mmc-space-1-5: 6px;
+  --mmc-space-2:   8px;
+  --mmc-space-2-5: 10px;
+  --mmc-space-3:   12px;
+  --mmc-space-3-5: 14px;
+  --mmc-space-4:   16px;
+  --mmc-space-5:   20px;
+  --mmc-space-6:   24px;
+  --mmc-space-7:   28px;
+  --mmc-space-8:   32px;
+  --mmc-space-9:   36px;
+  --mmc-space-10:  40px;
+  --mmc-space-12:  48px;
+  --mmc-space-14:  56px;
+  --mmc-space-16:  64px;
+
+  // ---------------------------------------------------------------------------
+  // Border Radius
+  // ---------------------------------------------------------------------------
+  --mmc-radius-none: 0px;
+  --mmc-radius-xs:   2px;
+  --mmc-radius-sm:   4px;
+  --mmc-radius-md:   8px;
+  --mmc-radius-lg:   12px;
+  --mmc-radius-xl:   16px;
+  --mmc-radius-2xl:  20px;
+  --mmc-radius-3xl:  24px;
+  --mmc-radius-full: 9999px;
+
+  // ---------------------------------------------------------------------------
+  // Sombras
+  // ---------------------------------------------------------------------------
+  --mmc-shadow-none: none;
+  --mmc-shadow-sm:   0px 1px 2px 0px rgba(15, 26, 64, 0.05);
+  --mmc-shadow-md:   0px 4px 6px -1px rgba(15, 26, 64, 0.08), 0px 2px 4px -1px rgba(15, 26, 64, 0.04);
+  --mmc-shadow-lg:   0px 10px 15px -3px rgba(15, 26, 64, 0.08), 0px 4px 6px -2px rgba(15, 26, 64, 0.04);
+  --mmc-shadow-xl:   0px 20px 25px -5px rgba(15, 26, 64, 0.10), 0px 10px 10px -5px rgba(15, 26, 64, 0.04);
+  --mmc-shadow-brand: 0px 4px 14px 0px rgba(249, 115, 22, 0.30);
+  --mmc-shadow-inner: inset 0px 2px 4px 0px rgba(15, 26, 64, 0.06);
+  --mmc-shadow-focus: 0px 0px 0px 3px rgba(249, 115, 22, 0.25);
+
+  // ---------------------------------------------------------------------------
+  // Layout
+  // ---------------------------------------------------------------------------
+  --mmc-sidebar-width:           240px;
+  --mmc-sidebar-collapsed-width: 64px;
+  --mmc-topbar-height:           64px;
+  --mmc-content-max-width:       1440px;
+}
+
+// =============================================================================
+// DARK MODE
+// Ativado via: <html data-theme="dark"> (toggle JS) ou prefers-color-scheme.
+// Sobrescreve apenas os tokens semânticos — a paleta base (--mmc-orange-*, etc.)
+// permanece igual para manter a identidade de marca.
+// =============================================================================
+
+@mixin dark-tokens {
+  // Superfícies
+  --mmc-bg:            #0C1322;
+  --mmc-bg-card:       #111E35;
+  --mmc-bg-card-hover: #172542;
+  --mmc-overlay:       rgba(0, 0, 0, 0.65);
+
+  // Sidebar
+  --mmc-sidebar-bg:     #070E1D;
+  --mmc-sidebar-active: #0F1A3A;
+  --mmc-sidebar-hover:  rgba(255, 255, 255, 0.05);
+
+  // Bordas
+  --mmc-border:        rgba(255, 255, 255, 0.09);
+  --mmc-border-strong: rgba(255, 255, 255, 0.16);
+  --mmc-divider:       rgba(255, 255, 255, 0.05);
+
+  // Texto
+  --mmc-text-primary:        rgba(255, 255, 255, 0.90);
+  --mmc-text-secondary:      rgba(255, 255, 255, 0.55);
+  --mmc-text-tertiary:       rgba(255, 255, 255, 0.35);
+  --mmc-text-disabled:       rgba(255, 255, 255, 0.22);
+  --mmc-text-inverse:        #0C1322;
+  --mmc-text-on-dark:        rgba(255, 255, 255, 0.90);
+  --mmc-text-link:           var(--mmc-orange-400);
+  --mmc-text-link-hover:     var(--mmc-orange-300);
+
+  // Ações — laranja um tom mais claro para contraste no escuro
+  --mmc-action-primary:        var(--mmc-orange-400);
+  --mmc-action-primary-hover:  var(--mmc-orange-500);
+  --mmc-action-primary-active: var(--mmc-orange-600);
+  --mmc-action-secondary:      var(--mmc-navy-700);
+  --mmc-action-secondary-hover:var(--mmc-navy-600);
+  --mmc-action-danger:         #F87171;
+  --mmc-action-danger-hover:   #EF4444;
+
+  // Semânticas — shift para tons mais luminosos
+  --mmc-success-light: rgba(52, 211, 153, 0.12);
+  --mmc-success:       #34D399;
+  --mmc-success-dark:  #A7F3D0;
+  --mmc-warning-light: rgba(251, 191, 36, 0.12);
+  --mmc-warning:       #FBBF24;
+  --mmc-warning-dark:  #FDE68A;
+  --mmc-error-light:   rgba(248, 113, 113, 0.12);
+  --mmc-error:         #F87171;
+  --mmc-error-dark:    #FECACA;
+  --mmc-info-light:    rgba(96, 165, 250, 0.12);
+  --mmc-info:          #60A5FA;
+  --mmc-info-dark:     #BFDBFE;
+
+  // Status de pagamento — dark
+  --mmc-status-pending-bg:     rgba(251, 191, 36, 0.12);
+  --mmc-status-pending-text:   #FBBF24;
+  --mmc-status-pending-border: rgba(251, 191, 36, 0.28);
+  --mmc-status-pending-dot:    #FBBF24;
+
+  --mmc-status-paid-bg:        rgba(52, 211, 153, 0.12);
+  --mmc-status-paid-text:      #34D399;
+  --mmc-status-paid-border:    rgba(52, 211, 153, 0.28);
+  --mmc-status-paid-dot:       #34D399;
+
+  --mmc-status-refused-bg:     rgba(248, 113, 113, 0.12);
+  --mmc-status-refused-text:   #F87171;
+  --mmc-status-refused-border: rgba(248, 113, 113, 0.28);
+  --mmc-status-refused-dot:    #F87171;
+
+  // Sombras — mais profundas e escuras
+  --mmc-shadow-sm:    0px 1px 3px 0px rgba(0, 0, 0, 0.35);
+  --mmc-shadow-md:    0px 4px 8px -1px rgba(0, 0, 0, 0.40), 0px 2px 4px -1px rgba(0, 0, 0, 0.25);
+  --mmc-shadow-lg:    0px 10px 20px -3px rgba(0, 0, 0, 0.45), 0px 4px 8px -2px rgba(0, 0, 0, 0.25);
+  --mmc-shadow-xl:    0px 20px 30px -5px rgba(0, 0, 0, 0.50), 0px 10px 12px -5px rgba(0, 0, 0, 0.25);
+  --mmc-shadow-brand: 0px 4px 18px 0px rgba(249, 115, 22, 0.45);
+  --mmc-shadow-focus: 0px 0px 0px 3px rgba(249, 115, 22, 0.38);
+}
+
+// Ativação via atributo (toggle JS)
+[data-theme="dark"] { @include dark-tokens; }
+
+// Ativação via preferência do sistema (quando não há data-theme explícito)
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { @include dark-tokens; }
+}

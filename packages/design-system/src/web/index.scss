@@ -1,0 +1,14 @@
+// =============================================================================
+// MM Fature — Design System (Web Entry Point)
+// =============================================================================
+// Importe este arquivo UMA VEZ em apps/web/src/styles.scss
+//
+// @use '@medcontrol/design-system/web';
+// =============================================================================
+
+@forward 'tokens';    // CSS Custom Properties (:root)
+@forward 'reset';     // CSS Reset & base styles
+@forward 'components'; // Mixins e utility classes
+
+// Fonte Inter via Google Fonts (carregada no index.html)
+// @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
