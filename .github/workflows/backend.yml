@@ -103,9 +103,10 @@ jobs:
             -reports:"**/coverage.opencover.xml" \
             -targetdir:"coverage-report" \
             -reporttypes:"TextSummary" \
-            -assemblyfilters:"-*Tests*"
+            -assemblyfilters:"-*Tests*;-MedControl.Api;-MedControl.Infrastructure"
           cat coverage-report/Summary.txt
           # Fail if line coverage < 80%
+          # Api and Infrastructure are excluded: tested via integration tests (WebApplicationFactory / Testcontainers)
           LINE_COV=$(grep "Line coverage" coverage-report/Summary.txt | grep -oP '\d+\.\d+' | head -1)
           echo "Line coverage: $LINE_COV%"
           awk "BEGIN { exit ($LINE_COV < 80) ? 1 : 0 }" || (echo "Coverage below 80%!" && exit 1)

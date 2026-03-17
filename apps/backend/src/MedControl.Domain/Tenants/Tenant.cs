@@ -15,9 +15,20 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
 
     public IReadOnlyList<TenantMember> Members => _members.AsReadOnly();
 
-    public static Tenant Create(string name)
+    public static class Errors
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        public static readonly Error NameRequired = new("Tenant.NameRequired", "Tenant name is required.");
+        public static readonly Error MemberAlreadyExists = new("Tenant.MemberAlreadyExists", "User is already a member of this tenant.");
+        public static readonly Error MemberNotFound = new("Tenant.MemberNotFound", "User is not a member of this tenant.");
+        public static readonly Error RoleRequired = new("Tenant.RoleRequired", "Role is required.");
+    }
+
+    public static Result<Tenant> Create(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Result.Failure<Tenant>(Errors.NameRequired);
+        }
 
         var slug = GenerateSlug(name);
         var tenant = new Tenant
@@ -30,28 +41,44 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
         return tenant;
     }
 
-    public void Update(string name)
+    public Result Update(string name)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Result.Failure(Errors.NameRequired);
+        }
+
         Name = name.Trim();
+        return Result.Success();
     }
 
-    public void AddMember(Guid userId, string role)
+    public Result AddMember(Guid userId, string role)
     {
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            return Result.Failure(Errors.RoleRequired);
+        }
+
         if (_members.Any(m => m.UserId == userId))
         {
-            throw new InvalidOperationException($"User {userId} is already a member of this tenant.");
+            return Result.Failure(Errors.MemberAlreadyExists);
         }
 
         _members.Add(TenantMember.Create(Id, userId, role));
+        return Result.Success();
     }
 
-    public void RemoveMember(Guid userId)
+    public Result RemoveMember(Guid userId)
     {
-        var member = _members.FirstOrDefault(m => m.UserId == userId)
-            ?? throw new InvalidOperationException($"User {userId} is not a member of this tenant.");
+        var member = _members.FirstOrDefault(m => m.UserId == userId);
+
+        if (member is null)
+        {
+            return Result.Failure(Errors.MemberNotFound);
+        }
 
         _members.Remove(member);
+        return Result.Success();
     }
 
     public void Deactivate() => IsActive = false;

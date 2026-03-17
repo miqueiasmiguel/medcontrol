@@ -14,9 +14,18 @@ public sealed class User : BaseAuditableEntity, IAggregateRoot
     public GlobalRole GlobalRole { get; private set; } = GlobalRole.None;
     public DateTimeOffset? LastLoginAt { get; private set; }
 
-    public static User Create(string email, string? displayName = null)
+    public static class Errors
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        public static readonly Error EmailRequired = new("User.EmailRequired", "Email is required.");
+        public static readonly Error DisplayNameRequired = new("User.DisplayNameRequired", "Display name is required.");
+    }
+
+    public static Result<User> Create(string email, string? displayName = null)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return Result.Failure<User>(Errors.EmailRequired);
+        }
 
         var user = new User
         {
@@ -35,10 +44,17 @@ public sealed class User : BaseAuditableEntity, IAggregateRoot
     /// Creates or updates a user from Google OAuth profile.
     /// Email is always verified when coming from Google.
     /// </summary>
-    public static User CreateFromGoogle(string email, string displayName, Uri? avatarUrl)
+    public static Result<User> CreateFromGoogle(string email, string displayName, Uri? avatarUrl)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(email);
-        ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return Result.Failure<User>(Errors.EmailRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            return Result.Failure<User>(Errors.DisplayNameRequired);
+        }
 
         var user = new User
         {

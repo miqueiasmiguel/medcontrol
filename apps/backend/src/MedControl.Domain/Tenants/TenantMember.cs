@@ -13,8 +13,6 @@ public sealed class TenantMember : BaseEntity
 
     internal static TenantMember Create(Guid tenantId, Guid userId, string role)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(role);
-
         return new TenantMember
         {
             TenantId = tenantId,
@@ -24,9 +22,14 @@ public sealed class TenantMember : BaseEntity
         };
     }
 
-    public void UpdateRole(string role)
+    public Result UpdateRole(string role)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(role);
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            return Result.Failure(Tenant.Errors.RoleRequired);
+        }
+
         Role = role;
+        return Result.Success();
     }
 }
