@@ -44,7 +44,7 @@ public sealed class TenantMemberConfigurationTests(DbContextModelFixture fixture
     {
         var prop = _et.FindProperty(nameof(TenantMember.Role))!;
         prop.GetColumnName().Should().Be("role");
-        prop.GetMaxLength().Should().Be(100);
+        prop.GetMaxLength().Should().Be(50);
         prop.IsNullable.Should().BeFalse();
     }
 

@@ -24,8 +24,9 @@ internal sealed class TenantMemberConfiguration : IEntityTypeConfiguration<Tenan
 
         builder.Property(tm => tm.Role)
             .HasColumnName("role")
-            .HasMaxLength(100)
-            .IsRequired();
+            .HasMaxLength(50)
+            .IsRequired()
+            .HasConversion<string>();
 
         builder.Property(tm => tm.JoinedAt)
             .HasColumnName("joined_at");
