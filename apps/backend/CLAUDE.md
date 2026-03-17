@@ -13,7 +13,7 @@ src/
 ├── MedControl.Domain/
 │   ├── Common/           ← BaseEntity, BaseAuditableEntity, Result, Error, IAggregateRoot, IDomainEvent, IHasTenant
 │   ├── Auth/             ← AuthProvider (enum)
-│   ├── Tenants/          ← Tenant, TenantMember, ITenantRepository, Events/
+│   ├── Tenants/          ← Tenant, TenantMember, TenantRole (enum), ITenantRepository, Events/
 │   └── Users/            ← User, GlobalRole (enum), IUserRepository, Events/
 ├── MedControl.Application/
 │   ├── Mediator/         ← IMediator, Mediator, ICommand, IQuery, IRequest, Unit, IPipelineBehavior, IDomainEventHandler
@@ -111,14 +111,16 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
     public bool IsActive { get; private set; } = true
     public IReadOnlyList<TenantMember> Members { get; }
 
-    public static class Errors { NameRequired, MemberAlreadyExists, MemberNotFound, RoleRequired }
+    public static class Errors { NameRequired, MemberAlreadyExists, MemberNotFound, InvalidRole }
 
-    public static Result<Tenant> Create(string name)    // Raises TenantCreatedEvent
+    public static Result<Tenant> Create(string name)         // Raises TenantCreatedEvent
     public Result Update(string name)
-    public Result AddMember(Guid userId, string role)
+    public Result AddMember(Guid userId, TenantRole role)    // validates Enum.IsDefined
     public Result RemoveMember(Guid userId)
     public void Deactivate()
 }
+
+public enum TenantRole { Admin = 0, Operator = 1, Doctor = 2 }
 ```
 
 ### User
@@ -236,7 +238,7 @@ snake_case em tudo (convenção PostgreSQL). Tabelas: `users`, `tenants`, `tenan
 |---|---|
 | `UserConfiguration` | `avatar_url`: `Uri → string` converter, max 2048; índice único `ix_users_email` |
 | `TenantConfiguration` | índice único `ix_tenants_slug`; `Members` com `PropertyAccessMode.Field` |
-| `TenantMemberConfiguration` | FK→Tenant: `Cascade`; FK→User: `Restrict`; índice composto único `(tenant_id, user_id)` + índice simples `user_id` |
+| `TenantMemberConfiguration` | FK→Tenant: `Cascade`; FK→User: `Restrict`; índice composto único `(tenant_id, user_id)` + índice simples `user_id`; `Role`: `HasConversion<string>()`, max 50 |
 
 Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
 
@@ -421,8 +423,22 @@ builder.ConfigureAppConfiguration((_, config) =>
 
 ## O que Ainda Não Foi Implementado
 
+### Infraestrutura / Auth
 - Troca de tenant (`POST /auth/switch-tenant`)
-- Endpoints de tenant e usuário
+- Endpoints de tenant e usuário (CRUD)
+
+### Controle de Pagamento (próximo milestone)
+
+**Ordem de implementação recomendada:**
+
+1. ~~**Tenant Roles**~~ — ✅ implementado (`TenantRole` enum: Admin/Operator/Doctor; validação no `AddMember` e `UpdateRole`)
+2. **DoctorProfile** — entidade ligada a `User`; campos: CRM, especialidade, conselho regional
+3. **HealthPlan** — aggregate `HealthPlan`; campos: name, tissCode; tabela `health_plans`
+4. **Procedure** — aggregate `Procedure`; campos: code (TUSS/CBHPM), description, value; tabela `procedures`
+5. **Payment** — aggregate root; campos definidos no CLAUDE.md raiz; tabela `payments`
+6. **Payment Queries** — `ListPaymentsByDoctorQuery`, `GetPaymentQuery`, com paginação e filtros
+7. **Payment Endpoints** — `POST /payments`, `PUT /payments/{id}`, `GET /payments`, `GET /payments/{id}`
+8. **Report Query** — agrega pagamentos por período/convênio/status para o médico
 
 ---
 
