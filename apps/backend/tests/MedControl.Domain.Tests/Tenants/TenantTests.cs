@@ -1,4 +1,5 @@
 using FluentAssertions;
+using MedControl.Domain.Common;
 using MedControl.Domain.Tenants;
 
 namespace MedControl.Domain.Tests.Tenants;
@@ -15,6 +16,7 @@ public class TenantCreateTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Tenant.Errors.NameRequired);
+        result.Error.Type.Should().Be(ErrorType.Validation);
     }
 
     [Fact]
@@ -52,6 +54,7 @@ public class TenantUpdateTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Tenant.Errors.NameRequired);
+        result.Error.Type.Should().Be(ErrorType.Validation);
     }
 
     [Fact]
@@ -79,6 +82,7 @@ public class TenantAddMemberTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Tenant.Errors.MemberAlreadyExists);
+        result.Error.Type.Should().Be(ErrorType.Conflict);
     }
 
     [Theory]
@@ -93,6 +97,7 @@ public class TenantAddMemberTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Tenant.Errors.RoleRequired);
+        result.Error.Type.Should().Be(ErrorType.Validation);
     }
 
     [Fact]
@@ -119,6 +124,7 @@ public class TenantRemoveMemberTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Tenant.Errors.MemberNotFound);
+        result.Error.Type.Should().Be(ErrorType.NotFound);
     }
 
     [Fact]
