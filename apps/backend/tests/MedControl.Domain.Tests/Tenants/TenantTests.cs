@@ -110,6 +110,18 @@ public class TenantAddMemberTests
     }
 
     [Fact]
+    public void AddMember_WithOwnerRole_ShouldSucceed()
+    {
+        var tenant = Tenant.Create("Clinic").Value;
+        var userId = Guid.NewGuid();
+
+        var result = tenant.AddMember(userId, TenantRole.Owner);
+
+        result.IsSuccess.Should().BeTrue();
+        tenant.Members.Should().ContainSingle(m => m.UserId == userId && m.Role == TenantRole.Owner);
+    }
+
+    [Fact]
     public void AddMember_WithValidData_ShouldReturnSuccessAndAddMember()
     {
         var tenant = Tenant.Create("Clínica").Value;
