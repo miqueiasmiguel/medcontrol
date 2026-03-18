@@ -1,5 +1,6 @@
 using MedControl.Application.Common.Interfaces;
 using MedControl.Domain.Common;
+using MedControl.Domain.Doctors;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 using MedControl.Infrastructure.Persistence.Interceptors;
@@ -17,6 +18,7 @@ public sealed class ApplicationDbContext(
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantMember> TenantMembers => Set<TenantMember>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -31,6 +33,9 @@ public sealed class ApplicationDbContext(
         // Global query filters for multi-tenancy
         modelBuilder.Entity<TenantMember>()
             .HasQueryFilter(m => m.TenantId == currentUser.TenantId!.Value);
+
+        modelBuilder.Entity<DoctorProfile>()
+            .HasQueryFilter(d => d.TenantId == currentUser.TenantId!.Value);
 
         base.OnModelCreating(modelBuilder);
     }

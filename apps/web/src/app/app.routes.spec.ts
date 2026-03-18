@@ -30,4 +30,20 @@ describe('appRoutes', () => {
     tick();
     expect(location.path()).toBe('/auth/login');
   }));
+
+  it('should redirect /tenants/new to /auth/login when not authenticated', fakeAsync(() => {
+    const router = TestBed.inject(Router);
+    const location = TestBed.inject(Location);
+    router.navigate(['/tenants/new']).catch(() => void 0);
+    tick();
+    expect(location.path()).toBe('/auth/login');
+  }));
+
+  it('should redirect /tenants/select to /auth/login when not authenticated', fakeAsync(() => {
+    const router = TestBed.inject(Router);
+    const location = TestBed.inject(Location);
+    router.navigate(['/tenants/select']).catch(() => void 0);
+    tick();
+    expect(location.path()).toBe('/auth/login');
+  }));
 });
