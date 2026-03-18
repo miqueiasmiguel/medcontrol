@@ -9,6 +9,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'tenants',
+    canActivate: [authGuard],
     loadChildren: () => import('./tenants/tenants.routes').then((m) => m.tenantsRoutes),
   },
   {
