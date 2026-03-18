@@ -12,9 +12,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../data-access/auth.service';
 import { WINDOW } from '../../core/tokens/window.token';
+import { GOOGLE_CLIENT_ID } from '../../core/tokens/google-client-id.token';
 
-const GOOGLE_AUTH_URL =
-  'https://accounts.google.com/o/oauth2/v2/auth?response_type=code&scope=openid%20email%20profile';
+const GOOGLE_AUTH_BASE_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 
 @Component({
   selector: 'app-login',
@@ -30,6 +30,7 @@ export class LoginComponent {
   private readonly router = inject(Router);
   private readonly win = inject(WINDOW);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly googleClientId = inject(GOOGLE_CLIENT_ID);
 
   readonly loading = signal(false);
   readonly errorMessage = signal('');
@@ -70,6 +71,12 @@ export class LoginComponent {
 
   loginWithGoogle() {
     const redirectUri = `${this.win.location.origin}/auth/callback`;
-    this.win.location.href = `${GOOGLE_AUTH_URL}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const params = new URLSearchParams({
+      response_type: 'code',
+      scope: 'openid email profile',
+      client_id: this.googleClientId,
+      redirect_uri: redirectUri,
+    });
+    this.win.location.href = `${GOOGLE_AUTH_BASE_URL}?${params.toString()}`;
   }
 }

@@ -7,6 +7,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../data-access/auth.service';
 import { WINDOW } from '../../core/tokens/window.token';
+import { GOOGLE_CLIENT_ID } from '../../core/tokens/google-client-id.token';
 
 describe('LoginComponent', () => {
   let authService: jest.Mocked<AuthService>;
@@ -32,6 +33,7 @@ describe('LoginComponent', () => {
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authService },
         { provide: WINDOW, useValue: mockWindow },
+        { provide: GOOGLE_CLIENT_ID, useValue: 'test-client-id' },
       ],
     });
 
@@ -128,5 +130,19 @@ describe('LoginComponent', () => {
     const googleBtn = el.querySelector<HTMLButtonElement>('[data-testid="google-btn"]')!;
     googleBtn.click();
     expect(mockWindow.location.href).toContain('accounts.google.com');
+  });
+
+  it('should include client_id in Google OAuth redirect url', () => {
+    const { el } = createComponent();
+    const googleBtn = el.querySelector<HTMLButtonElement>('[data-testid="google-btn"]')!;
+    googleBtn.click();
+    expect(mockWindow.location.href).toContain('client_id=test-client-id');
+  });
+
+  it('should include redirect_uri with /auth/callback in Google OAuth redirect url', () => {
+    const { el } = createComponent();
+    const googleBtn = el.querySelector<HTMLButtonElement>('[data-testid="google-btn"]')!;
+    googleBtn.click();
+    expect(mockWindow.location.href).toContain(encodeURIComponent('http://localhost:4200/auth/callback'));
   });
 });
