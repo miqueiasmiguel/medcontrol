@@ -1,0 +1,65 @@
+<div class="doctors-list">
+  <div class="doctors-list__header">
+    <div>
+      <h1 class="doctors-list__title">Médicos</h1>
+      <p class="doctors-list__subtitle">Gerencie os médicos cadastrados no sistema</p>
+    </div>
+    <button class="btn btn--primary" (click)="openCreateForm()" type="button">
+      Novo médico
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="doctors-list__error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <div class="doctors-list__card">
+    @if (doctors().length === 0) {
+      <div class="doctors-list__empty">
+        <p>Nenhum médico cadastrado.</p>
+        <button class="btn btn--secondary" (click)="openCreateForm()" type="button">
+          Cadastrar primeiro médico
+        </button>
+      </div>
+    } @else {
+      <table class="doctors-list__table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>CRM</th>
+            <th>Especialidade</th>
+            <th><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (doctor of doctors(); track doctor.id) {
+            <tr class="doctors-list__row" (click)="openEditForm(doctor)">
+              <td>{{ doctor.name }}</td>
+              <td>
+                <span class="doctors-list__crm">{{ doctor.crm }}/{{ doctor.councilState }}</span>
+              </td>
+              <td>{{ doctor.specialty }}</td>
+              <td class="doctors-list__actions">
+                <button
+                  class="btn btn--ghost btn--sm"
+                  (click)="openEditForm(doctor); $event.stopPropagation()"
+                  type="button"
+                >
+                  Editar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+@if (formOpen()) {
+  <app-doctor-form
+    [doctor]="selectedDoctor()"
+    (saved)="onSaved($event)"
+    (closed)="closeForm()"
+  />
+}

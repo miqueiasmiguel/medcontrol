@@ -6,6 +6,9 @@ namespace MedControl.Infrastructure.Persistence.Repositories;
 
 internal sealed class DoctorRepository(ApplicationDbContext db) : IDoctorRepository
 {
+    public async Task<IReadOnlyList<DoctorProfile>> ListAsync(CancellationToken ct = default) =>
+        await db.DoctorProfiles.ToListAsync(ct);
+
     public Task<DoctorProfile?> GetByIdAsync(Guid id, CancellationToken ct = default) =>
         db.DoctorProfiles.FirstOrDefaultAsync(d => d.Id == id, ct);
 

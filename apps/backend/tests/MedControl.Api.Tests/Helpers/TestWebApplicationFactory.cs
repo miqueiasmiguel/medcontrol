@@ -1,4 +1,5 @@
 using MedControl.Application.Common.Interfaces;
+using MedControl.Domain.Doctors;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 using Microsoft.AspNetCore.Authentication;
@@ -21,6 +22,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     public IUnitOfWork UnitOfWork { get; } = Substitute.For<IUnitOfWork>();
     public IGoogleAuthService GoogleAuthService { get; } = Substitute.For<IGoogleAuthService>();
     public ITenantRepository TenantRepository { get; } = Substitute.For<ITenantRepository>();
+    public IDoctorRepository DoctorRepository { get; } = Substitute.For<IDoctorRepository>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -49,6 +51,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IDistributedCache>();
             services.RemoveAll<IGoogleAuthService>();
             services.RemoveAll<ITenantRepository>();
+            services.RemoveAll<IDoctorRepository>();
 
             services.AddSingleton(MagicLinkService);
             services.AddSingleton(EmailService);
@@ -58,6 +61,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton<IDistributedCache>(Substitute.For<IDistributedCache>());
             services.AddSingleton(GoogleAuthService);
             services.AddSingleton(TenantRepository);
+            services.AddSingleton(DoctorRepository);
 
             // Replace JWT auth with a test handler that reads from X-Test-* headers
             services.AddAuthentication(TestAuthHandler.SchemeName)
@@ -75,7 +79,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     /// <summary>
     /// Creates a client that authenticates as the given user via X-Test-* headers.
     /// </summary>
-    public HttpClient CreateAuthenticatedClient(Guid userId, string email)
+    public HttpClient CreateAuthenticatedClient(Guid userId, string email, Guid? tenantId = null)
     {
         var client = CreateClient(new WebApplicationFactoryClientOptions
         {
@@ -84,6 +88,10 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
         });
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
         client.DefaultRequestHeaders.Add(TestAuthHandler.EmailHeader, email);
+        if (tenantId.HasValue)
+        {
+            client.DefaultRequestHeaders.Add(TestAuthHandler.TenantIdHeader, tenantId.Value.ToString());
+        }
         return client;
     }
 }
