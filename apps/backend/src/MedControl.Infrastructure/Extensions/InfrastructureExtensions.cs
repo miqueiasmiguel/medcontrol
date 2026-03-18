@@ -1,5 +1,6 @@
 using MedControl.Application.Auth.Settings;
 using MedControl.Application.Common.Interfaces;
+using MedControl.Domain.Doctors;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 using MedControl.Infrastructure.Auth;
@@ -71,6 +72,7 @@ public static class InfrastructureExtensions
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITenantRepository, TenantRepository>();
+        services.AddScoped<IDoctorRepository, DoctorRepository>();
 
         return services;
     }
