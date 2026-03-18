@@ -1,6 +1,7 @@
 using MedControl.Application.Common.Interfaces;
 using MedControl.Domain.Common;
 using MedControl.Domain.Doctors;
+using MedControl.Domain.HealthPlans;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 using MedControl.Infrastructure.Persistence.Interceptors;
@@ -19,6 +20,7 @@ public sealed class ApplicationDbContext(
     public DbSet<TenantMember> TenantMembers => Set<TenantMember>();
     public DbSet<User> Users => Set<User>();
     public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
+    public DbSet<HealthPlan> HealthPlans => Set<HealthPlan>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -36,6 +38,9 @@ public sealed class ApplicationDbContext(
 
         modelBuilder.Entity<DoctorProfile>()
             .HasQueryFilter(d => d.TenantId == currentUser.TenantId!.Value);
+
+        modelBuilder.Entity<HealthPlan>()
+            .HasQueryFilter(hp => hp.TenantId == currentUser.TenantId!.Value);
 
         base.OnModelCreating(modelBuilder);
     }

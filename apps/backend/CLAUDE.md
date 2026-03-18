@@ -15,7 +15,8 @@ src/
 │   ├── Auth/             ← AuthProvider (enum)
 │   ├── Tenants/          ← Tenant, TenantMember, TenantRole (enum), ITenantRepository, Events/
 │   ├── Users/            ← User, GlobalRole (enum), IUserRepository, Events/
-│   └── Doctors/          ← DoctorProfile, IDoctorRepository
+│   ├── Doctors/          ← DoctorProfile, IDoctorRepository
+│   └── HealthPlans/      ← HealthPlan, IHealthPlanRepository
 ├── MedControl.Application/
 │   ├── Mediator/         ← IMediator, Mediator, ICommand, IQuery, IRequest, Unit, IPipelineBehavior, IDomainEventHandler
 │   ├── Behaviors/        ← LoggingBehavior, ValidationBehavior, TransactionBehavior
@@ -28,6 +29,10 @@ src/
 │   │   ├── Commands/     ← CreateDoctorCommand(Handler+Validator), UpdateDoctorCommand(Handler+Validator)
 │   │   ├── Queries/      ← GetDoctorsQuery(Handler)
 │   │   └── DTOs/         ← DoctorDto
+│   ├── HealthPlans/
+│   │   ├── Commands/     ← CreateHealthPlanCommand(Handler+Validator), UpdateHealthPlanCommand(Handler+Validator)
+│   │   ├── Queries/      ← GetHealthPlansQuery(Handler)
+│   │   └── DTOs/         ← HealthPlanDto
 │   └── Common/
 │       ├── Interfaces/   ← IUnitOfWork, ICurrentTenantService, ICurrentUserService,
 │       │                    IEmailService, ITokenService, IMagicLinkService, IGoogleAuthService
@@ -45,9 +50,9 @@ src/
 │   └── Persistence/
 │       ├── ApplicationDbContext.cs
 │       ├── Interceptors/ ← AuditableEntityInterceptor, DomainEventDispatchInterceptor
-│       ├── Repositories/ ← UserRepository, TenantRepository, DoctorRepository
+│       ├── Repositories/ ← UserRepository, TenantRepository, DoctorRepository, HealthPlanRepository
 │       └── Configurations/ ← UserConfiguration, TenantConfiguration, TenantMemberConfiguration,
-│                              DoctorProfileConfiguration
+│                              DoctorProfileConfiguration, HealthPlanConfiguration
 └── MedControl.Api/
     ├── Program.cs              ← ~15 linhas, sem AddControllers
     ├── Endpoints/
@@ -157,6 +162,30 @@ public enum GlobalRole { None = 0, Support = 1, Admin = 2 }
 public enum AuthProvider { MagicLink = 0, Google = 1 }
 ```
 
+### HealthPlan
+
+```csharp
+public sealed class HealthPlan : BaseAuditableEntity, IAggregateRoot, IHasTenant
+{
+    private HealthPlan() { }  // EF Core
+    public Guid TenantId { get; private set; }
+    public string Name { get; private set; }      // max 256
+    public string TissCode { get; private set; }  // max 20, código ANS
+
+    public static class Errors { NameRequired, TissCodeRequired }
+
+    public static Result<HealthPlan> Create(Guid tenantId, string name, string tissCode)
+    public Result Update(string name, string tissCode)
+}
+
+// IHealthPlanRepository
+Task<IReadOnlyList<HealthPlan>> ListAsync(CancellationToken ct = default);
+Task<HealthPlan?> GetByIdAsync(Guid id, CancellationToken ct = default);
+Task<bool> ExistsByTissCodeAsync(Guid tenantId, string tissCode, CancellationToken ct = default);
+Task AddAsync(HealthPlan healthPlan, CancellationToken ct = default);
+Task UpdateAsync(HealthPlan healthPlan, CancellationToken ct = default);
+```
+
 ### DoctorProfile
 
 ```csharp
@@ -242,9 +271,9 @@ public sealed class MagicLinkSettings
 
 ### ApplicationDbContext
 
-- DbSets: `Tenants`, `TenantMembers`, `Users`, `DoctorProfiles`
+- DbSets: `Tenants`, `TenantMembers`, `Users`, `DoctorProfiles`, `HealthPlans`
 - Interceptors: `AuditableEntityInterceptor`, `DomainEventDispatchInterceptor`
-- Global query filters: `TenantMembers` e `DoctorProfiles` filtrados por `currentUser.TenantId`
+- Global query filters: `TenantMembers`, `DoctorProfiles` e `HealthPlans` filtrados por `currentUser.TenantId`
 - Implementa `IUnitOfWork` diretamente
 - Connection string key: `"Database"` (Npgsql)
 
@@ -259,11 +288,13 @@ DomainEventDispatchInterceptor  → após SaveChanges: coleta eventos de BaseEnt
 ### Repositories
 
 ```
-UserRepository  : GetByIdAsync, GetByEmailAsync, AddAsync, UpdateAsync
-TenantRepository: GetByIdAsync (Include Members), GetBySlugAsync, AddAsync, UpdateAsync
-                  ListByUserAsync → usa .IgnoreQueryFilters() para bypass do filtro multi-tenant
-DoctorRepository: ExistsByCrmAndTenantAsync(crm, tenantId), AddAsync, ListAsync
-                  → global query filter cuida do escopo de tenant automaticamente no ListAsync
+UserRepository      : GetByIdAsync, GetByEmailAsync, AddAsync, UpdateAsync
+TenantRepository    : GetByIdAsync (Include Members), GetBySlugAsync, AddAsync, UpdateAsync
+                      ListByUserAsync → usa .IgnoreQueryFilters() para bypass do filtro multi-tenant
+DoctorRepository    : ExistsByCrmAsync(tenantId, crm, councilState), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
+                      → global query filter cuida do escopo de tenant automaticamente no ListAsync
+HealthPlanRepository: ExistsByTissCodeAsync(tenantId, tissCode), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
+                      → global query filter cuida do escopo de tenant automaticamente no ListAsync
 ```
 
 ### Entity Configurations (`Persistence/Configurations/`)
@@ -276,6 +307,7 @@ snake_case em tudo (convenção PostgreSQL). Tabelas: `users`, `tenants`, `tenan
 | `TenantConfiguration` | índice único `ix_tenants_slug`; `Members` com `PropertyAccessMode.Field` |
 | `TenantMemberConfiguration` | FK→Tenant: `Cascade`; FK→User: `Restrict`; índice composto único `(tenant_id, user_id)` + índice simples `user_id`; `Role`: `HasConversion<string>()`, max 50 |
 | `DoctorProfileConfiguration` | Tabela `doctor_profiles`; índice único `(crm, council_state, tenant_id)`; global query filter por `tenant_id`; `CA1861` suprimido no arquivo de migration |
+| `HealthPlanConfiguration` | Tabela `health_plans`; índice único `ix_health_plans_tenant_tiss_code` em `(tenant_id, tiss_code)`; índice simples `ix_health_plans_tenant_id`; `CA1861` suprimido no arquivo de migration |
 
 Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
 
@@ -359,6 +391,9 @@ doctors.MapDoctors();
 | `GET` | `/doctors` | ✅ | Lista médicos do tenant; retorna `DoctorDto[]` → 200 |
 | `POST` | `/doctors` | ✅ | Cria médico; verifica CRM duplicado → 201 / 409 |
 | `PATCH` | `/doctors/{id}` | ✅ | Atualiza médico; verifica CRM duplicado → 200 / 404 / 409 |
+| `GET` | `/health-plans` | ✅ | Lista convênios do tenant; retorna `HealthPlanDto[]` → 200 |
+| `POST` | `/health-plans` | ✅ | Cria convênio; verifica TissCode duplicado → 201 / 409 |
+| `PATCH` | `/health-plans/{id}` | ✅ | Atualiza convênio; verifica TissCode duplicado → 200 / 404 / 409 |
 
 ### Mapeamento Result → IResult
 
@@ -499,7 +534,7 @@ builder.ConfigureAppConfiguration((_, config) =>
 
 1. ~~**Tenant Roles**~~ — ✅ implementado (`TenantRole` enum: Admin/Operator/Doctor; validação no `AddMember` e `UpdateRole`)
 2. ~~**DoctorProfile**~~ — ✅ implementado (`DoctorProfile`: CRM, CouncilState, Specialty; `IDoctorRepository`; `CreateDoctorCommand`; `UpdateDoctorCommand`; `GetDoctorsQuery`; endpoints `GET/POST/PATCH /doctors`)
-3. **HealthPlan** — aggregate `HealthPlan`; campos: name, tissCode; tabela `health_plans`
+3. ~~**HealthPlan**~~ — ✅ implementado (`HealthPlan`: name, tissCode; `IHealthPlanRepository`; `CreateHealthPlanCommand`; `UpdateHealthPlanCommand`; `GetHealthPlansQuery`; endpoints `GET/POST/PATCH /health-plans`)
 4. **Procedure** — aggregate `Procedure`; campos: code (TUSS/CBHPM), description, value; tabela `procedures`
 5. **Payment** — aggregate root; campos definidos no CLAUDE.md raiz; tabela `payments`
 6. **Payment Queries** — `ListPaymentsByDoctorQuery`, `GetPaymentQuery`, com paginação e filtros

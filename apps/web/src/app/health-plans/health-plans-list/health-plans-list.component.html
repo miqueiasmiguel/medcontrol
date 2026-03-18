@@ -1,0 +1,63 @@
+<div class="health-plans-list">
+  <div class="health-plans-list__header">
+    <div>
+      <h1 class="health-plans-list__title">Convênios</h1>
+      <p class="health-plans-list__subtitle">Gerencie os convênios cadastrados no sistema</p>
+    </div>
+    <button class="btn btn--primary" (click)="openCreateForm()" type="button">
+      Novo convênio
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="health-plans-list__error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <div class="health-plans-list__card">
+    @if (healthPlans().length === 0) {
+      <div class="health-plans-list__empty">
+        <p>Nenhum convênio cadastrado.</p>
+        <button class="btn btn--secondary" (click)="openCreateForm()" type="button">
+          Cadastrar primeiro convênio
+        </button>
+      </div>
+    } @else {
+      <table class="health-plans-list__table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Código TISS</th>
+            <th><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (healthPlan of healthPlans(); track healthPlan.id) {
+            <tr class="health-plans-list__row" (click)="openEditForm(healthPlan)">
+              <td>{{ healthPlan.name }}</td>
+              <td>
+                <span class="health-plans-list__tiss-code">{{ healthPlan.tissCode }}</span>
+              </td>
+              <td class="health-plans-list__actions">
+                <button
+                  class="btn btn--ghost btn--sm"
+                  (click)="openEditForm(healthPlan); $event.stopPropagation()"
+                  type="button"
+                >
+                  Editar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+@if (formOpen()) {
+  <app-health-plan-form
+    [healthPlan]="selectedHealthPlan()"
+    (saved)="onSaved($event)"
+    (closed)="closeForm()"
+  />
+}

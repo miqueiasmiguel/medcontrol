@@ -1,5 +1,6 @@
 using MedControl.Api.Endpoints.Auth;
 using MedControl.Api.Endpoints.Doctors;
+using MedControl.Api.Endpoints.HealthPlans;
 using MedControl.Api.Endpoints.Tenants;
 
 namespace MedControl.Api.Endpoints;
@@ -18,6 +19,9 @@ public static class EndpointExtensions
 
         var doctors = app.MapGroup("doctors");
         doctors.MapDoctors();
+
+        var healthPlans = app.MapGroup("health-plans");
+        healthPlans.MapHealthPlans();
 
         return app;
     }
