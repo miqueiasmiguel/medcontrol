@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
   standalone: true,
   imports: [RouterLink],
   templateUrl: './magic-link-sent.component.html',
+  styleUrl: './magic-link-sent.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MagicLinkSentComponent {
