@@ -21,6 +21,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseApiExceptionHandler();
+app.UseCors("WebApp");
+app.UseCookiePolicy(new CookiePolicyOptions
+{
+    MinimumSameSitePolicy = SameSiteMode.Strict,
+    Secure = CookieSecurePolicy.SameAsRequest,
+});
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

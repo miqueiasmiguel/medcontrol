@@ -32,6 +32,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
                 ["Jwt:Audience"] = "medcontrol-api",
                 ["ConnectionStrings:Database"] = "Host=localhost;Database=test",
                 ["ConnectionStrings:Redis"] = "localhost",
+                ["Cors:WebOrigin"] = "http://localhost:4200",
             });
         });
 

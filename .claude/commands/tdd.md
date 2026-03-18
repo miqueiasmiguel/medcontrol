@@ -168,16 +168,37 @@ Extrair template do email para constante, melhorar mensagem, etc.
 
 ## 📝 PÓS-IMPLEMENTAÇÃO — Atualizar CLAUDE.md
 
-Após todos os ciclos RED → GREEN → REFACTOR → COMMIT da feature:
+Após todos os ciclos RED → GREEN → REFACTOR → COMMIT da feature, atualize os arquivos relevantes abaixo. **Só atualize o que mudou.** Informações deriváveis do código não precisam ser documentadas.
 
-1. Atualizar `apps/backend/CLAUDE.md` com:
-   - Novas entidades/enums criados (estrutura de campos, comportamentos)
-   - Novos endpoints adicionados
-   - Novos serviços ou interfaces de Application/Infrastructure
-   - Atualizar a seção "O que ainda não foi implementado" removendo o que foi feito
+### `apps/backend/CLAUDE.md` — atualizar quando a feature tocar o backend
 
-2. Atualizar `CLAUDE.md` raiz (se pertinente) com:
-   - Mudanças de escopo ou decisões de domínio relevantes
-   - Novos scopes de commit (se adicionados)
+- Novas entidades/value objects/enums: campos, invariantes, métodos públicos relevantes
+- Novos endpoints: rota, método HTTP, payload, resposta
+- Novos commands/queries e seus handlers
+- Novas interfaces em `Application/Common/Interfaces/`
+- Novas implementações em Infrastructure (serviços, repositórios)
+- Remover itens da seção "O que ainda não foi implementado" que foram concluídos
 
-3. Apenas informações que **não são deriváveis do código** — não duplicar o que já está no código fonte.
+### `apps/web/CLAUDE.md` — atualizar quando a feature tocar o frontend Angular
+
+- Novos módulos/features adicionados à estrutura de pastas
+- Novas convenções de teste específicas da feature
+- Novos serviços ou tokens de injeção relevantes para futuras features
+- Mudanças em `app.config.ts` ou `app.routes.ts` que afetam toda a aplicação
+
+### `apps/mobile/CLAUDE.md` — atualizar quando a feature tocar o mobile React Native
+
+- Novas screens ou navigators adicionados
+- Novos hooks ou contextos globais
+- Dependências nativas adicionadas que requerem configuração extra
+
+### `CLAUDE.md` raiz — atualizar apenas para mudanças transversais
+
+- Mudanças de escopo ou decisões de domínio que afetam múltiplas camadas
+- Novos módulos adicionados à tabela de Módulos ou Bounded Contexts
+- Novos scopes válidos para commitlint
+- Novas variáveis de ambiente obrigatórias
+
+### Regra de ouro para documentação
+
+> Só documente o que **não é óbvio ao ler o código**. Se alguém lendo o arquivo `.cs` ou `.ts` consegue derivar a informação, não precisa estar no CLAUDE.md.

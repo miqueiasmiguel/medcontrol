@@ -8,3 +8,13 @@
 @use '../../../packages/design-system/src/web/tokens' as *;
 @use '../../../packages/design-system/src/web/reset' as *;
 @use '../../../packages/design-system/src/web/components' as *;
+
+// Angular Material token overrides
+.mat-mdc-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: var(--mmc-orange-500);
+}
+
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--mmc-navy-900);
+  --mdc-snackbar-supporting-text-color: var(--mmc-text-inverse);
+}

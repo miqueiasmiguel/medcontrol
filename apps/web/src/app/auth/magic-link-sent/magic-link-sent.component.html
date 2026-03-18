@@ -1,0 +1,27 @@
+<div class="magic-link-sent-page">
+  <div class="magic-link-sent-card">
+    <div class="card-logo">
+      <span class="card-wordmark">MedControl</span>
+    </div>
+
+    <div class="icon-wrapper" aria-hidden="true">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2"/>
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+      </svg>
+    </div>
+
+    <h1 class="card-title">Verifique seu e-mail</h1>
+
+    @if (email) {
+      <p class="card-body">Enviamos um link de acesso para</p>
+      <span class="email-pill">{{ email }}</span>
+    } @else {
+      <p class="card-body">Enviamos um link de acesso para o seu e-mail.</p>
+    }
+
+    <p class="hint">O link expira em 15 minutos. Verifique também a pasta de spam.</p>
+
+    <a routerLink="/auth/login" class="btn-ghost btn-full">Tentar novamente</a>
+  </div>
+</div>

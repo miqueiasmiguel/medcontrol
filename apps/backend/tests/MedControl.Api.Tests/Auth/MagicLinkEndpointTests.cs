@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using MedControl.Api.Tests.Helpers;
-using MedControl.Application.Auth.DTOs;
 using MedControl.Application.Common.Interfaces;
 using MedControl.Domain.Users;
 using NSubstitute;
@@ -44,7 +43,7 @@ public sealed class MagicLinkEndpointTests : IClassFixture<TestWebApplicationFac
     }
 
     [Fact]
-    public async Task POST_auth_magic_link_verify_ValidToken_Returns200WithTokens()
+    public async Task POST_auth_magic_link_verify_ValidToken_Returns204WithCookies()
     {
         var email = "user@example.com";
         var user = User.Create(email).Value;
@@ -62,10 +61,12 @@ public sealed class MagicLinkEndpointTests : IClassFixture<TestWebApplicationFac
         var response = await _client.PostAsJsonAsync("/auth/magic-link/verify",
             new { token = "valid-token" });
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var dto = await response.Content.ReadFromJsonAsync<AuthTokenDto>();
-        dto!.AccessToken.Should().Be("access-token");
-        dto.RefreshToken.Should().Be("refresh-token");
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var cookies = response.Headers.GetValues("Set-Cookie").ToList();
+        cookies.Should().Contain(c => c.StartsWith("mmc_access_token=") && c.Contains("httponly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_refresh_token=") && c.Contains("httponly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_session=1") && !c.Contains("httponly"));
     }
 
     [Fact]
