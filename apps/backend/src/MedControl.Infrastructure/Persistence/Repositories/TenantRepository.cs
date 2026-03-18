@@ -21,6 +21,8 @@ internal sealed class TenantRepository(ApplicationDbContext db) : ITenantReposit
             .ToListAsync(ct);
 
         return await db.Tenants
+            .IgnoreQueryFilters()
+            .Include(t => t.Members)
             .Where(t => tenantIds.Contains(t.Id))
             .ToListAsync(ct);
     }

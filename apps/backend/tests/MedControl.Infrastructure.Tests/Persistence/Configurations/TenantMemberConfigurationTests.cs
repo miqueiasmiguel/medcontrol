@@ -95,4 +95,13 @@ public sealed class TenantMemberConfigurationTests(DbContextModelFixture fixture
 
         index.GetDatabaseName().Should().Be("ix_tenant_members_user_id");
     }
+
+    [Fact]
+    public void TenantRole_Owner_RoundtripsThroughStringConverter()
+    {
+        var ownerString = TenantRole.Owner.ToString();
+        var parsed = Enum.Parse<TenantRole>(ownerString);
+        parsed.Should().Be(TenantRole.Owner);
+        ownerString.Should().Be("Owner");
+    }
 }
