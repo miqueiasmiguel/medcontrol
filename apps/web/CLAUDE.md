@@ -18,7 +18,7 @@ src/app/
 │   └── tokens/
 │       └── window.token.ts  ← InjectionToken<Window> para mockabilidade em testes
 └── auth/
-    ├── auth.routes.ts        ← lazy routes: login, magic-link-sent, callback
+    ├── auth.routes.ts        ← lazy routes: login, magic-link-sent, callback, verify
     ├── data-access/
     │   ├── auth.service.ts   ← sendMagicLink, verifyMagicLink, loginWithGoogle, logout
     │   └── session.service.ts ← isAuthenticated() lê cookie mmc_session
@@ -29,6 +29,7 @@ src/app/
     │   └── auth.interceptor.ts ← withCredentials: true em /api/*
     ├── login/                ← LoginComponent (magic link form + Google button)
     ├── magic-link-sent/      ← MagicLinkSentComponent (confirmação)
+    ├── magic-link-callback/  ← MagicLinkCallbackComponent (lê ?token, chama verifyMagicLink → cookie)
     └── google-callback/      ← GoogleCallbackComponent (troca code → cookie)
 ```
 

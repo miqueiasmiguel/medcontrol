@@ -27,4 +27,11 @@ export const authRoutes: Routes = [
         (m) => m.GoogleCallbackComponent
       ),
   },
+  {
+    path: 'verify',
+    loadComponent: () =>
+      import('./magic-link-callback/magic-link-callback.component').then(
+        (m) => m.MagicLinkCallbackComponent
+      ),
+  },
 ];
