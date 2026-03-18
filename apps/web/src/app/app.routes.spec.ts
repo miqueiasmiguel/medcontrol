@@ -1,8 +1,10 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { of } from 'rxjs';
 import { appRoutes } from './app.routes';
 import { SessionService } from './auth/data-access/session.service';
+import { TenantService } from './tenants/data-access/tenant.service';
 
 describe('appRoutes', () => {
   beforeEach(() => {
@@ -12,6 +14,10 @@ describe('appRoutes', () => {
         {
           provide: SessionService,
           useValue: { isAuthenticated: () => false },
+        },
+        {
+          provide: TenantService,
+          useValue: { getMyTenants: () => of([]), switchTenant: () => of(null) },
         },
       ],
     });

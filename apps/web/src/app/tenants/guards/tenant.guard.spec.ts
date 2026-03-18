@@ -1,5 +1,5 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { Router, UrlTree } from '@angular/router';
+import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { tenantGuard } from './tenant.guard';
 import { TenantService, TenantDto } from '../data-access/tenant.service';
