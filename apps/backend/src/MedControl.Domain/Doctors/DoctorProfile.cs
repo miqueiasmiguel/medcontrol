@@ -54,6 +54,36 @@ public sealed class DoctorProfile : BaseAuditableEntity, IAggregateRoot, IHasTen
         };
     }
 
+    public Result Update(string name, string crm, string councilState, string specialty)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Result.Failure(Errors.NameRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(crm))
+        {
+            return Result.Failure(Errors.CrmRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(councilState))
+        {
+            return Result.Failure(Errors.CouncilStateRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(specialty))
+        {
+            return Result.Failure(Errors.SpecialtyRequired);
+        }
+
+        Name = name.Trim();
+        Crm = crm.Trim();
+        CouncilState = councilState.Trim();
+        Specialty = specialty.Trim();
+
+        return Result.Success();
+    }
+
     public Result LinkUser(Guid userId)
     {
         if (UserId.HasValue)

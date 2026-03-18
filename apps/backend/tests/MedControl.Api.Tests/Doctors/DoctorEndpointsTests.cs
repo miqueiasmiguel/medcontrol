@@ -5,6 +5,7 @@ using MedControl.Api.Tests.Helpers;
 using MedControl.Application.Doctors.DTOs;
 using MedControl.Domain.Doctors;
 using NSubstitute;
+using NSubstitute.ReturnsExtensions;
 
 namespace MedControl.Api.Tests.Doctors;
 
@@ -139,5 +140,108 @@ public sealed class DoctorEndpointsTests : IClassFixture<TestWebApplicationFacto
         body.Crm.Should().Be("123456");
         body.CouncilState.Should().Be("SP");
         body.Specialty.Should().Be("Cardiologia");
+    }
+
+    // PATCH /doctors/{id}
+
+    [Fact]
+    public async Task PATCH_doctors_id_SemAutenticacao_Retorna401()
+    {
+        var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            HandleCookies = false,
+            AllowAutoRedirect = false,
+        });
+
+        var response = await client.PatchAsJsonAsync($"/doctors/{Guid.NewGuid()}", new
+        {
+            name = "Dr. Novo",
+            crm = "111111",
+            councilState = "SP",
+            specialty = "Cardiologia",
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task PATCH_doctors_id_MedicoNaoEncontrado_Retorna404()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var doctorId = Guid.NewGuid();
+        var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
+
+        _factory.DoctorRepository
+            .GetByIdAsync(doctorId, Arg.Any<CancellationToken>())
+            .ReturnsNull();
+
+        var response = await client.PatchAsJsonAsync($"/doctors/{doctorId}", new
+        {
+            name = "Dr. Novo",
+            crm = "111111",
+            councilState = "SP",
+            specialty = "Cardiologia",
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PATCH_doctors_id_DadosValidos_Retorna200ComDoctorDto()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var doctor = DoctorProfile.Create(tenantId, "Dr. João", "123456", "SP", "Cardiologia").Value;
+        var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
+
+        _factory.DoctorRepository
+            .GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>())
+            .Returns(doctor);
+        _factory.DoctorRepository
+            .ExistsByCrmAsync(tenantId, "654321", "RJ", Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var response = await client.PatchAsJsonAsync($"/doctors/{doctor.Id}", new
+        {
+            name = "Dr. Maria",
+            crm = "654321",
+            councilState = "RJ",
+            specialty = "Neurologia",
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<DoctorDto>();
+        body.Should().NotBeNull();
+        body!.Name.Should().Be("Dr. Maria");
+        body.Crm.Should().Be("654321");
+        body.CouncilState.Should().Be("RJ");
+        body.Specialty.Should().Be("Neurologia");
+    }
+
+    [Fact]
+    public async Task PATCH_doctors_id_CRMDuplicado_Retorna409()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var doctor = DoctorProfile.Create(tenantId, "Dr. João", "123456", "SP", "Cardiologia").Value;
+        var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
+
+        _factory.DoctorRepository
+            .GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>())
+            .Returns(doctor);
+        _factory.DoctorRepository
+            .ExistsByCrmAsync(tenantId, "999999", "SP", Arg.Any<CancellationToken>())
+            .Returns(true);
+
+        var response = await client.PatchAsJsonAsync($"/doctors/{doctor.Id}", new
+        {
+            name = "Dr. João",
+            crm = "999999",
+            councilState = "SP",
+            specialty = "Cardiologia",
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 }

@@ -1,4 +1,5 @@
 using MedControl.Application.Doctors.Commands.CreateDoctor;
+using MedControl.Application.Doctors.Commands.UpdateDoctor;
 using MedControl.Application.Doctors.DTOs;
 using MedControl.Application.Doctors.Queries.GetDoctors;
 using MedControl.Application.Mediator;
@@ -22,6 +23,15 @@ public static class DoctorEndpoints
              .Produces<DoctorDto>(StatusCodes.Status201Created)
              .Produces(StatusCodes.Status400BadRequest)
              .Produces(StatusCodes.Status401Unauthorized)
+             .Produces(StatusCodes.Status409Conflict);
+
+        group.MapPatch("/{id:guid}", UpdateDoctor)
+             .WithName("UpdateDoctor")
+             .RequireAuthorization()
+             .Produces<DoctorDto>(StatusCodes.Status200OK)
+             .Produces(StatusCodes.Status400BadRequest)
+             .Produces(StatusCodes.Status401Unauthorized)
+             .Produces(StatusCodes.Status404NotFound)
              .Produces(StatusCodes.Status409Conflict);
 
         return group;
@@ -57,6 +67,23 @@ public static class DoctorEndpoints
         return Results.Created($"/doctors/{result.Value!.Id}", result.Value);
     }
 
+    private static async Task<IResult> UpdateDoctor(
+        Guid id,
+        UpdateDoctorRequest request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<DoctorDto>>(
+            new UpdateDoctorCommand(id, request.Name, request.Crm, request.CouncilState, request.Specialty), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        return Results.Ok(result.Value);
+    }
+
     private static IResult ToErrorResult(Error error) => error.Type switch
     {
         ErrorType.Unauthorized => Results.Problem(error.Description, statusCode: 401),
@@ -67,3 +94,4 @@ public static class DoctorEndpoints
 }
 
 internal sealed record CreateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty);
+internal sealed record UpdateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty);
