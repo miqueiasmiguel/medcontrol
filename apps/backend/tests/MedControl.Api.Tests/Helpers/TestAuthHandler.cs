@@ -16,6 +16,7 @@ public sealed class TestAuthHandler(
     public const string SchemeName = "TestAuth";
     public const string UserIdHeader = "X-Test-UserId";
     public const string EmailHeader = "X-Test-Email";
+    public const string TenantIdHeader = "X-Test-TenantId";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -30,6 +31,11 @@ public sealed class TestAuthHandler(
             new(JwtRegisteredClaimNames.Sub, userIdValues.ToString()),
             new(JwtRegisteredClaimNames.Email, emailValues.ToString()),
         };
+
+        if (Request.Headers.TryGetValue(TenantIdHeader, out var tenantIdValues))
+        {
+            claims.Add(new Claim("tenant_id", tenantIdValues.ToString()));
+        }
 
         var identity = new ClaimsIdentity(claims, SchemeName);
         var principal = new ClaimsPrincipal(identity);

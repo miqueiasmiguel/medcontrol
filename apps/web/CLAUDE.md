@@ -12,25 +12,55 @@
 ```
 src/app/
 ├── app.ts                    ← root component (apenas <router-outlet>)
-├── app.routes.ts             ← rotas lazy, redirect / → /auth/login
+├── app.routes.ts             ← rotas lazy; rota raiz usa ShellComponent com children
 ├── app.config.ts             ← provideRouter, provideHttpClient, provideAnimationsAsync
 ├── core/
 │   └── tokens/
 │       └── window.token.ts  ← InjectionToken<Window> para mockabilidade em testes
-└── auth/
-    ├── auth.routes.ts        ← lazy routes: login, magic-link-sent, callback, verify
+├── layout/
+│   ├── shell/
+│   │   └── shell.component.ts   ← ShellComponent: sidebar + <router-outlet>; signal collapsed
+│   └── sidebar/
+│       └── sidebar.component.ts ← SidebarComponent: nav groups + logout; @Input collapsed
+├── auth/
+│   ├── auth.routes.ts        ← lazy routes: login, magic-link-sent, callback, verify
+│   ├── data-access/
+│   │   ├── auth.service.ts   ← sendMagicLink, verifyMagicLink, loginWithGoogle, logout
+│   │   └── session.service.ts ← isAuthenticated() lê cookie mmc_session
+│   ├── guards/
+│   │   ├── auth.guard.ts     ← redireciona para /auth/login se não autenticado
+│   │   └── guest.guard.ts    ← redireciona para / se já autenticado
+│   ├── interceptors/
+│   │   └── auth.interceptor.ts ← withCredentials: true em /api/*
+│   ├── login/                ← LoginComponent (magic link form + Google button)
+│   ├── magic-link-sent/      ← MagicLinkSentComponent (confirmação)
+│   ├── magic-link-callback/  ← MagicLinkCallbackComponent (lê ?token, chama verifyMagicLink → cookie)
+│   └── google-callback/      ← GoogleCallbackComponent (troca code → cookie)
+├── doctors/
+│   ├── doctors.routes.ts     ← { path: '' → DoctorsListComponent }
+│   ├── data-access/
+│   │   └── doctor.service.ts ← getDoctors, createDoctor, updateDoctor; DoctorDto, CreateDoctorCommand
+│   ├── doctors-list/         ← tabela de médicos + botão "Novo médico"; signals: doctors, formOpen, selectedDoctor
+│   └── doctor-form/          ← slide-over panel; @Input doctor (null=criar); @Output saved/closed
+└── tenants/
+    ├── tenants.routes.ts     ← lazy routes: /new, /select
     ├── data-access/
-    │   ├── auth.service.ts   ← sendMagicLink, verifyMagicLink, loginWithGoogle, logout
-    │   └── session.service.ts ← isAuthenticated() lê cookie mmc_session
+    │   └── tenant.service.ts ← getMyTenants, createTenant, switchTenant
     ├── guards/
-    │   ├── auth.guard.ts     ← redireciona para /auth/login se não autenticado
-    │   └── guest.guard.ts    ← redireciona para / se já autenticado
-    ├── interceptors/
-    │   └── auth.interceptor.ts ← withCredentials: true em /api/*
-    ├── login/                ← LoginComponent (magic link form + Google button)
-    ├── magic-link-sent/      ← MagicLinkSentComponent (confirmação)
-    ├── magic-link-callback/  ← MagicLinkCallbackComponent (lê ?token, chama verifyMagicLink → cookie)
-    └── google-callback/      ← GoogleCallbackComponent (troca code → cookie)
+    │   └── tenant.guard.ts   ← multi-tenant routing logic
+    ├── tenant-new/           ← TenantNewComponent
+    └── tenant-select/        ← TenantSelectComponent
+```
+
+## Roteamento
+
+```
+/ (ShellComponent)              ← authGuard + tenantGuard
+  ├── ''  → redirect /doctors
+  └── doctors/                  ← DoctorsListComponent (lazy)
+/auth/**                        ← sem guards
+/tenants/**                     ← authGuard
+/**                             → redirect /auth/login
 ```
 
 ## Autenticação com HttpOnly Cookies

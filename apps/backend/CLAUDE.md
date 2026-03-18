@@ -14,7 +14,8 @@ src/
 │   ├── Common/           ← BaseEntity, BaseAuditableEntity, Result, Error, IAggregateRoot, IDomainEvent, IHasTenant
 │   ├── Auth/             ← AuthProvider (enum)
 │   ├── Tenants/          ← Tenant, TenantMember, TenantRole (enum), ITenantRepository, Events/
-│   └── Users/            ← User, GlobalRole (enum), IUserRepository, Events/
+│   ├── Users/            ← User, GlobalRole (enum), IUserRepository, Events/
+│   └── Doctors/          ← DoctorProfile, IDoctorRepository
 ├── MedControl.Application/
 │   ├── Mediator/         ← IMediator, Mediator, ICommand, IQuery, IRequest, Unit, IPipelineBehavior, IDomainEventHandler
 │   ├── Behaviors/        ← LoggingBehavior, ValidationBehavior, TransactionBehavior
@@ -23,6 +24,10 @@ src/
 │   │   │                    GoogleLoginCommand(Handler+Validator)
 │   │   ├── DTOs/         ← AuthTokenDto
 │   │   └── Settings/     ← MagicLinkSettings
+│   ├── Doctors/
+│   │   ├── Commands/     ← CreateDoctorCommand(Handler+Validator), UpdateDoctorCommand(Handler+Validator)
+│   │   ├── Queries/      ← GetDoctorsQuery(Handler)
+│   │   └── DTOs/         ← DoctorDto
 │   └── Common/
 │       ├── Interfaces/   ← IUnitOfWork, ICurrentTenantService, ICurrentUserService,
 │       │                    IEmailService, ITokenService, IMagicLinkService, IGoogleAuthService
@@ -40,12 +45,14 @@ src/
 │   └── Persistence/
 │       ├── ApplicationDbContext.cs
 │       ├── Interceptors/ ← AuditableEntityInterceptor, DomainEventDispatchInterceptor
-│       ├── Repositories/ ← UserRepository, TenantRepository
-│       └── Configurations/ ← UserConfiguration, TenantConfiguration, TenantMemberConfiguration
+│       ├── Repositories/ ← UserRepository, TenantRepository, DoctorRepository
+│       └── Configurations/ ← UserConfiguration, TenantConfiguration, TenantMemberConfiguration,
+│                              DoctorProfileConfiguration
 └── MedControl.Api/
     ├── Program.cs              ← ~15 linhas, sem AddControllers
     ├── Endpoints/
     │   ├── Auth/               ← MagicLinkEndpoints, GoogleAuthEndpoints (minimal API)
+    │   ├── Doctors/            ← DoctorEndpoints (minimal API)
     │   └── EndpointExtensions  ← MapApiEndpoints(WebApplication)
     └── Extensions/
         ├── ServiceCollectionExtensions  ← AddApiServices (JWT bearer + ProblemDetails)
@@ -54,9 +61,10 @@ src/
 tests/
 ├── MedControl.Domain.Tests/         ← ResultTests, ErrorTests, TenantTests, UserTests ✅
 ├── MedControl.Architecture.Tests/   ← ArchitectureTests (NetArchTest) ✅
-├── MedControl.Application.Tests/    ← validator + handler tests (Auth/) ✅
+├── MedControl.Application.Tests/    ← validator + handler tests (Auth/, Doctors/) ✅
 ├── MedControl.Infrastructure.Tests/ ← model metadata + Auth service tests ✅
-└── MedControl.Api.Tests/            ← MagicLinkEndpointTests, GoogleAuthEndpointTests (WebApplicationFactory) ✅
+└── MedControl.Api.Tests/            ← MagicLinkEndpointTests, GoogleAuthEndpointTests,
+                                        DoctorEndpointsTests (WebApplicationFactory) ✅
 ```
 
 ---
@@ -149,6 +157,32 @@ public enum GlobalRole { None = 0, Support = 1, Admin = 2 }
 public enum AuthProvider { MagicLink = 0, Google = 1 }
 ```
 
+### DoctorProfile
+
+```csharp
+public sealed class DoctorProfile : BaseAuditableEntity, IHasTenant
+{
+    private DoctorProfile() { }  // EF Core
+    public Guid TenantId { get; private set; }
+    public Guid UserId { get; private set; }
+    public string Crm { get; private set; }
+    public string CouncilState { get; private set; }  // 2-char UF (e.g. "SP")
+    public string Specialty { get; private set; }
+    public string Name { get; private set; }
+
+    public static class Errors { CrmRequired, SpecialtyRequired, CouncilStateRequired, NameRequired, CrmAlreadyExists }
+
+    public static Result<DoctorProfile> Create(Guid tenantId, string name,
+                                                string crm, string councilState, string specialty)
+    public Result Update(string name, string crm, string councilState, string specialty)
+}
+
+// IDoctorRepository
+Task<bool> ExistsByCrmAndTenantAsync(string crm, Guid tenantId, CancellationToken ct = default);
+Task AddAsync(DoctorProfile doctor, CancellationToken ct = default);
+Task<IReadOnlyList<DoctorProfile>> ListAsync(CancellationToken ct = default);
+```
+
 ### Domain Events
 
 ```csharp
@@ -208,9 +242,9 @@ public sealed class MagicLinkSettings
 
 ### ApplicationDbContext
 
-- DbSets: `Tenants`, `TenantMembers`, `Users`
+- DbSets: `Tenants`, `TenantMembers`, `Users`, `DoctorProfiles`
 - Interceptors: `AuditableEntityInterceptor`, `DomainEventDispatchInterceptor`
-- Global query filter: `TenantMembers` filtrado por `currentUser.TenantId`
+- Global query filters: `TenantMembers` e `DoctorProfiles` filtrados por `currentUser.TenantId`
 - Implementa `IUnitOfWork` diretamente
 - Connection string key: `"Database"` (Npgsql)
 
@@ -228,6 +262,8 @@ DomainEventDispatchInterceptor  → após SaveChanges: coleta eventos de BaseEnt
 UserRepository  : GetByIdAsync, GetByEmailAsync, AddAsync, UpdateAsync
 TenantRepository: GetByIdAsync (Include Members), GetBySlugAsync, AddAsync, UpdateAsync
                   ListByUserAsync → usa .IgnoreQueryFilters() para bypass do filtro multi-tenant
+DoctorRepository: ExistsByCrmAndTenantAsync(crm, tenantId), AddAsync, ListAsync
+                  → global query filter cuida do escopo de tenant automaticamente no ListAsync
 ```
 
 ### Entity Configurations (`Persistence/Configurations/`)
@@ -239,6 +275,7 @@ snake_case em tudo (convenção PostgreSQL). Tabelas: `users`, `tenants`, `tenan
 | `UserConfiguration` | `avatar_url`: `Uri → string` converter, max 2048; índice único `ix_users_email` |
 | `TenantConfiguration` | índice único `ix_tenants_slug`; `Members` com `PropertyAccessMode.Field` |
 | `TenantMemberConfiguration` | FK→Tenant: `Cascade`; FK→User: `Restrict`; índice composto único `(tenant_id, user_id)` + índice simples `user_id`; `Role`: `HasConversion<string>()`, max 50 |
+| `DoctorProfileConfiguration` | Tabela `doctor_profiles`; índice único `(crm, council_state, tenant_id)`; global query filter por `tenant_id`; `CA1861` suprimido no arquivo de migration |
 
 Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
 
@@ -307,15 +344,21 @@ Endpoints definidos em `Endpoints/` como static classes com extension methods so
 var auth = app.MapGroup("auth");
 auth.MapGroup("magic-link").MapMagicLink();
 auth.MapGroup("google").MapGoogleAuth();
+
+var doctors = app.MapGroup("doctors");
+doctors.MapDoctors();
 ```
 
 ### Endpoints Disponíveis
 
-| Método | Rota | Descrição |
-|---|---|---|
-| `POST` | `/auth/magic-link/send` | Envia magic link; cria usuário se não existir → 204 |
-| `POST` | `/auth/magic-link/verify` | Valida token; retorna JWT + refresh token → 200 |
-| `POST` | `/auth/google/callback` | Troca code Google por JWT; cria usuário se não existir → 200 |
+| Método | Rota | Auth | Descrição |
+|---|---|---|---|
+| `POST` | `/auth/magic-link/send` | ❌ | Envia magic link; cria usuário se não existir → 204 |
+| `POST` | `/auth/magic-link/verify` | ❌ | Valida token; retorna JWT + refresh token → 200 |
+| `POST` | `/auth/google/callback` | ❌ | Troca code Google por JWT; cria usuário se não existir → 200 |
+| `GET` | `/doctors` | ✅ | Lista médicos do tenant; retorna `DoctorDto[]` → 200 |
+| `POST` | `/doctors` | ✅ | Cria médico; verifica CRM duplicado → 201 / 409 |
+| `PATCH` | `/doctors/{id}` | ✅ | Atualiza médico; verifica CRM duplicado → 200 / 404 / 409 |
 
 ### Mapeamento Result → IResult
 
@@ -406,7 +449,27 @@ public string Name { get; private set; } = default!;
 
 ## Testes de Integração (Api.Tests)
 
-`TestWebApplicationFactory` substitui serviços de infraestrutura por mocks NSubstitute e injeta configuração via `ConfigureAppConfiguration` (não `UseSetting`, que vai para host config e não app config):
+`TestWebApplicationFactory` substitui serviços de infraestrutura por mocks NSubstitute e injeta configuração via `ConfigureAppConfiguration` (não `UseSetting`, que vai para host config e não app config).
+
+### Autenticação nos Testes de Integração
+
+`TestAuthHandler` interpreta headers `X-Test-*` para montar a identidade:
+
+| Header | Claim injetado |
+|---|---|
+| `X-Test-UserId` | `sub` |
+| `X-Test-Email` | `email` |
+| `X-Test-TenantId` | `tenant_id` |
+
+`CreateAuthenticatedClient(userId, email, tenantId?)` cria um `HttpClient` com esses headers pré-configurados. O `tenantId` é necessário para qualquer endpoint que dependa de `ICurrentTenantService`.
+
+### Mocks disponíveis em TestWebApplicationFactory
+
+```csharp
+public IUserRepository UserRepository { get; }      // NSubstitute mock
+public ITenantRepository TenantRepository { get; }  // NSubstitute mock
+public IDoctorRepository DoctorRepository { get; }  // NSubstitute mock
+```
 
 ```csharp
 builder.ConfigureAppConfiguration((_, config) =>
@@ -435,7 +498,7 @@ builder.ConfigureAppConfiguration((_, config) =>
 **Ordem de implementação recomendada:**
 
 1. ~~**Tenant Roles**~~ — ✅ implementado (`TenantRole` enum: Admin/Operator/Doctor; validação no `AddMember` e `UpdateRole`)
-2. **DoctorProfile** — entidade ligada a `User`; campos: CRM, especialidade, conselho regional
+2. ~~**DoctorProfile**~~ — ✅ implementado (`DoctorProfile`: CRM, CouncilState, Specialty; `IDoctorRepository`; `CreateDoctorCommand`; `UpdateDoctorCommand`; `GetDoctorsQuery`; endpoints `GET/POST/PATCH /doctors`)
 3. **HealthPlan** — aggregate `HealthPlan`; campos: name, tissCode; tabela `health_plans`
 4. **Procedure** — aggregate `Procedure`; campos: code (TUSS/CBHPM), description, value; tabela `procedures`
 5. **Payment** — aggregate root; campos definidos no CLAUDE.md raiz; tabela `payments`

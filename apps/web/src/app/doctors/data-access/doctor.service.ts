@@ -1,0 +1,41 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+export interface DoctorDto {
+  id: string;
+  name: string;
+  crm: string;
+  councilState: string;
+  specialty: string;
+}
+
+export interface CreateDoctorCommand {
+  name: string;
+  crm: string;
+  councilState: string;
+  specialty: string;
+}
+
+export interface UpdateDoctorCommand {
+  name: string;
+  crm: string;
+  councilState: string;
+  specialty: string;
+}
+
+@Injectable({ providedIn: 'root' })
+export class DoctorService {
+  private readonly http = inject(HttpClient);
+
+  getDoctors() {
+    return this.http.get<DoctorDto[]>('/api/doctors', { withCredentials: true });
+  }
+
+  createDoctor(command: CreateDoctorCommand) {
+    return this.http.post<DoctorDto>('/api/doctors', command, { withCredentials: true });
+  }
+
+  updateDoctor(id: string, command: UpdateDoctorCommand) {
+    return this.http.patch<DoctorDto>(`/api/doctors/${id}`, command, { withCredentials: true });
+  }
+}

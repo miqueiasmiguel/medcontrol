@@ -1,0 +1,99 @@
+<div class="doctor-form-overlay" (click)="close()" aria-hidden="true"></div>
+
+<aside class="doctor-form-panel" role="dialog" aria-modal="true" [attr.aria-label]="isEditing ? 'Editar médico' : 'Novo médico'">
+  <div class="doctor-form-panel__header">
+    <h2 class="doctor-form-panel__title">{{ isEditing ? 'Editar médico' : 'Novo médico' }}</h2>
+    <button class="doctor-form-panel__close" (click)="close()" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path
+          fill-rule="evenodd"
+          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <form class="doctor-form-panel__body" [formGroup]="form" (ngSubmit)="submit()">
+    @if (errorMessage()) {
+      <div class="form-error-banner" role="alert">{{ errorMessage() }}</div>
+    }
+
+    <div class="form-field">
+      <label class="form-label" for="name">Nome completo</label>
+      <input
+        id="name"
+        class="form-input"
+        [class.form-input--error]="form.controls.name.invalid && form.controls.name.touched"
+        type="text"
+        formControlName="name"
+        placeholder="Dr. João da Silva"
+        autocomplete="name"
+      />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="form-field-error">Nome completo é obrigatório.</span>
+      }
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="form-label" for="crm">CRM</label>
+        <input
+          id="crm"
+          class="form-input form-input--mono"
+          [class.form-input--error]="form.controls.crm.invalid && form.controls.crm.touched"
+          type="text"
+          formControlName="crm"
+          placeholder="123456"
+          inputmode="numeric"
+        />
+        @if (form.controls.crm.invalid && form.controls.crm.touched) {
+          <span class="form-field-error">CRM inválido (somente números).</span>
+        }
+      </div>
+
+      <div class="form-field form-field--sm">
+        <label class="form-label" for="councilState">Estado</label>
+        <input
+          id="councilState"
+          class="form-input form-input--mono"
+          [class.form-input--error]="form.controls.councilState.invalid && form.controls.councilState.touched"
+          type="text"
+          formControlName="councilState"
+          placeholder="SP"
+          maxlength="2"
+          style="text-transform: uppercase"
+        />
+        @if (form.controls.councilState.invalid && form.controls.councilState.touched) {
+          <span class="form-field-error">UF inválida (ex: SP).</span>
+        }
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="specialty">Especialidade</label>
+      <input
+        id="specialty"
+        class="form-input"
+        [class.form-input--error]="form.controls.specialty.invalid && form.controls.specialty.touched"
+        type="text"
+        formControlName="specialty"
+        placeholder="Cardiologia"
+      />
+      @if (form.controls.specialty.invalid && form.controls.specialty.touched) {
+        <span class="form-field-error">Especialidade é obrigatória.</span>
+      }
+    </div>
+
+    <div class="doctor-form-panel__footer">
+      <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+      <button class="btn btn--primary" type="submit" [disabled]="loading()">
+        @if (loading()) {
+          Salvando…
+        } @else {
+          {{ isEditing ? 'Salvar alterações' : 'Cadastrar médico' }}
+        }
+      </button>
+    </div>
+  </form>
+</aside>

@@ -15,7 +15,14 @@ export const appRoutes: Route[] = [
   {
     path: '',
     canActivate: [authGuard, tenantGuard],
-    loadComponent: () => import('./app').then((m) => m.App),
+    loadComponent: () => import('./layout/shell/shell.component').then((m) => m.ShellComponent),
+    children: [
+      { path: '', redirectTo: 'doctors', pathMatch: 'full' },
+      {
+        path: 'doctors',
+        loadChildren: () => import('./doctors/doctors.routes').then((m) => m.doctorsRoutes),
+      },
+    ],
   },
   {
     path: '**',

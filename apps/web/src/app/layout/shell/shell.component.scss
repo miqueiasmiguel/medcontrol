@@ -1,0 +1,12 @@
+.shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+
+  &__content {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--mmc-bg);
+    min-width: 0;
+  }
+}

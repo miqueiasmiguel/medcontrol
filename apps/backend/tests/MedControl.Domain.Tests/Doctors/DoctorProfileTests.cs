@@ -75,6 +75,79 @@ public class DoctorProfileCreateTests
     }
 }
 
+public class DoctorProfileUpdateTests
+{
+    [Fact]
+    public void Update_ComDadosValidos_DeveAtualizarCampos()
+    {
+        var doctor = DoctorProfile.Create(Guid.NewGuid(), "Dr. João", "123456", "SP", "Cardiologia").Value;
+
+        var result = doctor.Update("Dr. Maria", "654321", "RJ", "Neurologia");
+
+        result.IsSuccess.Should().BeTrue();
+        doctor.Name.Should().Be("Dr. Maria");
+        doctor.Crm.Should().Be("654321");
+        doctor.CouncilState.Should().Be("RJ");
+        doctor.Specialty.Should().Be("Neurologia");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Update_ComNomeInvalido_DeveRetornarFalha(string? name)
+    {
+        var doctor = DoctorProfile.Create(Guid.NewGuid(), "Dr. João", "123456", "SP", "Cardiologia").Value;
+
+        var result = doctor.Update(name!, "123456", "SP", "Cardiologia");
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(DoctorProfile.Errors.NameRequired);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Update_ComCrmInvalido_DeveRetornarFalha(string? crm)
+    {
+        var doctor = DoctorProfile.Create(Guid.NewGuid(), "Dr. João", "123456", "SP", "Cardiologia").Value;
+
+        var result = doctor.Update("Dr. João", crm!, "SP", "Cardiologia");
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(DoctorProfile.Errors.CrmRequired);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Update_ComEstadoConselhoInvalido_DeveRetornarFalha(string? councilState)
+    {
+        var doctor = DoctorProfile.Create(Guid.NewGuid(), "Dr. João", "123456", "SP", "Cardiologia").Value;
+
+        var result = doctor.Update("Dr. João", "123456", councilState!, "Cardiologia");
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(DoctorProfile.Errors.CouncilStateRequired);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Update_ComEspecialidadeInvalida_DeveRetornarFalha(string? specialty)
+    {
+        var doctor = DoctorProfile.Create(Guid.NewGuid(), "Dr. João", "123456", "SP", "Cardiologia").Value;
+
+        var result = doctor.Update("Dr. João", "123456", "SP", specialty!);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(DoctorProfile.Errors.SpecialtyRequired);
+    }
+}
+
 public class DoctorProfileLinkUserTests
 {
     [Fact]
