@@ -30,7 +30,9 @@ public static class ServiceCollectionExtensions
                     OnMessageReceived = ctx =>
                     {
                         if (ctx.Request.Cookies.TryGetValue("mmc_access_token", out var token))
+                        {
                             ctx.Token = token;
+                        }
                         return Task.CompletedTask;
                     }
                 };

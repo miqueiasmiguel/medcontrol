@@ -28,7 +28,9 @@ public static class GoogleAuthEndpoints
             new GoogleLoginCommand(request.Code, request.RedirectUri), ct);
 
         if (!result.IsSuccess)
+        {
             return ToErrorResult(result.Error);
+        }
 
         CookieHelper.SetAuthCookies(ctx, result.Value!);
         return Results.NoContent();

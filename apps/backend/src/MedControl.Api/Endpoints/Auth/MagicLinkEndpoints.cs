@@ -43,7 +43,9 @@ public static class MagicLinkEndpoints
             new VerifyMagicLinkCommand(request.Token), ct);
 
         if (!result.IsSuccess)
+        {
             return ToErrorResult(result.Error);
+        }
 
         CookieHelper.SetAuthCookies(ctx, result.Value!);
         return Results.NoContent();
