@@ -1,0 +1,66 @@
+<div class="health-plan-form-overlay" (click)="close()" aria-hidden="true"></div>
+
+<aside class="health-plan-form-panel" role="dialog" aria-modal="true" [attr.aria-label]="isEditing ? 'Editar convênio' : 'Novo convênio'">
+  <div class="health-plan-form-panel__header">
+    <h2 class="health-plan-form-panel__title">{{ isEditing ? 'Editar convênio' : 'Novo convênio' }}</h2>
+    <button class="health-plan-form-panel__close" (click)="close()" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path
+          fill-rule="evenodd"
+          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <form class="health-plan-form-panel__body" [formGroup]="form" (ngSubmit)="submit()">
+    @if (errorMessage()) {
+      <div class="form-error-banner" role="alert">{{ errorMessage() }}</div>
+    }
+
+    <div class="form-field">
+      <label class="form-label" for="name">Nome do convênio</label>
+      <input
+        id="name"
+        class="form-input"
+        [class.form-input--error]="form.controls.name.invalid && form.controls.name.touched"
+        type="text"
+        formControlName="name"
+        placeholder="Unimed, Bradesco Saúde..."
+        autocomplete="off"
+      />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="form-field-error">Nome é obrigatório (mínimo 2 caracteres).</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="tissCode">Código TISS (ANS)</label>
+      <input
+        id="tissCode"
+        class="form-input form-input--mono"
+        [class.form-input--error]="form.controls.tissCode.invalid && form.controls.tissCode.touched"
+        type="text"
+        formControlName="tissCode"
+        placeholder="000000"
+        inputmode="numeric"
+        maxlength="20"
+      />
+      @if (form.controls.tissCode.invalid && form.controls.tissCode.touched) {
+        <span class="form-field-error">Código TISS é obrigatório (máximo 20 caracteres).</span>
+      }
+    </div>
+
+    <div class="health-plan-form-panel__footer">
+      <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+      <button class="btn btn--primary" type="submit" [disabled]="loading()">
+        @if (loading()) {
+          Salvando…
+        } @else {
+          {{ isEditing ? 'Salvar alterações' : 'Cadastrar convênio' }}
+        }
+      </button>
+    </div>
+  </form>
+</aside>
