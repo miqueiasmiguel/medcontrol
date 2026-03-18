@@ -1,4 +1,5 @@
 using MedControl.Api.Endpoints.Auth;
+using MedControl.Api.Endpoints.Tenants;
 
 namespace MedControl.Api.Endpoints;
 
@@ -10,6 +11,9 @@ public static class EndpointExtensions
         auth.MapGroup("magic-link").MapMagicLink();
         auth.MapGroup("google").MapGoogleAuth();
         auth.MapLogout();
+
+        var tenants = app.MapGroup("tenants");
+        tenants.MapTenants();
 
         return app;
     }

@@ -13,6 +13,10 @@ public static class ServiceCollectionExtensions
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
+                // Preserve original JWT claim names ("sub", "email", etc.) without mapping to
+                // long URI claim types (e.g. http://schemas.xmlsoap.org/.../nameidentifier).
+                options.MapInboundClaims = false;
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,

@@ -1,5 +1,7 @@
 using MedControl.Application.Common.Interfaces;
+using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Caching.Distributed;
@@ -18,6 +20,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     public IUserRepository UserRepository { get; } = Substitute.For<IUserRepository>();
     public IUnitOfWork UnitOfWork { get; } = Substitute.For<IUnitOfWork>();
     public IGoogleAuthService GoogleAuthService { get; } = Substitute.For<IGoogleAuthService>();
+    public ITenantRepository TenantRepository { get; } = Substitute.For<ITenantRepository>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -45,6 +48,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IUnitOfWork>();
             services.RemoveAll<IDistributedCache>();
             services.RemoveAll<IGoogleAuthService>();
+            services.RemoveAll<ITenantRepository>();
 
             services.AddSingleton(MagicLinkService);
             services.AddSingleton(EmailService);
@@ -53,6 +57,33 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton(UnitOfWork);
             services.AddSingleton<IDistributedCache>(Substitute.For<IDistributedCache>());
             services.AddSingleton(GoogleAuthService);
+            services.AddSingleton(TenantRepository);
+
+            // Replace JWT auth with a test handler that reads from X-Test-* headers
+            services.AddAuthentication(TestAuthHandler.SchemeName)
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                    TestAuthHandler.SchemeName, _ => { });
+
+            services.PostConfigure<AuthenticationOptions>(options =>
+            {
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName;
+                options.DefaultChallengeScheme = TestAuthHandler.SchemeName;
+            });
         });
+    }
+
+    /// <summary>
+    /// Creates a client that authenticates as the given user via X-Test-* headers.
+    /// </summary>
+    public HttpClient CreateAuthenticatedClient(Guid userId, string email)
+    {
+        var client = CreateClient(new WebApplicationFactoryClientOptions
+        {
+            HandleCookies = false,
+            AllowAutoRedirect = false,
+        });
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
+        client.DefaultRequestHeaders.Add(TestAuthHandler.EmailHeader, email);
+        return client;
     }
 }
