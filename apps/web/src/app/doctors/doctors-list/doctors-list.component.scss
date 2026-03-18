@@ -64,7 +64,7 @@
       letter-spacing: 0.05em;
       color: var(--mmc-text-secondary);
       border-bottom: 1px solid var(--mmc-border);
-      background: var(--mmc-neutral-50);
+      background: var(--mmc-bg);
     }
 
     tbody td {
@@ -90,7 +90,7 @@
   &__crm {
     font-family: var(--mmc-font-mono);
     font-size: var(--mmc-text-xs);
-    background: var(--mmc-neutral-100);
+    background: var(--mmc-bg-card-hover);
     padding: var(--mmc-space-0-5) var(--mmc-space-2);
     border-radius: var(--mmc-radius-sm);
     color: var(--mmc-text-secondary);
