@@ -1,5 +1,6 @@
 using MedControl.Application.Common.Interfaces;
 using MedControl.Domain.Doctors;
+using MedControl.Domain.HealthPlans;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 using Microsoft.AspNetCore.Authentication;
@@ -23,6 +24,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     public IGoogleAuthService GoogleAuthService { get; } = Substitute.For<IGoogleAuthService>();
     public ITenantRepository TenantRepository { get; } = Substitute.For<ITenantRepository>();
     public IDoctorRepository DoctorRepository { get; } = Substitute.For<IDoctorRepository>();
+    public IHealthPlanRepository HealthPlanRepository { get; } = Substitute.For<IHealthPlanRepository>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -52,6 +54,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IGoogleAuthService>();
             services.RemoveAll<ITenantRepository>();
             services.RemoveAll<IDoctorRepository>();
+            services.RemoveAll<IHealthPlanRepository>();
 
             services.AddSingleton(MagicLinkService);
             services.AddSingleton(EmailService);
@@ -62,6 +65,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton(GoogleAuthService);
             services.AddSingleton(TenantRepository);
             services.AddSingleton(DoctorRepository);
+            services.AddSingleton(HealthPlanRepository);
 
             // Replace JWT auth with a test handler that reads from X-Test-* headers
             services.AddAuthentication(TestAuthHandler.SchemeName)
