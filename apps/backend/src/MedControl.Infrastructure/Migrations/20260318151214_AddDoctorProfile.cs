@@ -35,7 +35,9 @@ public partial class AddDoctorProfile : Migration
         migrationBuilder.CreateIndex(
             name: "ix_doctor_profiles_tenant_crm_state",
             table: "doctor_profiles",
+#pragma warning disable CA1861
             columns: new[] { "tenant_id", "crm", "council_state" },
+#pragma warning restore CA1861
             unique: true);
 
         migrationBuilder.CreateIndex(
