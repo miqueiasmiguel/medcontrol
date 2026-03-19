@@ -277,6 +277,58 @@ Task AddAsync(DoctorProfile doctor, CancellationToken ct = default);
 Task<IReadOnlyList<DoctorProfile>> ListAsync(CancellationToken ct = default);
 ```
 
+### Payment
+
+```csharp
+public sealed class Payment : BaseAuditableEntity, IAggregateRoot, IHasTenant
+{
+    private Payment() { }  // EF Core
+    public Guid TenantId { get; private set; }
+    public Guid DoctorId { get; private set; }        // FK → doctor_profiles
+    public Guid HealthPlanId { get; private set; }    // FK → health_plans
+    public DateOnly ExecutionDate { get; private set; }
+    public string AppointmentNumber { get; private set; }  // max 100
+    public string? AuthorizationCode { get; private set; } // max 100
+    public string BeneficiaryCard { get; private set; }    // max 50
+    public string BeneficiaryName { get; private set; }    // max 256
+    public string ExecutionLocation { get; private set; }  // max 256
+    public string PaymentLocation { get; private set; }    // max 256
+    public string? Notes { get; private set; }
+    public IReadOnlyList<PaymentItem> Items { get; }       // mínimo 1
+
+    public static class Errors { AppointmentNumberRequired, BeneficiaryCardRequired, BeneficiaryNameRequired,
+                                  ExecutionLocationRequired, PaymentLocationRequired, ItemsRequired, ItemNotFound }
+
+    public static Result<Payment> Create(Guid tenantId, Guid doctorId, Guid healthPlanId, DateOnly executionDate,
+        string appointmentNumber, string? authorizationCode, string beneficiaryCard, string beneficiaryName,
+        string executionLocation, string paymentLocation, string? notes,
+        IEnumerable<(Guid ProcedureId, decimal Value)> items)
+    public Result<PaymentItem> GetItem(Guid itemId)
+}
+
+public sealed class PaymentItem : BaseEntity
+{
+    private PaymentItem() { }  // EF Core
+    public Guid PaymentId { get; private set; }
+    public Guid ProcedureId { get; private set; }    // FK → procedures
+    public decimal Value { get; private set; }       // snapshot; numeric(18,2)
+    public PaymentStatus Status { get; private set; } // Pending | Paid | Refused
+    public string? Notes { get; private set; }
+
+    public static class Errors { ValueInvalid }
+
+    public Result UpdateStatus(PaymentStatus status, string? notes = null)
+}
+
+public enum PaymentStatus { Pending = 0, Paid = 1, Refused = 2 }
+
+// IPaymentRepository
+Task<IReadOnlyList<Payment>> ListAsync(CancellationToken ct = default);
+Task<Payment?> GetByIdAsync(Guid id, CancellationToken ct = default);
+Task AddAsync(Payment payment, CancellationToken ct = default);
+Task UpdateAsync(Payment payment, CancellationToken ct = default);
+```
+
 ### Domain Events
 
 ```csharp
@@ -480,6 +532,10 @@ doctors.MapDoctors();
 | `PATCH` | `/procedures/{id}` | ✅ | Atualiza procedimento; verifica code duplicado → 200 / 404 / 409 |
 | `POST` | `/procedures/import` | ✅ | Importa CSV TUSS ou CBHPM; multipart/form-data: file, source, effectiveFrom → 200 / 400 |
 | `GET` | `/procedures/imports` | ✅ | Lista histórico de importações do tenant → 200 |
+| `GET` | `/payments` | ✅ | Lista pagamentos do tenant; retorna `PaymentDto[]` → 200 |
+| `POST` | `/payments` | ✅ | Cria pagamento com itens; mínimo 1 item → 201 / 400 |
+| `GET` | `/payments/{id}` | ✅ | Busca pagamento por id com itens → 200 / 404 |
+| `PATCH` | `/payments/{id}/items/{itemId}` | ✅ | Atualiza status do item (Pending/Paid/Refused) → 200 / 404 |
 
 ### Mapeamento Result → IResult
 
@@ -622,10 +678,9 @@ builder.ConfigureAppConfiguration((_, config) =>
 2. ~~**DoctorProfile**~~ — ✅ implementado (`DoctorProfile`: CRM, CouncilState, Specialty; `IDoctorRepository`; `CreateDoctorCommand`; `UpdateDoctorCommand`; `GetDoctorsQuery`; endpoints `GET/POST/PATCH /doctors`)
 3. ~~**HealthPlan**~~ — ✅ implementado (`HealthPlan`: name, tissCode; `IHealthPlanRepository`; `CreateHealthPlanCommand`; `UpdateHealthPlanCommand`; `GetHealthPlansQuery`; endpoints `GET/POST/PATCH /health-plans`)
 4. ~~**Procedure**~~ — ✅ implementado (`Procedure`: code, description, value, vigências (effectiveFrom/effectiveTo), source; `ProcedureImport`; `IProcedureRepository`; `IProcedureImportRepository`; `IProcedureFileParser` (TUSS + CBHPM); `CreateProcedureCommand`; `UpdateProcedureCommand`; `ImportProceduresCommand`; `GetProceduresQuery(activeOnly)`; `GetProcedureImportsQuery`; endpoints `GET/POST/PATCH /procedures`, `POST /procedures/import`, `GET /procedures/imports`)
-5. **Payment** — aggregate root; campos definidos no CLAUDE.md raiz; tabela `payments`
-6. **Payment Queries** — `ListPaymentsByDoctorQuery`, `GetPaymentQuery`, com paginação e filtros
-7. **Payment Endpoints** — `POST /payments`, `PUT /payments/{id}`, `GET /payments`, `GET /payments/{id}`
-8. **Report Query** — agrega pagamentos por período/convênio/status para o médico
+5. ~~**Payment**~~ — ✅ implementado (`Payment`: aggregate root com `PaymentItem`; `PaymentStatus` (Pending/Paid/Refused); `IPaymentRepository`; `CreatePaymentCommand`; `UpdatePaymentItemStatusCommand`; `ListPaymentsQuery`; `GetPaymentQuery`; endpoints `GET/POST /payments`, `GET /payments/{id}`, `PATCH /payments/{id}/items/{itemId}`; migration `AddPaymentTables`)
+6. **Report Query** — agrega pagamentos por período/convênio/status para o médico
+7. **Paginação e filtros** — por doutor, convênio, status, período
 
 ---
 
