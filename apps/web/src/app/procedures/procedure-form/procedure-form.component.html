@@ -71,6 +71,31 @@
       }
     </div>
 
+    <div class="form-field">
+      <label class="form-label" for="effectiveFrom">Vigência inicial</label>
+      <input
+        id="effectiveFrom"
+        class="form-input"
+        [class.form-input--error]="form.controls.effectiveFrom.invalid && form.controls.effectiveFrom.touched"
+        type="date"
+        formControlName="effectiveFrom"
+        [attr.readonly]="isEditing ? true : null"
+      />
+      @if (form.controls.effectiveFrom.invalid && form.controls.effectiveFrom.touched) {
+        <span class="form-field-error">Data de vigência inicial é obrigatória.</span>
+      }
+    </div>
+
+    <div class="form-field">
+      <label class="form-label" for="effectiveTo">Vigência final (opcional)</label>
+      <input
+        id="effectiveTo"
+        class="form-input"
+        type="date"
+        formControlName="effectiveTo"
+      />
+    </div>
+
     <div class="procedure-form-panel__footer">
       <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
       <button class="btn btn--primary" type="submit" [disabled]="loading()">

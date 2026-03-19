@@ -46,7 +46,7 @@ public sealed class UpdateProcedureCommandHandler(
             }
         }
 
-        var updateResult = procedure.Update(request.Code, request.Description, request.Value);
+        var updateResult = procedure.Update(request.Code, request.Description, request.Value, request.EffectiveTo);
         if (updateResult.IsFailure)
         {
             return Result.Failure<ProcedureDto>(updateResult.Error);
@@ -60,6 +60,9 @@ public sealed class UpdateProcedureCommandHandler(
             procedure.TenantId,
             procedure.Code,
             procedure.Description,
-            procedure.Value));
+            procedure.Value,
+            procedure.EffectiveFrom,
+            procedure.EffectiveTo,
+            procedure.Source.ToString()));
     }
 }

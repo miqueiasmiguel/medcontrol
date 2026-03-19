@@ -14,6 +14,8 @@ public sealed class CreateProcedureCommandHandlerTests
     private readonly ICurrentTenantService _currentTenant = Substitute.For<ICurrentTenantService>();
     private readonly CreateProcedureCommandHandler _sut;
 
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+
     public CreateProcedureCommandHandlerTests()
     {
         _sut = new CreateProcedureCommandHandler(_procedureRepository, _unitOfWork, _currentTenant);
@@ -24,35 +26,37 @@ public sealed class CreateProcedureCommandHandlerTests
     {
         var tenantId = Guid.NewGuid();
         _currentTenant.TenantId.Returns(tenantId);
-        _procedureRepository.ExistsByCodeAsync(tenantId, "10101012", Arg.Any<CancellationToken>())
-            .Returns(false);
+        _procedureRepository.ExistsByCodeAndEffectiveFromAsync(
+            tenantId, "10101012", Today, Arg.Any<CancellationToken>()).Returns(false);
 
-        var command = new CreateProcedureCommand("10101012", "Consulta médica", 150.00m);
+        var command = new CreateProcedureCommand("10101012", "Consulta médica", 150.00m, Today);
         var result = await _sut.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Code.Should().Be("10101012");
         result.Value.Description.Should().Be("Consulta médica");
         result.Value.Value.Should().Be(150.00m);
+        result.Value.EffectiveFrom.Should().Be(Today);
         await _procedureRepository.Received(1).AddAsync(
             Arg.Is<Procedure>(p =>
                 p.Code == "10101012" &&
                 p.Description == "Consulta médica" &&
                 p.Value == 150.00m &&
-                p.TenantId == tenantId),
+                p.TenantId == tenantId &&
+                p.EffectiveFrom == Today),
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task Handle_ComCodeDuplicado_DeveRetornarConflict()
+    public async Task Handle_ComCodeEEffectiveFromDuplicados_DeveRetornarConflict()
     {
         var tenantId = Guid.NewGuid();
         _currentTenant.TenantId.Returns(tenantId);
-        _procedureRepository.ExistsByCodeAsync(tenantId, "10101012", Arg.Any<CancellationToken>())
-            .Returns(true);
+        _procedureRepository.ExistsByCodeAndEffectiveFromAsync(
+            tenantId, "10101012", Today, Arg.Any<CancellationToken>()).Returns(true);
 
-        var command = new CreateProcedureCommand("10101012", "Consulta médica", 150.00m);
+        var command = new CreateProcedureCommand("10101012", "Consulta médica", 150.00m, Today);
         var result = await _sut.Handle(command, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -65,7 +69,7 @@ public sealed class CreateProcedureCommandHandlerTests
     {
         _currentTenant.TenantId.Returns((Guid?)null);
 
-        var command = new CreateProcedureCommand("10101012", "Consulta médica", 150.00m);
+        var command = new CreateProcedureCommand("10101012", "Consulta médica", 150.00m, Today);
         var result = await _sut.Handle(command, CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -76,7 +80,7 @@ public sealed class CreateProcedureCommandHandlerTests
     public async Task Validator_ComCodeVazio_DeveRetornarErroDeValidacao()
     {
         var validator = new CreateProcedureCommandValidator();
-        var validation = await validator.ValidateAsync(new CreateProcedureCommand(string.Empty, "Consulta médica", 150.00m));
+        var validation = await validator.ValidateAsync(new CreateProcedureCommand(string.Empty, "Consulta médica", 150.00m, Today));
         validation.IsValid.Should().BeFalse();
     }
 
@@ -84,7 +88,7 @@ public sealed class CreateProcedureCommandHandlerTests
     public async Task Validator_ComDescriptionVazia_DeveRetornarErroDeValidacao()
     {
         var validator = new CreateProcedureCommandValidator();
-        var validation = await validator.ValidateAsync(new CreateProcedureCommand("10101012", string.Empty, 150.00m));
+        var validation = await validator.ValidateAsync(new CreateProcedureCommand("10101012", string.Empty, 150.00m, Today));
         validation.IsValid.Should().BeFalse();
     }
 
@@ -92,7 +96,7 @@ public sealed class CreateProcedureCommandHandlerTests
     public async Task Validator_ComValueZero_DeveRetornarErroDeValidacao()
     {
         var validator = new CreateProcedureCommandValidator();
-        var validation = await validator.ValidateAsync(new CreateProcedureCommand("10101012", "Consulta médica", 0m));
+        var validation = await validator.ValidateAsync(new CreateProcedureCommand("10101012", "Consulta médica", 0m, Today));
         validation.IsValid.Should().BeFalse();
     }
 }

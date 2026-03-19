@@ -2,14 +2,30 @@ import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { ProceduresListComponent } from './procedures-list.component';
-import { ProcedureService, ProcedureDto } from '../data-access/procedure.service';
+import { ProcedureService, ProcedureDto, ProcedureImportDto } from '../data-access/procedure.service';
 
 describe('ProceduresListComponent', () => {
   let procedureService: jest.Mocked<Pick<ProcedureService, 'getProcedures'>>;
 
   const mockProcedures: ProcedureDto[] = [
-    { id: 'proc-1', code: '10101012', description: 'Consulta em Clínica Médica', value: 150.0 },
-    { id: 'proc-2', code: '20203015', description: 'Eletrocardiograma', value: 80.5 },
+    {
+      id: 'proc-1',
+      code: '10101012',
+      description: 'Consulta em Clínica Médica',
+      value: 150.0,
+      effectiveFrom: '2025-01-01',
+      effectiveTo: null,
+      source: 'Manual',
+    },
+    {
+      id: 'proc-2',
+      code: '20203015',
+      description: 'Eletrocardiograma',
+      value: 80.5,
+      effectiveFrom: '2025-01-01',
+      effectiveTo: '2025-12-31',
+      source: 'Tuss',
+    },
   ];
 
   function setup() {
@@ -36,6 +52,22 @@ describe('ProceduresListComponent', () => {
     expect(rows).toHaveLength(2);
     expect(rows[0].textContent).toContain('Consulta em Clínica Médica');
     expect(rows[1].textContent).toContain('Eletrocardiograma');
+  }));
+
+  it('renders vigência and fonte columns', fakeAsync(() => {
+    setup();
+    procedureService.getProcedures.mockReturnValue(of(mockProcedures));
+    const fixture = TestBed.createComponent(ProceduresListComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const rows = fixture.nativeElement.querySelectorAll('.procedures-list__row');
+    expect(rows[0].textContent).toContain('2025-01-01');
+    expect(rows[0].textContent).toContain('em vigor');
+    expect(rows[0].textContent).toContain('Manual');
+    expect(rows[1].textContent).toContain('2025-12-31');
+    expect(rows[1].textContent).toContain('Tuss');
   }));
 
   it('shows empty state when no procedures', fakeAsync(() => {
@@ -74,6 +106,21 @@ describe('ProceduresListComponent', () => {
 
     expect(fixture.componentInstance.formOpen()).toBe(true);
     expect(fixture.componentInstance.selectedProcedure()).toBeNull();
+  }));
+
+  it('opens import panel when "Importar" button clicked', fakeAsync(() => {
+    setup();
+    procedureService.getProcedures.mockReturnValue(of([]));
+    const fixture = TestBed.createComponent(ProceduresListComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const btn = fixture.nativeElement.querySelector('.procedures-list__header .btn--secondary');
+    btn.click();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.importOpen()).toBe(true);
   }));
 
   it('opens form in edit mode when row clicked', fakeAsync(() => {
@@ -123,6 +170,9 @@ describe('ProceduresListComponent', () => {
       code: '30304020',
       description: 'Radiografia de Tórax',
       value: 60.0,
+      effectiveFrom: '2025-01-01',
+      effectiveTo: null,
+      source: 'Manual',
     };
 
     fixture.componentInstance.onSaved(newProcedure);
@@ -158,5 +208,48 @@ describe('ProceduresListComponent', () => {
 
     fixture.componentInstance.onSaved(mockProcedures[0]);
     expect(fixture.componentInstance.formOpen()).toBe(false);
+  }));
+
+  it('calls getProcedures with activeOnly=false when toggling all vigências', fakeAsync(() => {
+    setup();
+    procedureService.getProcedures.mockReturnValue(of(mockProcedures));
+    const fixture = TestBed.createComponent(ProceduresListComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    expect(procedureService.getProcedures).toHaveBeenCalledWith(true);
+
+    fixture.componentInstance.toggleVigencias();
+    tick();
+
+    expect(procedureService.getProcedures).toHaveBeenCalledWith(false);
+  }));
+
+  it('closes import panel and reloads on onImported', fakeAsync(() => {
+    setup();
+    procedureService.getProcedures.mockReturnValue(of(mockProcedures));
+    const fixture = TestBed.createComponent(ProceduresListComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    fixture.componentInstance.openImport();
+    expect(fixture.componentInstance.importOpen()).toBe(true);
+
+    const importDto: ProcedureImportDto = {
+      id: 'imp-1',
+      source: 'Tuss',
+      effectiveFrom: '2025-01-01',
+      totalRows: 10,
+      importedRows: 10,
+      skippedRows: 0,
+      errorSummary: null,
+      createdAt: new Date().toISOString(),
+    };
+    fixture.componentInstance.onImported(importDto);
+    tick();
+
+    expect(fixture.componentInstance.importOpen()).toBe(false);
   }));
 });

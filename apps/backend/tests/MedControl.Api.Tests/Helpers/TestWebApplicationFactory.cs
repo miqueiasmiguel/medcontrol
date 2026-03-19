@@ -27,6 +27,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     public IDoctorRepository DoctorRepository { get; } = Substitute.For<IDoctorRepository>();
     public IHealthPlanRepository HealthPlanRepository { get; } = Substitute.For<IHealthPlanRepository>();
     public IProcedureRepository ProcedureRepository { get; } = Substitute.For<IProcedureRepository>();
+    public IProcedureImportRepository ProcedureImportRepository { get; } = Substitute.For<IProcedureImportRepository>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -58,6 +59,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll<IDoctorRepository>();
             services.RemoveAll<IHealthPlanRepository>();
             services.RemoveAll<IProcedureRepository>();
+            services.RemoveAll<IProcedureImportRepository>();
 
             services.AddSingleton(MagicLinkService);
             services.AddSingleton(EmailService);
@@ -70,6 +72,7 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton(DoctorRepository);
             services.AddSingleton(HealthPlanRepository);
             services.AddSingleton(ProcedureRepository);
+            services.AddSingleton(ProcedureImportRepository);
 
             // Replace JWT auth with a test handler that reads from X-Test-* headers
             services.AddAuthentication(TestAuthHandler.SchemeName)

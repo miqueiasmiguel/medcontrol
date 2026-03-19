@@ -99,6 +99,48 @@
   &__actions {
     text-align: right;
   }
+
+  &__source-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--mmc-space-0-5) var(--mmc-space-2);
+    font-size: var(--mmc-text-xs);
+    font-weight: var(--mmc-font-weight-medium);
+    border-radius: var(--mmc-radius-full);
+    background: var(--mmc-navy-50);
+    color: var(--mmc-navy-700);
+    border: 1px solid var(--mmc-navy-200);
+    font-family: var(--mmc-font-mono);
+    letter-spacing: 0.02em;
+  }
+
+  &__filters {
+    display: flex;
+    align-items: center;
+    padding: var(--mmc-space-3) var(--mmc-space-4);
+    border-bottom: 1px solid var(--mmc-divider);
+  }
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mmc-space-2);
+    font-size: var(--mmc-text-sm);
+    color: var(--mmc-text-secondary);
+    cursor: pointer;
+    user-select: none;
+
+    input[type='checkbox'] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--mmc-orange-500);
+      cursor: pointer;
+    }
+
+    &:hover {
+      color: var(--mmc-text-primary);
+    }
+  }
 }
 
 .btn {

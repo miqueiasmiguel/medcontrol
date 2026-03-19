@@ -23,6 +23,7 @@ public sealed class ApplicationDbContext(
     public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
     public DbSet<HealthPlan> HealthPlans => Set<HealthPlan>();
     public DbSet<Procedure> Procedures => Set<Procedure>();
+    public DbSet<ProcedureImport> ProcedureImports => Set<ProcedureImport>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -46,6 +47,9 @@ public sealed class ApplicationDbContext(
 
         modelBuilder.Entity<Procedure>()
             .HasQueryFilter(p => p.TenantId == currentUser.TenantId!.Value);
+
+        modelBuilder.Entity<ProcedureImport>()
+            .HasQueryFilter(i => i.TenantId == currentUser.TenantId!.Value);
 
         base.OnModelCreating(modelBuilder);
     }

@@ -5,4 +5,7 @@ public sealed record ProcedureDto(
     Guid TenantId,
     string Code,
     string Description,
-    decimal Value);
+    decimal Value,
+    DateOnly EffectiveFrom,
+    DateOnly? EffectiveTo,
+    string Source);

@@ -12,6 +12,7 @@ namespace MedControl.Api.Tests.Procedures;
 public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly TestWebApplicationFactory _factory;
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
 
     public ProcedureEndpointsTests(TestWebApplicationFactory factory)
     {
@@ -42,7 +43,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
         var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
 
         _factory.ProcedureRepository
-            .ListAsync(Arg.Any<CancellationToken>())
+            .ListAsync(Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(new List<Procedure>());
 
         var response = await client.GetAsync("/procedures");
@@ -50,6 +51,22 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await response.Content.ReadFromJsonAsync<List<ProcedureDto>>();
         body.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GET_procedures_ComActiveOnlyFalse_Retorna200()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
+
+        _factory.ProcedureRepository
+            .ListAsync(false, Arg.Any<CancellationToken>())
+            .Returns(new List<Procedure>());
+
+        var response = await client.GetAsync("/procedures?activeOnly=false");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
     // POST /procedures
@@ -68,6 +85,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
             code = "10101012",
             description = "Consulta médica",
             value = 150.00,
+            effectiveFrom = Today,
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -85,6 +103,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
             code = string.Empty,
             description = string.Empty,
             value = 0,
+            effectiveFrom = Today,
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -98,7 +117,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
         var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
 
         _factory.ProcedureRepository
-            .ExistsByCodeAsync(tenantId, "10101012", Arg.Any<CancellationToken>())
+            .ExistsByCodeAndEffectiveFromAsync(tenantId, "10101012", Today, Arg.Any<CancellationToken>())
             .Returns(true);
 
         var response = await client.PostAsJsonAsync("/procedures", new
@@ -106,6 +125,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
             code = "10101012",
             description = "Consulta médica",
             value = 150.00,
+            effectiveFrom = Today,
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -119,7 +139,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
         var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
 
         _factory.ProcedureRepository
-            .ExistsByCodeAsync(tenantId, "10101012", Arg.Any<CancellationToken>())
+            .ExistsByCodeAndEffectiveFromAsync(tenantId, "10101012", Today, Arg.Any<CancellationToken>())
             .Returns(false);
 
         var response = await client.PostAsJsonAsync("/procedures", new
@@ -127,6 +147,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
             code = "10101012",
             description = "Consulta médica",
             value = 150.00,
+            effectiveFrom = Today,
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -135,6 +156,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
         body!.Code.Should().Be("10101012");
         body.Description.Should().Be("Consulta médica");
         body.Value.Should().Be(150.00m);
+        body.EffectiveFrom.Should().Be(Today);
     }
 
     // PATCH /procedures/{id}
@@ -185,7 +207,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
     {
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m, Today).Value;
         var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
 
         _factory.ProcedureRepository
@@ -210,7 +232,7 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
     {
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m, Today).Value;
         var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
 
         _factory.ProcedureRepository
@@ -233,5 +255,39 @@ public sealed class ProcedureEndpointsTests : IClassFixture<TestWebApplicationFa
         body!.Code.Should().Be("20202025");
         body.Description.Should().Be("Consulta especializada");
         body.Value.Should().Be(300.00m);
+    }
+
+    // GET /procedures/imports
+
+    [Fact]
+    public async Task GET_procedures_imports_SemAutenticacao_Retorna401()
+    {
+        var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            HandleCookies = false,
+            AllowAutoRedirect = false,
+        });
+
+        var response = await client.GetAsync("/procedures/imports");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GET_procedures_imports_Autenticado_Retorna200ComLista()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
+
+        _factory.ProcedureImportRepository
+            .ListAsync(Arg.Any<CancellationToken>())
+            .Returns(new List<ProcedureImport>());
+
+        var response = await client.GetAsync("/procedures/imports");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<List<ProcedureImportDto>>();
+        body.Should().BeEmpty();
     }
 }

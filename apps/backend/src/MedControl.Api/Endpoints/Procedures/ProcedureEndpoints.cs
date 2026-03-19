@@ -1,9 +1,12 @@
 using MedControl.Application.Mediator;
 using MedControl.Application.Procedures.Commands.CreateProcedure;
+using MedControl.Application.Procedures.Commands.ImportProcedures;
 using MedControl.Application.Procedures.Commands.UpdateProcedure;
 using MedControl.Application.Procedures.DTOs;
+using MedControl.Application.Procedures.Queries.GetProcedureImports;
 using MedControl.Application.Procedures.Queries.GetProcedures;
 using MedControl.Domain.Common;
+using MedControl.Domain.Procedures;
 
 namespace MedControl.Api.Endpoints.Procedures;
 
@@ -34,14 +37,30 @@ public static class ProcedureEndpoints
              .Produces(StatusCodes.Status404NotFound)
              .Produces(StatusCodes.Status409Conflict);
 
+        group.MapPost("/import", ImportProcedures)
+             .WithName("ImportProcedures")
+             .RequireAuthorization()
+             .DisableAntiforgery()
+             .Produces<ProcedureImportDto>(StatusCodes.Status200OK)
+             .Produces(StatusCodes.Status400BadRequest)
+             .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/imports", GetProcedureImports)
+             .WithName("GetProcedureImports")
+             .RequireAuthorization()
+             .Produces<IReadOnlyList<ProcedureImportDto>>(StatusCodes.Status200OK)
+             .Produces(StatusCodes.Status401Unauthorized);
+
         return group;
     }
 
     private static async Task<IResult> GetProcedures(
         IMediator mediator,
-        CancellationToken ct)
+        bool activeOnly = true,
+        CancellationToken ct = default)
     {
-        var result = await mediator.Send<Result<IReadOnlyList<ProcedureDto>>>(new GetProceduresQuery(), ct);
+        var result = await mediator.Send<Result<IReadOnlyList<ProcedureDto>>>(
+            new GetProceduresQuery(activeOnly), ct);
 
         if (!result.IsSuccess)
         {
@@ -57,7 +76,12 @@ public static class ProcedureEndpoints
         CancellationToken ct)
     {
         var result = await mediator.Send<Result<ProcedureDto>>(
-            new CreateProcedureCommand(request.Code, request.Description, request.Value), ct);
+            new CreateProcedureCommand(
+                request.Code,
+                request.Description,
+                request.Value,
+                request.EffectiveFrom,
+                request.EffectiveTo), ct);
 
         if (!result.IsSuccess)
         {
@@ -74,7 +98,46 @@ public static class ProcedureEndpoints
         CancellationToken ct)
     {
         var result = await mediator.Send<Result<ProcedureDto>>(
-            new UpdateProcedureCommand(id, request.Code, request.Description, request.Value), ct);
+            new UpdateProcedureCommand(id, request.Code, request.Description, request.Value, request.EffectiveTo), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        return Results.Ok(result.Value);
+    }
+
+    private static async Task<IResult> ImportProcedures(
+        IFormFile file,
+        string source,
+        DateOnly effectiveFrom,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        if (!Enum.TryParse<ProcedureSource>(source, ignoreCase: true, out var procedureSource))
+        {
+            return Results.Problem("Invalid source. Use 'Tuss' or 'Cbhpm'.", statusCode: 400);
+        }
+
+        using var stream = file.OpenReadStream();
+        var result = await mediator.Send<Result<ProcedureImportDto>>(
+            new ImportProceduresCommand(stream, procedureSource, effectiveFrom), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        return Results.Ok(result.Value);
+    }
+
+    private static async Task<IResult> GetProcedureImports(
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<IReadOnlyList<ProcedureImportDto>>>(
+            new GetProcedureImportsQuery(), ct);
 
         if (!result.IsSuccess)
         {
@@ -93,5 +156,15 @@ public static class ProcedureEndpoints
     };
 }
 
-internal sealed record CreateProcedureRequest(string Code, string Description, decimal Value);
-internal sealed record UpdateProcedureRequest(string Code, string Description, decimal Value);
+internal sealed record CreateProcedureRequest(
+    string Code,
+    string Description,
+    decimal Value,
+    DateOnly EffectiveFrom,
+    DateOnly? EffectiveTo = null);
+
+internal sealed record UpdateProcedureRequest(
+    string Code,
+    string Description,
+    decimal Value,
+    DateOnly? EffectiveTo = null);

@@ -20,7 +20,9 @@ MedControl é um SaaS para médicos, clínicas, hospitais e empresas de faturame
 Payments     ← aggregate root Payment (core domain)
 Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
 HealthPlans  ← Convênio (nome, código TISS)
-Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor) — UI pronta, backend implementado
+Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor, vigências) — UI pronta, backend implementado
+             ← ProcedureImport (histórico de importações CSV TUSS/CBHPM por tenant)
+             ← vigências: EffectiveFrom/EffectiveTo por código; importação idempotente
 ```
 
 ### Roles de Tenant

@@ -13,6 +13,9 @@ describe('ProcedureFormComponent', () => {
     code: '10101012',
     description: 'Consulta em Clínica Médica',
     value: 150.0,
+    effectiveFrom: '2025-01-01',
+    effectiveTo: null,
+    source: 'Manual',
   };
 
   function setup() {
@@ -54,7 +57,7 @@ describe('ProcedureFormComponent', () => {
     );
   });
 
-  it('patches form values from procedure input', () => {
+  it('patches form values from procedure input including effectiveFrom and effectiveTo', () => {
     setup();
     const fixture = TestBed.createComponent(ProcedureFormComponent);
     fixture.componentRef.setInput('procedure', mockProcedure);
@@ -64,6 +67,8 @@ describe('ProcedureFormComponent', () => {
     expect(form.value.code).toBe('10101012');
     expect(form.value.description).toBe('Consulta em Clínica Médica');
     expect(form.value.value).toBe(150.0);
+    expect(form.value.effectiveFrom).toBe('2025-01-01');
+    expect(form.value.effectiveTo).toBe('');
   });
 
   it('marks all fields as touched and does not submit when form is invalid', () => {
@@ -78,7 +83,7 @@ describe('ProcedureFormComponent', () => {
     expect(procedureService.createProcedure).not.toHaveBeenCalled();
   });
 
-  it('calls createProcedure and emits saved on success', fakeAsync(() => {
+  it('calls createProcedure with effectiveFrom and emits saved on success', fakeAsync(() => {
     setup();
     procedureService.createProcedure.mockReturnValue(of(mockProcedure));
 
@@ -90,6 +95,8 @@ describe('ProcedureFormComponent', () => {
       code: '10101012',
       description: 'Consulta em Clínica Médica',
       value: 150.0,
+      effectiveFrom: '2025-01-01',
+      effectiveTo: '',
     });
 
     const savedSpy = jest.spyOn(fixture.componentInstance.saved, 'emit');
@@ -100,12 +107,14 @@ describe('ProcedureFormComponent', () => {
       code: '10101012',
       description: 'Consulta em Clínica Médica',
       value: 150.0,
+      effectiveFrom: '2025-01-01',
+      effectiveTo: undefined,
     });
     expect(savedSpy).toHaveBeenCalledWith(mockProcedure);
     expect(fixture.componentInstance.loading()).toBe(false);
   }));
 
-  it('calls updateProcedure when editing', fakeAsync(() => {
+  it('calls updateProcedure without effectiveFrom when editing', fakeAsync(() => {
     setup();
     const updated = { ...mockProcedure, value: 200.0 };
     procedureService.updateProcedure.mockReturnValue(of(updated));
@@ -124,6 +133,10 @@ describe('ProcedureFormComponent', () => {
       'proc-1',
       expect.objectContaining({ value: 200.0 }),
     );
+    expect(procedureService.updateProcedure).toHaveBeenCalledWith(
+      'proc-1',
+      expect.not.objectContaining({ effectiveFrom: expect.anything() }),
+    );
     expect(savedSpy).toHaveBeenCalledWith(updated);
   }));
 
@@ -140,6 +153,8 @@ describe('ProcedureFormComponent', () => {
       code: '10101012',
       description: 'Consulta',
       value: 100.0,
+      effectiveFrom: '2025-01-01',
+      effectiveTo: '',
     });
     fixture.componentInstance.submit();
     tick();
@@ -162,6 +177,8 @@ describe('ProcedureFormComponent', () => {
       code: '10101012',
       description: 'Consulta',
       value: 100.0,
+      effectiveFrom: '2025-01-01',
+      effectiveTo: '',
     });
     fixture.componentInstance.submit();
     tick();
