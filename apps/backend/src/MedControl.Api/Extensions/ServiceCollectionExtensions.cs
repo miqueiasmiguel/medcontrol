@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -44,6 +45,11 @@ public static class ServiceCollectionExtensions
 
         services.AddAuthorization();
         services.AddProblemDetails();
+
+        services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
 
         services.AddCors(opts => opts.AddPolicy("WebApp", policy =>
             policy.WithOrigins(configuration["Cors:WebOrigin"]!)
