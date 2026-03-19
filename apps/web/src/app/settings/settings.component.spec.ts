@@ -1,6 +1,7 @@
 import { signal } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { SettingsComponent } from './settings.component';
 import { SettingsService, UserDto } from './data-access/settings.service';
@@ -34,6 +35,7 @@ describe('SettingsComponent', () => {
     TestBed.configureTestingModule({
       imports: [SettingsComponent, ReactiveFormsModule],
       providers: [
+        provideNoopAnimations(),
         { provide: SettingsService, useValue: settingsService },
         { provide: ThemeService, useValue: themeService },
       ],

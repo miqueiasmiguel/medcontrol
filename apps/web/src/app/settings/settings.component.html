@@ -5,20 +5,37 @@
   </div>
 
   @if (errorMessage()) {
-    <div class="settings__alert settings__alert--error" role="alert">{{ errorMessage() }}</div>
+    <div class="settings__alert settings__alert--error" role="alert">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+      </svg>
+      {{ errorMessage() }}
+    </div>
   }
 
   @if (successMessage()) {
-    <div class="settings__alert settings__alert--success" role="status">{{ successMessage() }}</div>
+    <div class="settings__alert settings__alert--success" role="status">
+      <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+      </svg>
+      {{ successMessage() }}
+    </div>
   }
 
+  <!-- Card: Perfil -->
   <div class="settings__card">
-    <h2 class="settings__card-title">Perfil</h2>
+    <div class="settings__card-header">
+      <h2 class="settings__card-title">Perfil</h2>
+      <p class="settings__card-desc">Atualize as informações do seu usuário</p>
+    </div>
 
     @if (loading()) {
-      <p class="settings__loading">Carregando...</p>
+      <div class="settings__loading">
+        <mat-spinner diameter="20" />
+        <span>Carregando perfil...</span>
+      </div>
     } @else {
-      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="settings__form">
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="settings__form" novalidate>
         <div class="settings__field">
           <label class="settings__label" for="displayName">Nome de exibição</label>
           <input
@@ -26,12 +43,14 @@
             class="settings__input"
             type="text"
             formControlName="displayName"
-            placeholder="Seu nome"
+            placeholder="Como você quer ser chamado"
             maxlength="100"
+            autocomplete="name"
           />
           @if (profileForm.get('displayName')?.errors?.['maxlength']) {
             <span class="settings__field-error">Máximo 100 caracteres.</span>
           }
+          <span class="settings__field-hint">Exibido na interface para outros membros do tenant.</span>
         </div>
 
         <div class="settings__actions">
@@ -40,40 +59,60 @@
             type="submit"
             [disabled]="profileForm.invalid || saving()"
           >
-            {{ saving() ? 'Salvando...' : 'Salvar' }}
+            @if (saving()) {
+              <mat-spinner diameter="14" />
+            }
+            {{ saving() ? 'Salvando...' : 'Salvar alterações' }}
           </button>
         </div>
       </form>
     }
   </div>
 
+  <!-- Card: Aparência -->
   <div class="settings__card">
-    <h2 class="settings__card-title">Aparência</h2>
-    <p class="settings__card-desc">Escolha o tema da interface</p>
+    <div class="settings__card-header">
+      <h2 class="settings__card-title">Aparência</h2>
+      <p class="settings__card-desc">Escolha o tema da interface</p>
+    </div>
 
-    <div class="settings__theme-options">
+    <div class="settings__theme-group" role="group" aria-label="Tema da interface">
       <button
         class="settings__theme-btn"
         [class.settings__theme-btn--active]="themeService.theme() === 'light'"
         (click)="applyTheme('light')"
         type="button"
+        [attr.aria-pressed]="themeService.theme() === 'light'"
       >
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+        </svg>
         Claro
       </button>
+
       <button
         class="settings__theme-btn"
         [class.settings__theme-btn--active]="themeService.theme() === 'dark'"
         (click)="applyTheme('dark')"
         type="button"
+        [attr.aria-pressed]="themeService.theme() === 'dark'"
       >
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+        </svg>
         Escuro
       </button>
+
       <button
         class="settings__theme-btn"
         [class.settings__theme-btn--active]="themeService.theme() === 'system'"
         (click)="applyTheme('system')"
         type="button"
+        [attr.aria-pressed]="themeService.theme() === 'system'"
       >
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd" />
+        </svg>
         Sistema
       </button>
     </div>
