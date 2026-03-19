@@ -33,7 +33,9 @@ public partial class AddProcedures : Migration
         migrationBuilder.CreateIndex(
             name: "ix_procedures_tenant_code",
             table: "procedures",
+#pragma warning disable CA1861
             columns: new[] { "tenant_id", "code" },
+#pragma warning restore CA1861
             unique: true);
 
         migrationBuilder.CreateIndex(
