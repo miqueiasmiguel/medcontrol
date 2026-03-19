@@ -54,6 +54,14 @@ src/app/
 │   │   └── procedure.service.ts ← getProcedures, createProcedure, updateProcedure; ProcedureDto
 │   ├── procedures-list/      ← tabela de procedimentos + botão "Novo procedimento"; signals: procedures, formOpen, selectedProcedure; CurrencyPipe para valor
 │   └── procedure-form/       ← slide-over panel; @Input procedure (null=criar); @Output saved/closed; value type=number
+├── payments/
+│   ├── payments.routes.ts    ← { path: '' → PaymentsListComponent }
+│   ├── data-access/
+│   │   └── payment.service.ts ← getPayments, getPayment, createPayment, updatePayment, updatePaymentItemStatus, addPaymentItem, removePaymentItem
+│   │                             PaymentDto (com status computado), PaymentItemDto, PaymentStatus, PaymentItemStatus
+│   ├── payments-list/        ← tabela de pagamentos + filtro por status (todos os 5 valores); enriched com doctor/healthPlan names; uses payment.status direto do dto
+│   ├── payment-form/         ← slide-over (600px) para criar pagamento; FormArray de itens com procedureId+value; auto-fill value ao selecionar procedimento
+│   └── payment-detail/       ← slide-over (560px) para ver/editar cabeçalho, atualizar status de itens, adicionar e remover itens
 └── tenants/
     ├── tenants.routes.ts     ← lazy routes: /new, /select
     ├── data-access/
@@ -71,7 +79,8 @@ src/app/
   ├── ''  → redirect /doctors
   ├── doctors/                  ← DoctorsListComponent (lazy)
   ├── health-plans/             ← HealthPlansListComponent (lazy)
-  └── procedures/               ← ProceduresListComponent (lazy)
+  ├── procedures/               ← ProceduresListComponent (lazy)
+  └── payments/                 ← PaymentsListComponent (lazy)
 /auth/**                        ← sem guards
 /tenants/**                     ← authGuard
 /**                             → redirect /auth/login

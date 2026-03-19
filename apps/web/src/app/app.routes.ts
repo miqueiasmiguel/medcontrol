@@ -32,6 +32,11 @@ export const appRoutes: Route[] = [
         loadChildren: () =>
           import('./procedures/procedures.routes').then((m) => m.proceduresRoutes),
       },
+      {
+        path: 'payments',
+        loadChildren: () =>
+          import('./payments/payments.routes').then((m) => m.paymentsRoutes),
+      },
     ],
   },
   {

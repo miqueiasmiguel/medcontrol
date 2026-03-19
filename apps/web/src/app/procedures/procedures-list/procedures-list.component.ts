@@ -6,7 +6,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProcedureService, ProcedureDto, ProcedureImportDto } from '../data-access/procedure.service';
 import { ProcedureFormComponent } from '../procedure-form/procedure-form.component';
@@ -15,7 +15,7 @@ import { ProcedureImportComponent } from '../procedure-import/procedure-import.c
 @Component({
   selector: 'app-procedures-list',
   standalone: true,
-  imports: [ProcedureFormComponent, ProcedureImportComponent, CurrencyPipe, DatePipe],
+  imports: [ProcedureFormComponent, ProcedureImportComponent, CurrencyPipe],
   templateUrl: './procedures-list.component.html',
   styleUrl: './procedures-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
