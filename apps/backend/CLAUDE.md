@@ -537,6 +537,8 @@ doctors.MapDoctors();
 | `PATCH` | `/procedures/{id}` | ✅ | Atualiza procedimento; verifica code duplicado → 200 / 404 / 409 |
 | `POST` | `/procedures/import` | ✅ | Importa CSV TUSS ou CBHPM; multipart/form-data: file, source, effectiveFrom → 200 / 400 |
 | `GET` | `/procedures/imports` | ✅ | Lista histórico de importações do tenant → 200 |
+| `GET` | `/users/me` | ✅ | Retorna dados do usuário logado → 200 / 401 / 404 |
+| `PATCH` | `/users/me/profile` | ✅ | Atualiza displayName do usuário logado → 200 / 400 / 401 / 404 |
 | `GET` | `/payments` | ✅ | Lista pagamentos do tenant; retorna `PaymentDto[]` → 200 |
 | `POST` | `/payments` | ✅ | Cria pagamento com itens; mínimo 1 item → 201 / 400 |
 | `GET` | `/payments/{id}` | ✅ | Busca pagamento por id com itens → 200 / 404 |
