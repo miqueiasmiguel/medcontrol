@@ -13,6 +13,13 @@ public sealed class PaymentStatusTests
         ((int)PaymentStatus.Paid).Should().Be(1);
         ((int)PaymentStatus.Refused).Should().Be(2);
     }
+
+    [Fact]
+    public void PaymentStatus_DeveTerValoresPartiallyPendingEPartiallyRefused()
+    {
+        ((int)PaymentStatus.PartiallyPending).Should().Be(3);
+        ((int)PaymentStatus.PartiallyRefused).Should().Be(4);
+    }
 }
 
 public sealed class PaymentCreateTests
