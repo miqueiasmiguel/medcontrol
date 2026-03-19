@@ -22,6 +22,25 @@ public sealed class Payment : BaseAuditableEntity, IAggregateRoot, IHasTenant
 
     public IReadOnlyList<PaymentItem> Items => _items.AsReadOnly();
 
+    public PaymentStatus Status
+    {
+        get
+        {
+            var statuses = _items.Select(i => i.Status).Distinct().ToList();
+            if (statuses.Any(s => s == PaymentStatus.Refused) && statuses.Count > 1)
+            {
+                return PaymentStatus.PartiallyRefused;
+            }
+
+            if (statuses.Count == 1)
+            {
+                return statuses[0];
+            }
+
+            return PaymentStatus.PartiallyPending;
+        }
+    }
+
     public static class Errors
     {
         public static readonly Error AppointmentNumberRequired = Error.Validation(
@@ -51,6 +70,10 @@ public sealed class Payment : BaseAuditableEntity, IAggregateRoot, IHasTenant
         public static readonly Error ItemNotFound = Error.NotFound(
             "Payment.ItemNotFound",
             "Payment item not found.");
+
+        public static readonly Error MinimumItemsRequired = Error.Validation(
+            "Payment.MinimumItemsRequired",
+            "At least one payment item must remain.");
     }
 
     public static Result<Payment> Create(
@@ -127,6 +150,53 @@ public sealed class Payment : BaseAuditableEntity, IAggregateRoot, IHasTenant
         return payment;
     }
 
+    public Result Update(
+        DateOnly executionDate,
+        string appointmentNumber,
+        string? authorizationCode,
+        string beneficiaryCard,
+        string beneficiaryName,
+        string executionLocation,
+        string paymentLocation,
+        string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(appointmentNumber))
+        {
+            return Result.Failure(Errors.AppointmentNumberRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(beneficiaryCard))
+        {
+            return Result.Failure(Errors.BeneficiaryCardRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(beneficiaryName))
+        {
+            return Result.Failure(Errors.BeneficiaryNameRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(executionLocation))
+        {
+            return Result.Failure(Errors.ExecutionLocationRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(paymentLocation))
+        {
+            return Result.Failure(Errors.PaymentLocationRequired);
+        }
+
+        ExecutionDate = executionDate;
+        AppointmentNumber = appointmentNumber.Trim();
+        AuthorizationCode = authorizationCode?.Trim();
+        BeneficiaryCard = beneficiaryCard.Trim();
+        BeneficiaryName = beneficiaryName.Trim();
+        ExecutionLocation = executionLocation.Trim();
+        PaymentLocation = paymentLocation.Trim();
+        Notes = notes?.Trim();
+
+        return Result.Success();
+    }
+
     public Result<PaymentItem> GetItem(Guid itemId)
     {
         var item = _items.FirstOrDefault(i => i.Id == itemId);
@@ -136,5 +206,34 @@ public sealed class Payment : BaseAuditableEntity, IAggregateRoot, IHasTenant
         }
 
         return item;
+    }
+
+    public Result AddItem(Guid procedureId, decimal value)
+    {
+        var itemResult = PaymentItem.Create(Id, procedureId, value);
+        if (itemResult.IsFailure)
+        {
+            return Result.Failure(itemResult.Error);
+        }
+
+        _items.Add(itemResult.Value);
+        return Result.Success();
+    }
+
+    public Result RemoveItem(Guid itemId)
+    {
+        var item = _items.FirstOrDefault(i => i.Id == itemId);
+        if (item is null)
+        {
+            return Result.Failure(Errors.ItemNotFound);
+        }
+
+        if (_items.Count == 1)
+        {
+            return Result.Failure(Errors.MinimumItemsRequired);
+        }
+
+        _items.Remove(item);
+        return Result.Success();
     }
 }
