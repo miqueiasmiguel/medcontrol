@@ -42,6 +42,18 @@ src/app/
 │   │   └── doctor.service.ts ← getDoctors, createDoctor, updateDoctor; DoctorDto, CreateDoctorCommand
 │   ├── doctors-list/         ← tabela de médicos + botão "Novo médico"; signals: doctors, formOpen, selectedDoctor
 │   └── doctor-form/          ← slide-over panel; @Input doctor (null=criar); @Output saved/closed
+├── health-plans/
+│   ├── health-plans.routes.ts ← { path: '' → HealthPlansListComponent }
+│   ├── data-access/
+│   │   └── health-plan.service.ts ← getHealthPlans, createHealthPlan, updateHealthPlan; HealthPlanDto
+│   ├── health-plans-list/    ← tabela de convênios + botão "Novo convênio"; signals: healthPlans, formOpen, selectedHealthPlan
+│   └── health-plan-form/     ← slide-over panel; @Input healthPlan (null=criar); @Output saved/closed
+├── procedures/
+│   ├── procedures.routes.ts  ← { path: '' → ProceduresListComponent }
+│   ├── data-access/
+│   │   └── procedure.service.ts ← getProcedures, createProcedure, updateProcedure; ProcedureDto
+│   ├── procedures-list/      ← tabela de procedimentos + botão "Novo procedimento"; signals: procedures, formOpen, selectedProcedure; CurrencyPipe para valor
+│   └── procedure-form/       ← slide-over panel; @Input procedure (null=criar); @Output saved/closed; value type=number
 └── tenants/
     ├── tenants.routes.ts     ← lazy routes: /new, /select
     ├── data-access/
@@ -57,7 +69,9 @@ src/app/
 ```
 / (ShellComponent)              ← authGuard + tenantGuard
   ├── ''  → redirect /doctors
-  └── doctors/                  ← DoctorsListComponent (lazy)
+  ├── doctors/                  ← DoctorsListComponent (lazy)
+  ├── health-plans/             ← HealthPlansListComponent (lazy)
+  └── procedures/               ← ProceduresListComponent (lazy)
 /auth/**                        ← sem guards
 /tenants/**                     ← authGuard
 /**                             → redirect /auth/login
