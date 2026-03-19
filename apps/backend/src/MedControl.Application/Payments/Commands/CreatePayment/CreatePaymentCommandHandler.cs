@@ -63,6 +63,7 @@ public sealed class CreatePaymentCommandHandler(
         payment.ExecutionLocation,
         payment.PaymentLocation,
         payment.Notes,
+        payment.Status.ToString(),
         payment.Items.Select(i => new PaymentItemDto(
             i.Id,
             i.ProcedureId,
