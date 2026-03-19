@@ -6,18 +6,21 @@ namespace MedControl.Domain.Tests.Procedures;
 
 public class ProcedureCreateTests
 {
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+
     [Fact]
     public void Create_ComDadosValidos_DeveRetornarSucesso()
     {
         var tenantId = Guid.NewGuid();
 
-        var result = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m);
+        var result = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m, Today);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.TenantId.Should().Be(tenantId);
         result.Value.Code.Should().Be("10101012");
         result.Value.Description.Should().Be("Consulta médica");
         result.Value.Value.Should().Be(150.00m);
+        result.Value.EffectiveFrom.Should().Be(Today);
     }
 
     [Theory]
@@ -26,7 +29,7 @@ public class ProcedureCreateTests
     [InlineData("   ")]
     public void Create_ComCodeInvalido_DeveRetornarFalha(string? code)
     {
-        var result = Procedure.Create(Guid.NewGuid(), code!, "Consulta médica", 150.00m);
+        var result = Procedure.Create(Guid.NewGuid(), code!, "Consulta médica", 150.00m, Today);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Procedure.Errors.CodeRequired);
@@ -39,7 +42,7 @@ public class ProcedureCreateTests
     [InlineData("   ")]
     public void Create_ComDescriptionInvalida_DeveRetornarFalha(string? description)
     {
-        var result = Procedure.Create(Guid.NewGuid(), "10101012", description!, 150.00m);
+        var result = Procedure.Create(Guid.NewGuid(), "10101012", description!, 150.00m, Today);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Procedure.Errors.DescriptionRequired);
@@ -52,7 +55,7 @@ public class ProcedureCreateTests
     [InlineData(-100.50)]
     public void Create_ComValueInvalido_DeveRetornarFalha(double value)
     {
-        var result = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", (decimal)value);
+        var result = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", (decimal)value, Today);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Procedure.Errors.ValueInvalid);
@@ -62,10 +65,12 @@ public class ProcedureCreateTests
 
 public class ProcedureUpdateTests
 {
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+
     [Fact]
     public void Update_ComDadosValidos_DeveAtualizarCampos()
     {
-        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m, Today).Value;
 
         var result = procedure.Update("20202025", "Consulta especializada", 300.00m);
 
@@ -81,7 +86,7 @@ public class ProcedureUpdateTests
     [InlineData("   ")]
     public void Update_ComCodeInvalido_DeveRetornarFalha(string? code)
     {
-        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m, Today).Value;
 
         var result = procedure.Update(code!, "Consulta médica", 150.00m);
 
@@ -95,7 +100,7 @@ public class ProcedureUpdateTests
     [InlineData("   ")]
     public void Update_ComDescriptionInvalida_DeveRetornarFalha(string? description)
     {
-        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m, Today).Value;
 
         var result = procedure.Update("10101012", description!, 150.00m);
 
@@ -108,11 +113,23 @@ public class ProcedureUpdateTests
     [InlineData(-1)]
     public void Update_ComValueInvalido_DeveRetornarFalha(double value)
     {
-        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m, Today).Value;
 
         var result = procedure.Update("10101012", "Consulta médica", (decimal)value);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(Procedure.Errors.ValueInvalid);
+    }
+
+    [Fact]
+    public void Update_ComEffectiveTo_DeveAtualizarEffectiveTo()
+    {
+        var procedure = Procedure.Create(Guid.NewGuid(), "10101012", "Consulta médica", 150.00m, Today).Value;
+        var effectiveTo = Today.AddDays(365);
+
+        var result = procedure.Update("10101012", "Consulta médica", 150.00m, effectiveTo);
+
+        result.IsSuccess.Should().BeTrue();
+        procedure.EffectiveTo.Should().Be(effectiveTo);
     }
 }
