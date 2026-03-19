@@ -156,12 +156,12 @@
 
   &:hover {
     border-color: var(--mmc-orange-400);
-    background: var(--mmc-orange-50);
+    background: rgba(249, 115, 22, 0.06);
   }
 
   &--active {
     border-color: var(--mmc-orange-400);
-    background: var(--mmc-orange-50);
+    background: rgba(249, 115, 22, 0.06);
   }
 
   &__icon {
@@ -171,12 +171,12 @@
     width: 44px;
     height: 44px;
     border-radius: var(--mmc-radius-lg);
-    background: var(--mmc-neutral-100);
+    background: var(--mmc-bg-card-hover);
     color: var(--mmc-text-secondary);
 
     .file-upload-zone--active & {
-      background: var(--mmc-orange-100);
-      color: var(--mmc-orange-600);
+      background: rgba(249, 115, 22, 0.15);
+      color: var(--mmc-orange-500);
     }
 
     svg {
