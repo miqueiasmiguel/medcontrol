@@ -53,6 +53,23 @@ describe('ThemeService', () => {
     expect(service.theme()).toBe('system');
   });
 
+  // Testes de aplicação no DOM ao inicializar (regressão: tema voltava ao escuro no reload)
+
+  it('init with stored "dark" should set data-theme="dark" on the DOM immediately', () => {
+    const { mockWindow } = setup('dark');
+    expect(mockWindow.document.documentElement.getAttribute('data-theme')).toBe('dark');
+  });
+
+  it('init with stored "light" should set data-theme="light" on the DOM immediately', () => {
+    const { mockWindow } = setup('light');
+    expect(mockWindow.document.documentElement.getAttribute('data-theme')).toBe('light');
+  });
+
+  it('init with no stored theme should not set data-theme on the DOM', () => {
+    const { mockWindow } = setup();
+    expect(mockWindow.document.documentElement.hasAttribute('data-theme')).toBe(false);
+  });
+
   it('apply("dark") should set data-theme="dark" and update signal', () => {
     const { service, mockWindow } = setup();
     service.apply('dark');
