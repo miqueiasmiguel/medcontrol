@@ -35,9 +35,11 @@ src/
 │   │   ├── Queries/      ← GetHealthPlansQuery(Handler)
 │   │   └── DTOs/         ← HealthPlanDto
 │   ├── Procedures/
-│   │   ├── Commands/     ← CreateProcedureCommand(Handler+Validator), UpdateProcedureCommand(Handler+Validator)
-│   │   ├── Queries/      ← GetProceduresQuery(Handler)
-│   │   └── DTOs/         ← ProcedureDto
+│   │   ├── Commands/     ← CreateProcedureCommand(Handler+Validator), UpdateProcedureCommand(Handler+Validator),
+│   │   │                    ImportProceduresCommand(Handler+Validator)
+│   │   ├── Queries/      ← GetProceduresQuery(Handler), GetProcedureImportsQuery(Handler)
+│   │   ├── Parsers/      ← IProcedureFileParser, ParsedProcedureRow, ParseResult
+│   │   └── DTOs/         ← ProcedureDto, ProcedureImportDto
 │   └── Common/
 │       ├── Interfaces/   ← IUnitOfWork, ICurrentTenantService, ICurrentUserService,
 │       │                    IEmailService, ITokenService, IMagicLinkService, IGoogleAuthService
@@ -55,9 +57,11 @@ src/
 │   └── Persistence/
 │       ├── ApplicationDbContext.cs
 │       ├── Interceptors/ ← AuditableEntityInterceptor, DomainEventDispatchInterceptor
-│       ├── Repositories/ ← UserRepository, TenantRepository, DoctorRepository, HealthPlanRepository
+│       ├── Repositories/ ← UserRepository, TenantRepository, DoctorRepository, HealthPlanRepository,
+│       │                    ProcedureRepository, ProcedureImportRepository
 │       └── Configurations/ ← UserConfiguration, TenantConfiguration, TenantMemberConfiguration,
-│                              DoctorProfileConfiguration, HealthPlanConfiguration
+│                              DoctorProfileConfiguration, HealthPlanConfiguration,
+│                              ProcedureConfiguration, ProcedureImportConfiguration
 └── MedControl.Api/
     ├── Program.cs              ← ~15 linhas, sem AddControllers
     ├── Endpoints/
@@ -201,19 +205,50 @@ public sealed class Procedure : BaseAuditableEntity, IAggregateRoot, IHasTenant
     public string Code { get; private set; }        // max 50, TUSS/CBHPM
     public string Description { get; private set; } // max 512
     public decimal Value { get; private set; }      // > 0, numeric(18,2)
+    public DateOnly EffectiveFrom { get; private set; }
+    public DateOnly? EffectiveTo { get; private set; }
+    public ProcedureSource Source { get; private set; }  // Manual | Tuss | Cbhpm
 
-    public static class Errors { CodeRequired, DescriptionRequired, ValueInvalid }
+    public static class Errors { CodeRequired, DescriptionRequired, ValueInvalid, EffectiveDateRangeInvalid }
 
-    public static Result<Procedure> Create(Guid tenantId, string code, string description, decimal value)
-    public Result Update(string code, string description, decimal value)
+    public static Result<Procedure> Create(Guid tenantId, string code, string description, decimal value,
+        DateOnly effectiveFrom, DateOnly? effectiveTo = null, ProcedureSource source = Manual)
+    public Result Update(string code, string description, decimal value, DateOnly? effectiveTo = null)
+    public void CloseVigencia(DateOnly closedOn)
 }
 
 // IProcedureRepository
-Task<IReadOnlyList<Procedure>> ListAsync(CancellationToken ct = default);
+Task<IReadOnlyList<Procedure>> ListAsync(bool activeOnly, CancellationToken ct = default);
 Task<Procedure?> GetByIdAsync(Guid id, CancellationToken ct = default);
 Task<bool> ExistsByCodeAsync(Guid tenantId, string code, CancellationToken ct = default);
+Task<bool> ExistsByCodeAndEffectiveFromAsync(Guid tenantId, string code, DateOnly effectiveFrom, CancellationToken ct = default);
 Task AddAsync(Procedure procedure, CancellationToken ct = default);
+Task AddRangeAsync(IEnumerable<Procedure> procedures, CancellationToken ct = default);
 Task UpdateAsync(Procedure procedure, CancellationToken ct = default);
+```
+
+### ProcedureImport
+
+```csharp
+public sealed class ProcedureImport : BaseAuditableEntity, IAggregateRoot, IHasTenant
+{
+    public Guid TenantId { get; private set; }
+    public ProcedureSource Source { get; private set; }
+    public DateOnly EffectiveFrom { get; private set; }
+    public int TotalRows { get; private set; }
+    public int ImportedRows { get; private set; }
+    public int SkippedRows { get; private set; }
+    public string? ErrorSummary { get; private set; }  // max 2000
+
+    public static class Errors { ManualSourceNotAllowed }
+
+    public static Result<ProcedureImport> Create(Guid tenantId, ProcedureSource source, DateOnly effectiveFrom,
+        int totalRows, int importedRows, int skippedRows, string? errorSummary)
+}
+
+// IProcedureImportRepository
+Task AddAsync(ProcedureImport import, CancellationToken ct = default);
+Task<IReadOnlyList<ProcedureImport>> ListAsync(CancellationToken ct = default);
 ```
 
 ### DoctorProfile
@@ -325,8 +360,20 @@ DoctorRepository    : ExistsByCrmAsync(tenantId, crm, councilState), AddAsync, L
                       → global query filter cuida do escopo de tenant automaticamente no ListAsync
 HealthPlanRepository: ExistsByTissCodeAsync(tenantId, tissCode), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
                       → global query filter cuida do escopo de tenant automaticamente no ListAsync
-ProcedureRepository : ExistsByCodeAsync(tenantId, code), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
+ProcedureRepository : ExistsByCodeAsync(tenantId, code), ExistsByCodeAndEffectiveFromAsync(tenantId, code, effectiveFrom),
+                      AddAsync, AddRangeAsync, ListAsync(activeOnly), GetByIdAsync, UpdateAsync
                       → global query filter cuida do escopo de tenant automaticamente no ListAsync
+                      → ListAsync(activeOnly=true) filtra EffectiveFrom <= today AND (EffectiveTo IS NULL OR EffectiveTo >= today)
+ProcedureImportRepository : AddAsync, ListAsync (ordered by CreatedAt desc)
+                      → global query filter cuida do escopo de tenant automaticamente
+
+Parsers (`Infrastructure/Procedures/Parsers/`):
+TussCsvParser   : implementa IProcedureFileParser para ProcedureSource.Tuss
+                  colunas: CD_TUSS;DS_TERMO;VL_PORTE;DT_VIG_INICIO;DT_VIG_FIM
+                  EffectiveTo = coluna DT_VIG_FIM em dd/MM/yyyy (vazio = null)
+CbhpmCsvParser  : implementa IProcedureFileParser para ProcedureSource.Cbhpm
+                  colunas: CÓDIGO;NOMENCLATURA;PORTE;CUSTO_OPERACIONAL
+                  Value = PORTE + CUSTO_OPERACIONAL; EffectiveTo = null sempre
 ```
 
 ### Entity Configurations (`Persistence/Configurations/`)
@@ -340,7 +387,8 @@ snake_case em tudo (convenção PostgreSQL). Tabelas: `users`, `tenants`, `tenan
 | `TenantMemberConfiguration` | FK→Tenant: `Cascade`; FK→User: `Restrict`; índice composto único `(tenant_id, user_id)` + índice simples `user_id`; `Role`: `HasConversion<string>()`, max 50 |
 | `DoctorProfileConfiguration` | Tabela `doctor_profiles`; índice único `(crm, council_state, tenant_id)`; global query filter por `tenant_id`; `CA1861` suprimido no arquivo de migration |
 | `HealthPlanConfiguration` | Tabela `health_plans`; índice único `ix_health_plans_tenant_tiss_code` em `(tenant_id, tiss_code)`; índice simples `ix_health_plans_tenant_id`; `CA1861` suprimido no arquivo de migration |
-| `ProcedureConfiguration` | Tabela `procedures`; índice único `ix_procedures_tenant_code` em `(tenant_id, code)`; índice simples `ix_procedures_tenant_id`; `value`: `numeric(18,2)` |
+| `ProcedureConfiguration` | Tabela `procedures`; índice único `ix_procedures_tenant_code_effective_from` em `(tenant_id, code, effective_from)`; índice `ix_procedures_tenant_effective_dates` em `(tenant_id, effective_from, effective_to)`; índice simples `ix_procedures_tenant_id`; `value`: `numeric(18,2)`; `source`: `varchar(20)` |
+| `ProcedureImportConfiguration` | Tabela `procedure_imports`; índice simples `ix_procedure_imports_tenant_id`; global query filter por `tenant_id` |
 
 Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
 
@@ -427,9 +475,11 @@ doctors.MapDoctors();
 | `GET` | `/health-plans` | ✅ | Lista convênios do tenant; retorna `HealthPlanDto[]` → 200 |
 | `POST` | `/health-plans` | ✅ | Cria convênio; verifica TissCode duplicado → 201 / 409 |
 | `PATCH` | `/health-plans/{id}` | ✅ | Atualiza convênio; verifica TissCode duplicado → 200 / 404 / 409 |
-| `GET` | `/procedures` | ✅ | Lista procedimentos do tenant; retorna `ProcedureDto[]` → 200 |
-| `POST` | `/procedures` | ✅ | Cria procedimento; verifica code duplicado → 201 / 409 |
+| `GET` | `/procedures?activeOnly=true` | ✅ | Lista procedimentos do tenant; retorna `ProcedureDto[]` → 200 |
+| `POST` | `/procedures` | ✅ | Cria procedimento com vigência; verifica code+effectiveFrom duplicado → 201 / 409 |
 | `PATCH` | `/procedures/{id}` | ✅ | Atualiza procedimento; verifica code duplicado → 200 / 404 / 409 |
+| `POST` | `/procedures/import` | ✅ | Importa CSV TUSS ou CBHPM; multipart/form-data: file, source, effectiveFrom → 200 / 400 |
+| `GET` | `/procedures/imports` | ✅ | Lista histórico de importações do tenant → 200 |
 
 ### Mapeamento Result → IResult
 
@@ -571,7 +621,7 @@ builder.ConfigureAppConfiguration((_, config) =>
 1. ~~**Tenant Roles**~~ — ✅ implementado (`TenantRole` enum: Admin/Operator/Doctor; validação no `AddMember` e `UpdateRole`)
 2. ~~**DoctorProfile**~~ — ✅ implementado (`DoctorProfile`: CRM, CouncilState, Specialty; `IDoctorRepository`; `CreateDoctorCommand`; `UpdateDoctorCommand`; `GetDoctorsQuery`; endpoints `GET/POST/PATCH /doctors`)
 3. ~~**HealthPlan**~~ — ✅ implementado (`HealthPlan`: name, tissCode; `IHealthPlanRepository`; `CreateHealthPlanCommand`; `UpdateHealthPlanCommand`; `GetHealthPlansQuery`; endpoints `GET/POST/PATCH /health-plans`)
-4. ~~**Procedure**~~ — ✅ implementado (`Procedure`: code, description, value; `IProcedureRepository`; `CreateProcedureCommand`; `UpdateProcedureCommand`; `GetProceduresQuery`; endpoints `GET/POST/PATCH /procedures`)
+4. ~~**Procedure**~~ — ✅ implementado (`Procedure`: code, description, value, vigências (effectiveFrom/effectiveTo), source; `ProcedureImport`; `IProcedureRepository`; `IProcedureImportRepository`; `IProcedureFileParser` (TUSS + CBHPM); `CreateProcedureCommand`; `UpdateProcedureCommand`; `ImportProceduresCommand`; `GetProceduresQuery(activeOnly)`; `GetProcedureImportsQuery`; endpoints `GET/POST/PATCH /procedures`, `POST /procedures/import`, `GET /procedures/imports`)
 5. **Payment** — aggregate root; campos definidos no CLAUDE.md raiz; tabela `payments`
 6. **Payment Queries** — `ListPaymentsByDoctorQuery`, `GetPaymentQuery`, com paginação e filtros
 7. **Payment Endpoints** — `POST /payments`, `PUT /payments/{id}`, `GET /payments`, `GET /payments/{id}`
