@@ -8,4 +8,5 @@ public record UpdateProcedureCommand(
     Guid Id,
     string Code,
     string Description,
-    decimal Value) : ICommand<Result<ProcedureDto>>;
+    decimal Value,
+    DateOnly? EffectiveTo = null) : ICommand<Result<ProcedureDto>>;

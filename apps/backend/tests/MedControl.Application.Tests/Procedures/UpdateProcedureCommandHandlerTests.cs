@@ -14,6 +14,8 @@ public sealed class UpdateProcedureCommandHandlerTests
     private readonly ICurrentTenantService _currentTenant = Substitute.For<ICurrentTenantService>();
     private readonly UpdateProcedureCommandHandler _sut;
 
+    private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+
     public UpdateProcedureCommandHandlerTests()
     {
         _sut = new UpdateProcedureCommandHandler(_procedureRepository, _unitOfWork, _currentTenant);
@@ -23,7 +25,7 @@ public sealed class UpdateProcedureCommandHandlerTests
     public async Task Handle_ComDadosValidos_DeveAtualizarEPersistir()
     {
         var tenantId = Guid.NewGuid();
-        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m, Today).Value;
         _currentTenant.TenantId.Returns(tenantId);
         _procedureRepository.GetByIdAsync(procedure.Id, Arg.Any<CancellationToken>()).Returns(procedure);
         _procedureRepository.ExistsByCodeAsync(tenantId, "20202025", Arg.Any<CancellationToken>()).Returns(false);
@@ -71,7 +73,7 @@ public sealed class UpdateProcedureCommandHandlerTests
     public async Task Handle_CodeDuplicadoEmOutroProcedimento_DeveRetornarConflict()
     {
         var tenantId = Guid.NewGuid();
-        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m, Today).Value;
         _currentTenant.TenantId.Returns(tenantId);
         _procedureRepository.GetByIdAsync(procedure.Id, Arg.Any<CancellationToken>()).Returns(procedure);
         _procedureRepository.ExistsByCodeAsync(tenantId, "99999999", Arg.Any<CancellationToken>()).Returns(true);
@@ -88,7 +90,7 @@ public sealed class UpdateProcedureCommandHandlerTests
     public async Task Handle_MesmoCodeDoProprioProcedimento_DevePermitirAtualizar()
     {
         var tenantId = Guid.NewGuid();
-        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m).Value;
+        var procedure = Procedure.Create(tenantId, "10101012", "Consulta médica", 150.00m, Today).Value;
         _currentTenant.TenantId.Returns(tenantId);
         _procedureRepository.GetByIdAsync(procedure.Id, Arg.Any<CancellationToken>()).Returns(procedure);
 

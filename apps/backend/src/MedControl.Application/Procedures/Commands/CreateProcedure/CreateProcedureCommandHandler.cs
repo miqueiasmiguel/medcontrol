@@ -16,7 +16,7 @@ public sealed class CreateProcedureCommandHandler(
         Error.Unauthorized("Procedure.Unauthorized", "A tenant context is required.");
 
     private static readonly Error CodeAlreadyExists =
-        Error.Conflict("Procedure.CodeAlreadyExists", "A procedure with this code already exists in this tenant.");
+        Error.Conflict("Procedure.CodeAlreadyExists", "A procedure with this code and effective date already exists in this tenant.");
 
     public async Task<Result<ProcedureDto>> Handle(CreateProcedureCommand request, CancellationToken ct)
     {
@@ -27,13 +27,16 @@ public sealed class CreateProcedureCommandHandler(
 
         var tenantId = currentTenant.TenantId.Value;
 
-        var alreadyExists = await procedureRepository.ExistsByCodeAsync(tenantId, request.Code, ct);
+        var alreadyExists = await procedureRepository.ExistsByCodeAndEffectiveFromAsync(
+            tenantId, request.Code, request.EffectiveFrom, ct);
         if (alreadyExists)
         {
             return Result.Failure<ProcedureDto>(CodeAlreadyExists);
         }
 
-        var procedureResult = Procedure.Create(tenantId, request.Code, request.Description, request.Value);
+        var procedureResult = Procedure.Create(
+            tenantId, request.Code, request.Description, request.Value,
+            request.EffectiveFrom, request.EffectiveTo);
         if (procedureResult.IsFailure)
         {
             return Result.Failure<ProcedureDto>(procedureResult.Error);
@@ -48,6 +51,9 @@ public sealed class CreateProcedureCommandHandler(
             procedure.TenantId,
             procedure.Code,
             procedure.Description,
-            procedure.Value));
+            procedure.Value,
+            procedure.EffectiveFrom,
+            procedure.EffectiveTo,
+            procedure.Source.ToString()));
     }
 }

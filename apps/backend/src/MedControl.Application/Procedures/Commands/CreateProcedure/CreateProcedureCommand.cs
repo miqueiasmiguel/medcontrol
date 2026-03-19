@@ -7,4 +7,6 @@ namespace MedControl.Application.Procedures.Commands.CreateProcedure;
 public record CreateProcedureCommand(
     string Code,
     string Description,
-    decimal Value) : ICommand<Result<ProcedureDto>>;
+    decimal Value,
+    DateOnly EffectiveFrom,
+    DateOnly? EffectiveTo = null) : ICommand<Result<ProcedureDto>>;

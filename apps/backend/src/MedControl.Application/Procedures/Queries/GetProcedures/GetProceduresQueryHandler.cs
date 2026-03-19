@@ -21,10 +21,18 @@ public sealed class GetProceduresQueryHandler(
             return Result.Failure<IReadOnlyList<ProcedureDto>>(Unauthorized);
         }
 
-        var procedures = await procedureRepository.ListAsync(ct);
+        var procedures = await procedureRepository.ListAsync(request.ActiveOnly, ct);
 
         var dtos = procedures
-            .Select(p => new ProcedureDto(p.Id, p.TenantId, p.Code, p.Description, p.Value))
+            .Select(p => new ProcedureDto(
+                p.Id,
+                p.TenantId,
+                p.Code,
+                p.Description,
+                p.Value,
+                p.EffectiveFrom,
+                p.EffectiveTo,
+                p.Source.ToString()))
             .ToList()
             .AsReadOnly();
 

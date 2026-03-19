@@ -4,4 +4,4 @@ using MedControl.Domain.Common;
 
 namespace MedControl.Application.Procedures.Queries.GetProcedures;
 
-public record GetProceduresQuery : IQuery<Result<IReadOnlyList<ProcedureDto>>>;
+public record GetProceduresQuery(bool ActiveOnly = true) : IQuery<Result<IReadOnlyList<ProcedureDto>>>;
