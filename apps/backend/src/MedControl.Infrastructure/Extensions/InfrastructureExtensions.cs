@@ -3,6 +3,7 @@ using MedControl.Application.Common.Interfaces;
 using MedControl.Application.Procedures.Parsers;
 using MedControl.Domain.Doctors;
 using MedControl.Domain.HealthPlans;
+using MedControl.Domain.Payments;
 using MedControl.Domain.Procedures;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
@@ -80,6 +81,7 @@ public static class InfrastructureExtensions
         services.AddScoped<IHealthPlanRepository, HealthPlanRepository>();
         services.AddScoped<IProcedureRepository, ProcedureRepository>();
         services.AddScoped<IProcedureImportRepository, ProcedureImportRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
 
         // Procedure file parsers
         services.AddScoped<IProcedureFileParser, TussCsvParser>();
