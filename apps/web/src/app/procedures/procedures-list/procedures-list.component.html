@@ -4,9 +4,14 @@
       <h1 class="procedures-list__title">Procedimentos</h1>
       <p class="procedures-list__subtitle">Gerencie os procedimentos cadastrados no sistema</p>
     </div>
-    <button class="btn btn--primary" (click)="openCreateForm()" type="button">
-      Novo procedimento
-    </button>
+    <div class="procedures-list__actions">
+      <button class="btn btn--secondary" (click)="openImport()" type="button">
+        Importar
+      </button>
+      <button class="btn btn--primary" (click)="openCreateForm()" type="button">
+        Novo procedimento
+      </button>
+    </div>
   </div>
 
   @if (errorMessage()) {
@@ -14,6 +19,17 @@
   }
 
   <div class="procedures-list__card">
+    <div class="procedures-list__filters">
+      <label class="procedures-list__toggle">
+        <input
+          type="checkbox"
+          [checked]="showAllVigencias()"
+          (change)="toggleVigencias()"
+        />
+        Mostrar todas as vigências
+      </label>
+    </div>
+
     @if (procedures().length === 0) {
       <div class="procedures-list__empty">
         <p>Nenhum procedimento cadastrado.</p>
@@ -28,6 +44,8 @@
             <th>Código</th>
             <th>Descrição</th>
             <th>Valor</th>
+            <th>Vigência</th>
+            <th>Fonte</th>
             <th><span class="sr-only">Ações</span></th>
           </tr>
         </thead>
@@ -39,6 +57,10 @@
               </td>
               <td>{{ procedure.description }}</td>
               <td>{{ procedure.value | currency:'BRL':'symbol':'1.2-2' }}</td>
+              <td>{{ vigenciaLabel(procedure) }}</td>
+              <td>
+                <span class="procedures-list__source-badge">{{ procedure.source }}</span>
+              </td>
               <td class="procedures-list__actions">
                 <button
                   class="btn btn--ghost btn--sm"
@@ -61,5 +83,12 @@
     [procedure]="selectedProcedure()"
     (saved)="onSaved($event)"
     (closed)="closeForm()"
+  />
+}
+
+@if (importOpen()) {
+  <app-procedure-import
+    (imported)="onImported($event)"
+    (closed)="closeImport()"
   />
 }

@@ -38,6 +38,8 @@ export class ProcedureFormComponent implements OnChanges {
     code: ['', [Validators.required, Validators.maxLength(50)]],
     description: ['', [Validators.required, Validators.maxLength(512)]],
     value: [0, [Validators.required, Validators.min(0.01)]],
+    effectiveFrom: ['', [Validators.required]],
+    effectiveTo: [''],
   });
 
   get isEditing(): boolean {
@@ -50,9 +52,17 @@ export class ProcedureFormComponent implements OnChanges {
         code: this.procedure.code,
         description: this.procedure.description,
         value: this.procedure.value,
+        effectiveFrom: this.procedure.effectiveFrom,
+        effectiveTo: this.procedure.effectiveTo ?? '',
       });
     } else {
-      this.form.reset({ code: '', description: '', value: 0 });
+      this.form.reset({
+        code: '',
+        description: '',
+        value: 0,
+        effectiveFrom: '',
+        effectiveTo: '',
+      });
     }
     this.errorMessage.set('');
   }
@@ -66,12 +76,23 @@ export class ProcedureFormComponent implements OnChanges {
     this.loading.set(true);
     this.errorMessage.set('');
 
-    const value = this.form.getRawValue();
+    const raw = this.form.getRawValue();
 
     const request$ =
       this.isEditing && this.procedure
-        ? this.procedureService.updateProcedure(this.procedure.id, value)
-        : this.procedureService.createProcedure(value);
+        ? this.procedureService.updateProcedure(this.procedure.id, {
+            code: raw.code,
+            description: raw.description,
+            value: raw.value,
+            effectiveTo: raw.effectiveTo || undefined,
+          })
+        : this.procedureService.createProcedure({
+            code: raw.code,
+            description: raw.description,
+            value: raw.value,
+            effectiveFrom: raw.effectiveFrom,
+            effectiveTo: raw.effectiveTo || undefined,
+          });
 
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (procedure) => {
@@ -82,7 +103,7 @@ export class ProcedureFormComponent implements OnChanges {
         this.loading.set(false);
         if (err.status === 409) {
           this.errorMessage.set(
-            'Já existe um procedimento com esse código nesta organização.'
+            'Já existe um procedimento com esse código nesta organização.',
           );
         } else {
           this.errorMessage.set('Erro ao salvar procedimento. Tente novamente.');

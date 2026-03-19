@@ -1,0 +1,93 @@
+<div class="procedure-form-overlay" (click)="close()" aria-hidden="true"></div>
+
+<aside class="procedure-form-panel" role="dialog" aria-modal="true" aria-label="Importar procedimentos">
+  <div class="procedure-form-panel__header">
+    <h2 class="procedure-form-panel__title">Importar procedimentos</h2>
+    <button class="procedure-form-panel__close" (click)="close()" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path
+          fill-rule="evenodd"
+          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <div class="procedure-form-panel__body">
+    @if (errorMessage()) {
+      <div class="form-error-banner" role="alert">{{ errorMessage() }}</div>
+    }
+
+    @if (result(); as importResult) {
+      <div class="import-result" role="status">
+        <p><strong>Importação concluída</strong></p>
+        <p>Fonte: {{ importResult.source }}</p>
+        <p>Total de linhas: {{ importResult.totalRows }}</p>
+        <p>Importados: {{ importResult.importedRows }}</p>
+        <p>Pulados: {{ importResult.skippedRows }}</p>
+        @if (importResult.errorSummary) {
+          <details class="import-result__errors">
+            <summary>Ver erros</summary>
+            <pre>{{ importResult.errorSummary }}</pre>
+          </details>
+        }
+      </div>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-field">
+          <label class="form-label" for="source">Tabela</label>
+          <select
+            id="source"
+            class="form-input"
+            [class.form-input--error]="form.controls.source.invalid && form.controls.source.touched"
+            formControlName="source"
+          >
+            <option value="">Selecione...</option>
+            <option value="Tuss">TUSS (ANS)</option>
+            <option value="Cbhpm">CBHPM (AMB)</option>
+          </select>
+          @if (form.controls.source.invalid && form.controls.source.touched) {
+            <span class="form-field-error">Selecione a tabela de origem.</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="effectiveFrom">Data de vigência</label>
+          <input
+            id="effectiveFrom"
+            class="form-input"
+            [class.form-input--error]="form.controls.effectiveFrom.invalid && form.controls.effectiveFrom.touched"
+            type="date"
+            formControlName="effectiveFrom"
+          />
+          @if (form.controls.effectiveFrom.invalid && form.controls.effectiveFrom.touched) {
+            <span class="form-field-error">Data de vigência é obrigatória.</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label class="form-label" for="file">Arquivo CSV</label>
+          <input
+            id="file"
+            class="form-input"
+            type="file"
+            accept=".csv"
+            (change)="onFileSelected($event)"
+          />
+        </div>
+
+        <div class="procedure-form-panel__footer">
+          <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+          <button class="btn btn--primary" type="submit" [disabled]="loading()">
+            @if (loading()) {
+              Importando…
+            } @else {
+              Importar
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</aside>
