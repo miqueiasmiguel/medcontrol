@@ -27,6 +27,11 @@ export const appRoutes: Route[] = [
         loadChildren: () =>
           import('./health-plans/health-plans.routes').then((m) => m.healthPlansRoutes),
       },
+      {
+        path: 'procedures',
+        loadChildren: () =>
+          import('./procedures/procedures.routes').then((m) => m.proceduresRoutes),
+      },
     ],
   },
   {

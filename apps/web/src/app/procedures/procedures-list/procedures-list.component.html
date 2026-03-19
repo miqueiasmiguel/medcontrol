@@ -1,0 +1,65 @@
+<div class="procedures-list">
+  <div class="procedures-list__header">
+    <div>
+      <h1 class="procedures-list__title">Procedimentos</h1>
+      <p class="procedures-list__subtitle">Gerencie os procedimentos cadastrados no sistema</p>
+    </div>
+    <button class="btn btn--primary" (click)="openCreateForm()" type="button">
+      Novo procedimento
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="procedures-list__error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <div class="procedures-list__card">
+    @if (procedures().length === 0) {
+      <div class="procedures-list__empty">
+        <p>Nenhum procedimento cadastrado.</p>
+        <button class="btn btn--secondary" (click)="openCreateForm()" type="button">
+          Cadastrar primeiro procedimento
+        </button>
+      </div>
+    } @else {
+      <table class="procedures-list__table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (procedure of procedures(); track procedure.id) {
+            <tr class="procedures-list__row" (click)="openEditForm(procedure)">
+              <td>
+                <span class="procedures-list__code">{{ procedure.code }}</span>
+              </td>
+              <td>{{ procedure.description }}</td>
+              <td>{{ procedure.value | currency:'BRL':'symbol':'1.2-2' }}</td>
+              <td class="procedures-list__actions">
+                <button
+                  class="btn btn--ghost btn--sm"
+                  (click)="openEditForm(procedure); $event.stopPropagation()"
+                  type="button"
+                >
+                  Editar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+@if (formOpen()) {
+  <app-procedure-form
+    [procedure]="selectedProcedure()"
+    (saved)="onSaved($event)"
+    (closed)="closeForm()"
+  />
+}
