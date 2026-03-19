@@ -16,7 +16,8 @@ src/
 │   ├── Tenants/          ← Tenant, TenantMember, TenantRole (enum), ITenantRepository, Events/
 │   ├── Users/            ← User, GlobalRole (enum), IUserRepository, Events/
 │   ├── Doctors/          ← DoctorProfile, IDoctorRepository
-│   └── HealthPlans/      ← HealthPlan, IHealthPlanRepository
+│   ├── HealthPlans/      ← HealthPlan, IHealthPlanRepository
+│   └── Procedures/       ← Procedure, IProcedureRepository
 ├── MedControl.Application/
 │   ├── Mediator/         ← IMediator, Mediator, ICommand, IQuery, IRequest, Unit, IPipelineBehavior, IDomainEventHandler
 │   ├── Behaviors/        ← LoggingBehavior, ValidationBehavior, TransactionBehavior
@@ -33,6 +34,10 @@ src/
 │   │   ├── Commands/     ← CreateHealthPlanCommand(Handler+Validator), UpdateHealthPlanCommand(Handler+Validator)
 │   │   ├── Queries/      ← GetHealthPlansQuery(Handler)
 │   │   └── DTOs/         ← HealthPlanDto
+│   ├── Procedures/
+│   │   ├── Commands/     ← CreateProcedureCommand(Handler+Validator), UpdateProcedureCommand(Handler+Validator)
+│   │   ├── Queries/      ← GetProceduresQuery(Handler)
+│   │   └── DTOs/         ← ProcedureDto
 │   └── Common/
 │       ├── Interfaces/   ← IUnitOfWork, ICurrentTenantService, ICurrentUserService,
 │       │                    IEmailService, ITokenService, IMagicLinkService, IGoogleAuthService
@@ -186,6 +191,31 @@ Task AddAsync(HealthPlan healthPlan, CancellationToken ct = default);
 Task UpdateAsync(HealthPlan healthPlan, CancellationToken ct = default);
 ```
 
+### Procedure
+
+```csharp
+public sealed class Procedure : BaseAuditableEntity, IAggregateRoot, IHasTenant
+{
+    private Procedure() { }  // EF Core
+    public Guid TenantId { get; private set; }
+    public string Code { get; private set; }        // max 50, TUSS/CBHPM
+    public string Description { get; private set; } // max 512
+    public decimal Value { get; private set; }      // > 0, numeric(18,2)
+
+    public static class Errors { CodeRequired, DescriptionRequired, ValueInvalid }
+
+    public static Result<Procedure> Create(Guid tenantId, string code, string description, decimal value)
+    public Result Update(string code, string description, decimal value)
+}
+
+// IProcedureRepository
+Task<IReadOnlyList<Procedure>> ListAsync(CancellationToken ct = default);
+Task<Procedure?> GetByIdAsync(Guid id, CancellationToken ct = default);
+Task<bool> ExistsByCodeAsync(Guid tenantId, string code, CancellationToken ct = default);
+Task AddAsync(Procedure procedure, CancellationToken ct = default);
+Task UpdateAsync(Procedure procedure, CancellationToken ct = default);
+```
+
 ### DoctorProfile
 
 ```csharp
@@ -271,9 +301,9 @@ public sealed class MagicLinkSettings
 
 ### ApplicationDbContext
 
-- DbSets: `Tenants`, `TenantMembers`, `Users`, `DoctorProfiles`, `HealthPlans`
+- DbSets: `Tenants`, `TenantMembers`, `Users`, `DoctorProfiles`, `HealthPlans`, `Procedures`
 - Interceptors: `AuditableEntityInterceptor`, `DomainEventDispatchInterceptor`
-- Global query filters: `TenantMembers`, `DoctorProfiles` e `HealthPlans` filtrados por `currentUser.TenantId`
+- Global query filters: `TenantMembers`, `DoctorProfiles`, `HealthPlans` e `Procedures` filtrados por `currentUser.TenantId`
 - Implementa `IUnitOfWork` diretamente
 - Connection string key: `"Database"` (Npgsql)
 
@@ -295,6 +325,8 @@ DoctorRepository    : ExistsByCrmAsync(tenantId, crm, councilState), AddAsync, L
                       → global query filter cuida do escopo de tenant automaticamente no ListAsync
 HealthPlanRepository: ExistsByTissCodeAsync(tenantId, tissCode), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
                       → global query filter cuida do escopo de tenant automaticamente no ListAsync
+ProcedureRepository : ExistsByCodeAsync(tenantId, code), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
+                      → global query filter cuida do escopo de tenant automaticamente no ListAsync
 ```
 
 ### Entity Configurations (`Persistence/Configurations/`)
@@ -308,6 +340,7 @@ snake_case em tudo (convenção PostgreSQL). Tabelas: `users`, `tenants`, `tenan
 | `TenantMemberConfiguration` | FK→Tenant: `Cascade`; FK→User: `Restrict`; índice composto único `(tenant_id, user_id)` + índice simples `user_id`; `Role`: `HasConversion<string>()`, max 50 |
 | `DoctorProfileConfiguration` | Tabela `doctor_profiles`; índice único `(crm, council_state, tenant_id)`; global query filter por `tenant_id`; `CA1861` suprimido no arquivo de migration |
 | `HealthPlanConfiguration` | Tabela `health_plans`; índice único `ix_health_plans_tenant_tiss_code` em `(tenant_id, tiss_code)`; índice simples `ix_health_plans_tenant_id`; `CA1861` suprimido no arquivo de migration |
+| `ProcedureConfiguration` | Tabela `procedures`; índice único `ix_procedures_tenant_code` em `(tenant_id, code)`; índice simples `ix_procedures_tenant_id`; `value`: `numeric(18,2)` |
 
 Todas as PKs: `ValueGeneratedNever()` — IDs gerados pela aplicação.
 
@@ -394,6 +427,9 @@ doctors.MapDoctors();
 | `GET` | `/health-plans` | ✅ | Lista convênios do tenant; retorna `HealthPlanDto[]` → 200 |
 | `POST` | `/health-plans` | ✅ | Cria convênio; verifica TissCode duplicado → 201 / 409 |
 | `PATCH` | `/health-plans/{id}` | ✅ | Atualiza convênio; verifica TissCode duplicado → 200 / 404 / 409 |
+| `GET` | `/procedures` | ✅ | Lista procedimentos do tenant; retorna `ProcedureDto[]` → 200 |
+| `POST` | `/procedures` | ✅ | Cria procedimento; verifica code duplicado → 201 / 409 |
+| `PATCH` | `/procedures/{id}` | ✅ | Atualiza procedimento; verifica code duplicado → 200 / 404 / 409 |
 
 ### Mapeamento Result → IResult
 
@@ -535,7 +571,7 @@ builder.ConfigureAppConfiguration((_, config) =>
 1. ~~**Tenant Roles**~~ — ✅ implementado (`TenantRole` enum: Admin/Operator/Doctor; validação no `AddMember` e `UpdateRole`)
 2. ~~**DoctorProfile**~~ — ✅ implementado (`DoctorProfile`: CRM, CouncilState, Specialty; `IDoctorRepository`; `CreateDoctorCommand`; `UpdateDoctorCommand`; `GetDoctorsQuery`; endpoints `GET/POST/PATCH /doctors`)
 3. ~~**HealthPlan**~~ — ✅ implementado (`HealthPlan`: name, tissCode; `IHealthPlanRepository`; `CreateHealthPlanCommand`; `UpdateHealthPlanCommand`; `GetHealthPlansQuery`; endpoints `GET/POST/PATCH /health-plans`)
-4. **Procedure** — aggregate `Procedure`; campos: code (TUSS/CBHPM), description, value; tabela `procedures`
+4. ~~**Procedure**~~ — ✅ implementado (`Procedure`: code, description, value; `IProcedureRepository`; `CreateProcedureCommand`; `UpdateProcedureCommand`; `GetProceduresQuery`; endpoints `GET/POST/PATCH /procedures`)
 5. **Payment** — aggregate root; campos definidos no CLAUDE.md raiz; tabela `payments`
 6. **Payment Queries** — `ListPaymentsByDoctorQuery`, `GetPaymentQuery`, com paginação e filtros
 7. **Payment Endpoints** — `POST /payments`, `PUT /payments/{id}`, `GET /payments`, `GET /payments/{id}`

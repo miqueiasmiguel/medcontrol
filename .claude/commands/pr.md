@@ -20,15 +20,47 @@ pnpm nx affected:lint
 
 Se algum check falhar, corrija antes de continuar.
 
-## 2. Coletar informações do branch
+## 2. Commitar mudanças pendentes
+
+Antes de abrir o PR, verifique se há mudanças não commitadas e commite seguindo o fluxo `/commit`:
 
 ```bash
-git status                          # arquivos pendentes de commit
+git status         # checar arquivos modificados/não staged
+git diff --staged  # checar o que está staged
+```
+
+Se houver mudanças pendentes:
+
+1. Stage os arquivos relevantes:
+   ```bash
+   git add <arquivos>
+   ```
+
+2. Analise as mudanças e gere a mensagem no formato Conventional Commit:
+   ```
+   <type>(<scope>): <descrição em minúsculas, imperativo, sem ponto final>
+   ```
+   - Scopes disponíveis: `domain` | `app` | `infra` | `api` | `web` | `mobile` | `contracts` | `ci` | `deps` | `auth` | `tenants` | `users` | `payments` | `doctors` | `health-plans` | `procedures`
+   - Descrição 100% minúscula, incluindo siglas
+
+3. Commite:
+   ```bash
+   git commit -m "$(cat <<'EOF'
+   <mensagem gerada>
+   EOF
+   )"
+   ```
+
+Repita para cada conjunto lógico de mudanças. Só avance quando `git status` não mostrar arquivos pendentes de commit.
+
+## 3. Coletar informações do branch
+
+```bash
 git log main..HEAD --oneline        # commits que entrarão no PR
 git diff main...HEAD --stat         # resumo das mudanças
 ```
 
-## 3. Garantir que o branch está publicado
+## 4. Garantir que o branch está publicado
 
 ```bash
 git push origin HEAD
@@ -36,7 +68,7 @@ git push origin HEAD
 
 Se o branch não existir no remoto, use `git push -u origin <nome-do-branch>`.
 
-## 4. Redigir título e body do PR
+## 5. Redigir título e body do PR
 
 **Título** (máx. 70 caracteres, minúsculas, imperativo):
 - Seguir a mesma convenção do commit, mas em linguagem natural
@@ -63,7 +95,7 @@ Se o branch não existir no remoto, use `git push -u origin <nome-do-branch>`.
 - [ ] Nenhum secret ou dado sensível no código
 ```
 
-## 5. Abrir o PR via gh
+## 6. Abrir o PR via gh
 
 ```bash
 gh pr create \
@@ -93,7 +125,7 @@ Ou de forma interativa:
 gh pr create --fill   # usa commits como título/body (ponto de partida)
 ```
 
-## 6. Após abrir o PR
+## 7. Após abrir o PR
 
 - Copie a URL retornada e compartilhe
 - Verifique se o CI está verde: `gh pr checks`

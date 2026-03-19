@@ -2,6 +2,7 @@ using MedControl.Application.Auth.Settings;
 using MedControl.Application.Common.Interfaces;
 using MedControl.Domain.Doctors;
 using MedControl.Domain.HealthPlans;
+using MedControl.Domain.Procedures;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 using MedControl.Infrastructure.Auth;
@@ -75,6 +76,7 @@ public static class InfrastructureExtensions
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IDoctorRepository, DoctorRepository>();
         services.AddScoped<IHealthPlanRepository, HealthPlanRepository>();
+        services.AddScoped<IProcedureRepository, ProcedureRepository>();
 
         return services;
     }
