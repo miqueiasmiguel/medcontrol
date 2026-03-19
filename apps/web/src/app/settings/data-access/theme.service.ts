@@ -8,7 +8,11 @@ const STORAGE_KEY = 'mmc_theme';
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly win = inject(WINDOW);
-  readonly theme = signal<Theme>(this.loadStored());
+  readonly theme = signal<Theme>('system');
+
+  constructor() {
+    this.apply(this.loadStored());
+  }
 
   apply(theme: Theme): void {
     const root = this.win.document.documentElement;
