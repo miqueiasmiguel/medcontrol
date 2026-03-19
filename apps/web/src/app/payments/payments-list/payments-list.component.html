@@ -1,0 +1,140 @@
+<div class="payments-list">
+  <div class="payments-list__header">
+    <div>
+      <h1 class="payments-list__title">Pagamentos</h1>
+      <p class="payments-list__subtitle">Gerencie os pagamentos registrados no sistema</p>
+    </div>
+    <button class="btn btn--primary" (click)="openCreateForm()" type="button">
+      Novo pagamento
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="payments-list__error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <div class="payments-list__card">
+    <div class="payments-list__filters">
+      <span class="payments-list__filter-label">Status:</span>
+      <button
+        class="filter-btn"
+        [class.filter-btn--active]="statusFilter() === 'All'"
+        (click)="setStatusFilter('All')"
+        type="button"
+      >
+        Todos
+      </button>
+      <button
+        class="filter-btn filter-btn--pending"
+        [class.filter-btn--active]="statusFilter() === 'Pending'"
+        (click)="setStatusFilter('Pending')"
+        type="button"
+      >
+        Pendente
+      </button>
+      <button
+        class="filter-btn filter-btn--pending"
+        [class.filter-btn--active]="statusFilter() === 'PartiallyPending'"
+        (click)="setStatusFilter('PartiallyPending')"
+        type="button"
+      >
+        Parc. pendente
+      </button>
+      <button
+        class="filter-btn filter-btn--paid"
+        [class.filter-btn--active]="statusFilter() === 'Paid'"
+        (click)="setStatusFilter('Paid')"
+        type="button"
+      >
+        Pago
+      </button>
+      <button
+        class="filter-btn filter-btn--refused"
+        [class.filter-btn--active]="statusFilter() === 'Refused'"
+        (click)="setStatusFilter('Refused')"
+        type="button"
+      >
+        Recusado
+      </button>
+      <button
+        class="filter-btn filter-btn--refused"
+        [class.filter-btn--active]="statusFilter() === 'PartiallyRefused'"
+        (click)="setStatusFilter('PartiallyRefused')"
+        type="button"
+      >
+        Parc. recusado
+      </button>
+    </div>
+
+    @if (filteredPayments().length === 0) {
+      <div class="payments-list__empty">
+        <p>Nenhum pagamento encontrado.</p>
+        <button class="btn btn--secondary" (click)="openCreateForm()" type="button">
+          Registrar primeiro pagamento
+        </button>
+      </div>
+    } @else {
+      <table class="payments-list__table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Nº Atendimento</th>
+            <th>Beneficiário</th>
+            <th>Médico</th>
+            <th>Convênio</th>
+            <th>Itens</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (payment of filteredPayments(); track payment.id) {
+            <tr class="payments-list__row" (click)="openDetail(payment)">
+              <td>{{ formatDate(payment.executionDate) }}</td>
+              <td>
+                <span class="payments-list__code">{{ payment.appointmentNumber }}</span>
+              </td>
+              <td>{{ payment.beneficiaryName }}</td>
+              <td>{{ doctorName(payment.doctorId) }}</td>
+              <td>{{ healthPlanName(payment.healthPlanId) }}</td>
+              <td class="payments-list__items-count">{{ payment.items.length }}</td>
+              <td class="text-numeric">
+                {{ totalValue(payment) | currency:'BRL':'symbol':'1.2-2' }}
+              </td>
+              <td>
+                <span [class]="statusBadgeClass(payment.status)">
+                  {{ statusLabel(payment.status) }}
+                </span>
+              </td>
+              <td class="payments-list__actions">
+                <button
+                  class="btn btn--ghost btn--sm"
+                  (click)="openDetail(payment); $event.stopPropagation()"
+                  type="button"
+                >
+                  Ver
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+@if (formOpen()) {
+  <app-payment-form (saved)="onSaved($event)" (closed)="closeForm()" />
+}
+
+@if (detailOpen() && selectedPayment()) {
+  <app-payment-detail
+    [payment]="selectedPayment()!"
+    [doctorName]="doctorName(selectedPayment()!.doctorId)"
+    [healthPlanName]="healthPlanName(selectedPayment()!.healthPlanId)"
+    [procedures]="procedures()"
+    (updated)="onDetailUpdated($event)"
+    (closed)="closeDetail()"
+  />
+}

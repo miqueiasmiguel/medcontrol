@@ -10,14 +10,19 @@ MedControl é um SaaS para médicos, clínicas, hospitais e empresas de faturame
 
 | Módulo | Status | Descrição |
 |---|---|---|
-| **Controle de Pagamento** | 🔨 em desenvolvimento | Operador registra pagamentos; médico consulta via mobile |
+| **Controle de Pagamento** | ✅ backend + web implementados | Operador registra pagamentos; médico consulta via mobile |
 | Faturamento | 🔜 futuro | Geração de lotes TISS, envio a convênios |
 | Recurso de Glosa | 🔜 futuro | Contestação de pagamentos recusados |
 
 ### Bounded Contexts
 
 ```
-Payments     ← aggregate root Payment (core domain)
+Payments     ← aggregate root Payment (core domain) — backend implementado
+             ← PaymentItem (entity filha): ProcedureId, Value (snapshot), Status (Pending/Paid/Refused)
+             ← Payment.Status: computed (Pending/Paid/Refused/PartiallyPending/PartiallyRefused)
+             ← endpoints: GET/POST /payments, GET /payments/{id}, PATCH /payments/{id}
+             ←            PATCH /payments/{id}/items/{itemId}, POST /payments/{id}/items
+             ←            DELETE /payments/{id}/items/{itemId}
 Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
 HealthPlans  ← Convênio (nome, código TISS)
 Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor, vigências) — UI pronta, backend implementado

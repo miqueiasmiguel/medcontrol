@@ -1,0 +1,345 @@
+<div class="payment-detail-overlay" (click)="close()" aria-hidden="true"></div>
+
+<aside
+  class="payment-detail-panel"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Detalhes do pagamento"
+>
+  <div class="payment-detail-panel__header">
+    <div>
+      <h2 class="payment-detail-panel__title">Pagamento</h2>
+      <p class="payment-detail-panel__subtitle">Nº {{ payment.appointmentNumber }}</p>
+    </div>
+    <div class="payment-detail-panel__header-end">
+      <span [class]="statusBadgeClass(payment.status)">
+        {{ statusLabel(payment.status) }}
+      </span>
+      <button
+        class="payment-detail-panel__close"
+        (click)="close()"
+        type="button"
+        aria-label="Fechar"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path
+            fill-rule="evenodd"
+            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="payment-detail-panel__body">
+    @if (errorMessage()) {
+      <div class="error-banner" role="alert">{{ errorMessage() }}</div>
+    }
+
+    <!-- ── Header info / edit form ───────────────────────────────────────── -->
+    @if (editingHeader()) {
+      <form class="header-edit-form" [formGroup]="headerForm" (ngSubmit)="submitHeaderUpdate()">
+        <div class="header-edit-form__title-row">
+          <h3 class="section-title">Editar informações</h3>
+        </div>
+
+        <div class="detail-grid">
+          <div class="form-field">
+            <label class="form-label" for="executionDate">Data de execução</label>
+            <input
+              id="executionDate"
+              class="form-input"
+              type="date"
+              formControlName="executionDate"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="appointmentNumber">Nº atendimento</label>
+            <input
+              id="appointmentNumber"
+              class="form-input"
+              type="text"
+              formControlName="appointmentNumber"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="beneficiaryName">Beneficiário</label>
+            <input
+              id="beneficiaryName"
+              class="form-input"
+              type="text"
+              formControlName="beneficiaryName"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="beneficiaryCard">Carteira</label>
+            <input
+              id="beneficiaryCard"
+              class="form-input"
+              type="text"
+              formControlName="beneficiaryCard"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="authorizationCode">Senha de autorização</label>
+            <input
+              id="authorizationCode"
+              class="form-input"
+              type="text"
+              formControlName="authorizationCode"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="executionLocation">Local de execução</label>
+            <input
+              id="executionLocation"
+              class="form-input"
+              type="text"
+              formControlName="executionLocation"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="paymentLocation">Local de pagamento</label>
+            <input
+              id="paymentLocation"
+              class="form-input"
+              type="text"
+              formControlName="paymentLocation"
+              autocomplete="off"
+            />
+          </div>
+          <div class="form-field form-field--full">
+            <label class="form-label" for="headerNotes">Observações</label>
+            <input
+              id="headerNotes"
+              class="form-input"
+              type="text"
+              formControlName="notes"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="header-edit-form__actions">
+          <button
+            class="btn btn--ghost btn--xs"
+            type="button"
+            (click)="cancelEditHeader()"
+          >
+            Cancelar
+          </button>
+          <button
+            class="btn btn--primary btn--xs"
+            type="submit"
+            [disabled]="headerSubmitting()"
+          >
+            @if (headerSubmitting()) { Salvando… } @else { Salvar alterações }
+          </button>
+        </div>
+      </form>
+    } @else {
+      <div class="detail-section">
+        <div class="detail-section__title-row">
+          <h3 class="section-title">Informações</h3>
+          <button class="btn btn--ghost btn--xs" type="button" (click)="startEditHeader()">
+            Editar
+          </button>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-item__label">Médico</span>
+            <span class="detail-item__value">{{ doctorName }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label">Convênio</span>
+            <span class="detail-item__value">{{ healthPlanName }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label">Data de execução</span>
+            <span class="detail-item__value">{{ formatDate(payment.executionDate) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label">Beneficiário</span>
+            <span class="detail-item__value">{{ payment.beneficiaryName }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label">Carteira</span>
+            <span class="detail-item__value mono">{{ payment.beneficiaryCard }}</span>
+          </div>
+          @if (payment.authorizationCode) {
+            <div class="detail-item">
+              <span class="detail-item__label">Senha de autorização</span>
+              <span class="detail-item__value mono">{{ payment.authorizationCode }}</span>
+            </div>
+          }
+          <div class="detail-item">
+            <span class="detail-item__label">Local de execução</span>
+            <span class="detail-item__value">{{ payment.executionLocation }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-item__label">Local de pagamento</span>
+            <span class="detail-item__value">{{ payment.paymentLocation }}</span>
+          </div>
+          @if (payment.notes) {
+            <div class="detail-item detail-item--full">
+              <span class="detail-item__label">Observações</span>
+              <span class="detail-item__value">{{ payment.notes }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ── Procedimentos ─────────────────────────────────────────────────── -->
+    <div class="items-section">
+      <div class="items-section__header">
+        <h3 class="items-section__title">Procedimentos</h3>
+        <div class="items-section__header-end">
+          <span class="items-section__total">
+            Total: <strong class="mono">{{ totalValue() | currency:'BRL':'symbol':'1.2-2' }}</strong>
+          </span>
+          @if (!addingItem()) {
+            <button class="btn btn--ghost btn--xs" type="button" (click)="startAddItem()">
+              + Adicionar
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Add item form -->
+      @if (addingItem()) {
+        <form
+          class="add-item-form"
+          [formGroup]="addItemForm"
+          (ngSubmit)="submitAddItem()"
+        >
+          <div class="add-item-form__fields">
+            <select
+              class="form-input form-select form-input--sm"
+              formControlName="procedureId"
+              (change)="onAddProcedureSelected()"
+            >
+              <option value="">Selecione um procedimento</option>
+              @for (p of procedures; track p.id) {
+                <option [value]="p.id">{{ p.code }} — {{ p.description }}</option>
+              }
+            </select>
+            <input
+              class="form-input form-input--sm add-item-form__value"
+              type="number"
+              formControlName="value"
+              min="0.01"
+              step="0.01"
+              placeholder="Valor (R$)"
+            />
+          </div>
+          <div class="add-item-form__actions">
+            <button
+              class="btn btn--ghost btn--xs"
+              type="button"
+              (click)="cancelAddItem()"
+            >
+              Cancelar
+            </button>
+            <button
+              class="btn btn--primary btn--xs"
+              type="submit"
+              [disabled]="itemSubmitting()"
+            >
+              @if (itemSubmitting()) { Adicionando… } @else { Adicionar }
+            </button>
+          </div>
+        </form>
+      }
+
+      <div class="items-list">
+        @for (item of payment.items; track item.id) {
+          <div class="item-row">
+            <div class="item-row__main">
+              <div class="item-row__procedure">{{ procedureName(item.procedureId) }}</div>
+              <div class="item-row__meta">
+                <span class="mono item-row__value">
+                  {{ item.value | currency:'BRL':'symbol':'1.2-2' }}
+                </span>
+                <span [class]="'badge-' + item.status.toLowerCase()">
+                  {{ itemStatusLabel(item.status) }}
+                </span>
+              </div>
+            </div>
+
+            @if (item.notes && editingItemId() !== item.id) {
+              <div class="item-row__notes">{{ item.notes }}</div>
+            }
+
+            @if (editingItemId() === item.id) {
+              <form
+                class="item-row__edit"
+                [formGroup]="statusForm"
+                (ngSubmit)="submitStatusUpdate(item.id)"
+              >
+                <div class="item-row__edit-fields">
+                  <select class="form-input form-select form-input--sm" formControlName="status">
+                    <option value="Pending">Pendente</option>
+                    <option value="Paid">Pago</option>
+                    <option value="Refused">Recusado</option>
+                  </select>
+                  <input
+                    class="form-input form-input--sm"
+                    type="text"
+                    formControlName="notes"
+                    placeholder="Observação (opcional)"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="item-row__edit-actions">
+                  <button
+                    class="btn btn--ghost btn--xs"
+                    type="button"
+                    (click)="cancelEdit()"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    class="btn btn--primary btn--xs"
+                    type="submit"
+                    [disabled]="updatingItemId() === item.id"
+                  >
+                    @if (updatingItemId() === item.id) {
+                      Salvando…
+                    } @else {
+                      Salvar
+                    }
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <div class="item-row__action">
+                <button
+                  class="btn btn--ghost btn--xs"
+                  type="button"
+                  (click)="startEdit(item.id, item.status, item.notes)"
+                >
+                  Atualizar status
+                </button>
+                <button
+                  class="btn btn--ghost btn--xs btn--danger"
+                  type="button"
+                  [disabled]="payment.items.length === 1 || removingItemId() === item.id"
+                  (click)="removeItem(item.id)"
+                >
+                  @if (removingItemId() === item.id) { Removendo… } @else { Remover }
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</aside>
