@@ -9,13 +9,15 @@ import {
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProcedureService, ProcedureImportDto } from '../data-access/procedure.service';
 
 @Component({
   selector: 'app-procedure-import',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, MatProgressSpinnerModule],
   templateUrl: './procedure-import.component.html',
+  styleUrl: './procedure-import.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProcedureImportComponent {
@@ -40,19 +42,22 @@ export class ProcedureImportComponent {
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     this.selectedFile = input.files?.[0] ?? null;
+    if (this.selectedFile) {
+      this.errorMessage.set('');
+    }
   }
 
   submit() {
+    if (!this.selectedFile) {
+      this.errorMessage.set('Selecione um arquivo CSV.');
+    }
+
     if (this.form.invalid || !this.selectedFile) {
       this.form.markAllAsTouched();
-      if (!this.selectedFile) {
-        this.errorMessage.set('Selecione um arquivo CSV.');
-      }
       return;
     }
 
     this.loading.set(true);
-    this.errorMessage.set('');
     this.result.set(null);
 
     const { source, effectiveFrom } = this.form.getRawValue();

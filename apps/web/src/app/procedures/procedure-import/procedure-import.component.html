@@ -21,17 +21,42 @@
 
     @if (result(); as importResult) {
       <div class="import-result" role="status">
-        <p><strong>Importação concluída</strong></p>
-        <p>Fonte: {{ importResult.source }}</p>
-        <p>Total de linhas: {{ importResult.totalRows }}</p>
-        <p>Importados: {{ importResult.importedRows }}</p>
-        <p>Pulados: {{ importResult.skippedRows }}</p>
+        <div class="import-result__success-banner">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+          </svg>
+          Importação concluída com sucesso
+        </div>
+
+        <div class="import-result__stats">
+          <div class="import-stat import-stat--total">
+            <span class="import-stat__value">{{ importResult.totalRows }}</span>
+            <span class="import-stat__label">Total de linhas</span>
+          </div>
+          <div class="import-stat import-stat--ok">
+            <span class="import-stat__value">{{ importResult.importedRows }}</span>
+            <span class="import-stat__label">Importados</span>
+          </div>
+          <div class="import-stat import-stat--skip">
+            <span class="import-stat__value">{{ importResult.skippedRows }}</span>
+            <span class="import-stat__label">Pulados</span>
+          </div>
+        </div>
+
+        <p class="import-result__source">
+          Tabela: <strong>{{ importResult.source }}</strong>
+        </p>
+
         @if (importResult.errorSummary) {
           <details class="import-result__errors">
             <summary>Ver erros</summary>
             <pre>{{ importResult.errorSummary }}</pre>
           </details>
         }
+      </div>
+
+      <div class="procedure-form-panel__footer">
+        <button class="btn btn--primary" type="button" (click)="close()">Fechar</button>
       </div>
     } @else {
       <form [formGroup]="form" (ngSubmit)="submit()">
@@ -67,21 +92,57 @@
         </div>
 
         <div class="form-field">
-          <label class="form-label" for="file">Arquivo CSV</label>
-          <input
-            id="file"
-            class="form-input"
-            type="file"
-            accept=".csv"
-            (change)="onFileSelected($event)"
-          />
+          <label class="form-label">Arquivo CSV</label>
+          <label
+            class="file-upload-zone"
+            [class.file-upload-zone--active]="selectedFile"
+            for="file"
+          >
+            <div class="file-upload-zone__icon">
+              @if (selectedFile) {
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                </svg>
+              }
+            </div>
+
+            @if (selectedFile) {
+              <span class="file-upload-zone__file-name">
+                <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                </svg>
+                {{ selectedFile.name }}
+              </span>
+              <p class="file-upload-zone__hint">Clique para trocar o arquivo</p>
+            } @else {
+              <p class="file-upload-zone__label">Clique para selecionar um arquivo</p>
+              <p class="file-upload-zone__hint">Somente arquivos .csv</p>
+            }
+
+            <input
+              id="file"
+              type="file"
+              accept=".csv"
+              (change)="onFileSelected($event)"
+              aria-label="Selecionar arquivo CSV"
+            />
+          </label>
         </div>
 
         <div class="procedure-form-panel__footer">
-          <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
+          <button class="btn btn--ghost" type="button" (click)="close()" [disabled]="loading()">
+            Cancelar
+          </button>
           <button class="btn btn--primary" type="submit" [disabled]="loading()">
             @if (loading()) {
-              Importando…
+              <span class="btn-spinner">
+                <mat-spinner diameter="16" />
+                Importando…
+              </span>
             } @else {
               Importar
             }
