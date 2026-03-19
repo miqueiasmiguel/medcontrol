@@ -34,6 +34,19 @@ internal sealed class ProcedureConfiguration : IEntityTypeConfiguration<Procedur
             .HasColumnType("numeric(18,2)")
             .IsRequired();
 
+        builder.Property(p => p.EffectiveFrom)
+            .HasColumnName("effective_from")
+            .IsRequired();
+
+        builder.Property(p => p.EffectiveTo)
+            .HasColumnName("effective_to");
+
+        builder.Property(p => p.Source)
+            .HasColumnName("source")
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .IsRequired();
+
         builder.Property(p => p.CreatedAt)
             .HasColumnName("created_at");
 
@@ -46,9 +59,12 @@ internal sealed class ProcedureConfiguration : IEntityTypeConfiguration<Procedur
         builder.Property(p => p.UpdatedBy)
             .HasColumnName("updated_by");
 
-        builder.HasIndex(p => new { p.TenantId, p.Code })
+        builder.HasIndex(p => new { p.TenantId, p.Code, p.EffectiveFrom })
             .IsUnique()
-            .HasDatabaseName("ix_procedures_tenant_code");
+            .HasDatabaseName("ix_procedures_tenant_code_effective_from");
+
+        builder.HasIndex(p => new { p.TenantId, p.EffectiveFrom, p.EffectiveTo })
+            .HasDatabaseName("ix_procedures_tenant_effective_dates");
 
         builder.HasIndex(p => p.TenantId)
             .HasDatabaseName("ix_procedures_tenant_id");

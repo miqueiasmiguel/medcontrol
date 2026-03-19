@@ -1,5 +1,6 @@
 using MedControl.Application.Auth.Settings;
 using MedControl.Application.Common.Interfaces;
+using MedControl.Application.Procedures.Parsers;
 using MedControl.Domain.Doctors;
 using MedControl.Domain.HealthPlans;
 using MedControl.Domain.Procedures;
@@ -11,6 +12,7 @@ using MedControl.Infrastructure.Http;
 using MedControl.Infrastructure.Persistence;
 using MedControl.Infrastructure.Persistence.Interceptors;
 using MedControl.Infrastructure.Persistence.Repositories;
+using MedControl.Infrastructure.Procedures.Parsers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -77,6 +79,11 @@ public static class InfrastructureExtensions
         services.AddScoped<IDoctorRepository, DoctorRepository>();
         services.AddScoped<IHealthPlanRepository, HealthPlanRepository>();
         services.AddScoped<IProcedureRepository, ProcedureRepository>();
+        services.AddScoped<IProcedureImportRepository, ProcedureImportRepository>();
+
+        // Procedure file parsers
+        services.AddScoped<IProcedureFileParser, TussCsvParser>();
+        services.AddScoped<IProcedureFileParser, CbhpmCsvParser>();
 
         return services;
     }
