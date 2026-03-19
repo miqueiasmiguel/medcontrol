@@ -23,6 +23,9 @@ Payments     ← aggregate root Payment (core domain) — backend implementado
              ← endpoints: GET/POST /payments, GET /payments/{id}, PATCH /payments/{id}
              ←            PATCH /payments/{id}/items/{itemId}, POST /payments/{id}/items
              ←            DELETE /payments/{id}/items/{itemId}
+Users        ← User.UpdateProfile() — backend + web implementados
+             ← endpoints: GET /users/me, PATCH /users/me/profile
+             ← web: /settings (ThemeService: light/dark/system via data-theme attr; SettingsService: getMe/updateProfile)
 Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
 HealthPlans  ← Convênio (nome, código TISS)
 Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor, vigências) — UI pronta, backend implementado
