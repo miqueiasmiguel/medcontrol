@@ -1,0 +1,137 @@
+.settings {
+  padding: 2rem;
+  max-width: 640px;
+
+  &__header {
+    margin-bottom: 2rem;
+  }
+
+  &__title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem;
+  }
+
+  &__subtitle {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  &__alert {
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+
+    &--error {
+      background-color: var(--color-danger-subtle, #fef2f2);
+      color: var(--color-danger, #dc2626);
+      border: 1px solid var(--color-danger-border, #fca5a5);
+    }
+
+    &--success {
+      background-color: var(--color-success-subtle, #f0fdf4);
+      color: var(--color-success, #16a34a);
+      border: 1px solid var(--color-success-border, #86efac);
+    }
+  }
+
+  &__card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 0 0 1rem;
+  }
+
+  &__card-desc {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin: 0 0 1rem;
+  }
+
+  &__loading {
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  &__label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  &__input {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: var(--color-text-primary);
+    background: var(--color-background);
+    outline: none;
+    transition: border-color 0.15s;
+
+    &:focus {
+      border-color: var(--color-primary);
+    }
+  }
+
+  &__field-error {
+    font-size: 0.75rem;
+    color: var(--color-danger, #dc2626);
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &__theme-options {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  &__theme-btn {
+    padding: 0.5rem 1.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    background: var(--color-background);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+
+    &:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    &--active {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-subtle, rgba(var(--color-primary-rgb, 79 70 229) / 0.08));
+    }
+  }
+}

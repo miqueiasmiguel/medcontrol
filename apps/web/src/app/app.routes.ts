@@ -37,6 +37,11 @@ export const appRoutes: Route[] = [
         loadChildren: () =>
           import('./payments/payments.routes').then((m) => m.paymentsRoutes),
       },
+      {
+        path: 'settings',
+        loadChildren: () =>
+          import('./settings/settings.routes').then((m) => m.settingsRoutes),
+      },
     ],
   },
   {

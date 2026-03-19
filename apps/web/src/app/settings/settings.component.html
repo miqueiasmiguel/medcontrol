@@ -1,0 +1,81 @@
+<div class="settings">
+  <div class="settings__header">
+    <h1 class="settings__title">Configurações</h1>
+    <p class="settings__subtitle">Gerencie seu perfil e preferências</p>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="settings__alert settings__alert--error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  @if (successMessage()) {
+    <div class="settings__alert settings__alert--success" role="status">{{ successMessage() }}</div>
+  }
+
+  <div class="settings__card">
+    <h2 class="settings__card-title">Perfil</h2>
+
+    @if (loading()) {
+      <p class="settings__loading">Carregando...</p>
+    } @else {
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()" class="settings__form">
+        <div class="settings__field">
+          <label class="settings__label" for="displayName">Nome de exibição</label>
+          <input
+            id="displayName"
+            class="settings__input"
+            type="text"
+            formControlName="displayName"
+            placeholder="Seu nome"
+            maxlength="100"
+          />
+          @if (profileForm.get('displayName')?.errors?.['maxlength']) {
+            <span class="settings__field-error">Máximo 100 caracteres.</span>
+          }
+        </div>
+
+        <div class="settings__actions">
+          <button
+            class="btn btn--primary"
+            type="submit"
+            [disabled]="profileForm.invalid || saving()"
+          >
+            {{ saving() ? 'Salvando...' : 'Salvar' }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+
+  <div class="settings__card">
+    <h2 class="settings__card-title">Aparência</h2>
+    <p class="settings__card-desc">Escolha o tema da interface</p>
+
+    <div class="settings__theme-options">
+      <button
+        class="settings__theme-btn"
+        [class.settings__theme-btn--active]="themeService.theme() === 'light'"
+        (click)="applyTheme('light')"
+        type="button"
+      >
+        Claro
+      </button>
+      <button
+        class="settings__theme-btn"
+        [class.settings__theme-btn--active]="themeService.theme() === 'dark'"
+        (click)="applyTheme('dark')"
+        type="button"
+      >
+        Escuro
+      </button>
+      <button
+        class="settings__theme-btn"
+        [class.settings__theme-btn--active]="themeService.theme() === 'system'"
+        (click)="applyTheme('system')"
+        type="button"
+      >
+        Sistema
+      </button>
+    </div>
+  </div>
+</div>
