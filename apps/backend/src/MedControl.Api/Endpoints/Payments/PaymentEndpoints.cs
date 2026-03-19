@@ -1,5 +1,8 @@
 using MedControl.Application.Mediator;
+using MedControl.Application.Payments.Commands.AddPaymentItem;
 using MedControl.Application.Payments.Commands.CreatePayment;
+using MedControl.Application.Payments.Commands.RemovePaymentItem;
+using MedControl.Application.Payments.Commands.UpdatePayment;
 using MedControl.Application.Payments.Commands.UpdatePaymentItemStatus;
 using MedControl.Application.Payments.DTOs;
 using MedControl.Application.Payments.Queries.GetPayment;
@@ -36,6 +39,30 @@ public static class PaymentEndpoints
 
         group.MapPatch("/{paymentId:guid}/items/{itemId:guid}", UpdatePaymentItemStatus)
             .WithName("UpdatePaymentItemStatus")
+            .RequireAuthorization()
+            .Produces<PaymentDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPatch("/{id:guid}", UpdatePayment)
+            .WithName("UpdatePayment")
+            .RequireAuthorization()
+            .Produces<PaymentDto>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{paymentId:guid}/items", AddPaymentItem)
+            .WithName("AddPaymentItem")
+            .RequireAuthorization()
+            .Produces<PaymentDto>(StatusCodes.Status201Created)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapDelete("/{paymentId:guid}/items/{itemId:guid}", RemovePaymentItem)
+            .WithName("RemovePaymentItem")
             .RequireAuthorization()
             .Produces<PaymentDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status400BadRequest)
@@ -100,6 +127,56 @@ public static class PaymentEndpoints
         return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
     }
 
+    private static async Task<IResult> UpdatePayment(
+        [FromRoute] Guid id,
+        [FromBody] UpdatePaymentRequest request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<PaymentDto>>(
+            new UpdatePaymentCommand(
+                id,
+                request.ExecutionDate,
+                request.AppointmentNumber,
+                request.AuthorizationCode,
+                request.BeneficiaryCard,
+                request.BeneficiaryName,
+                request.ExecutionLocation,
+                request.PaymentLocation,
+                request.Notes), ct);
+
+        return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
+    }
+
+    private static async Task<IResult> AddPaymentItem(
+        [FromRoute] Guid paymentId,
+        [FromBody] AddPaymentItemRequest request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<PaymentDto>>(
+            new AddPaymentItemCommand(paymentId, request.ProcedureId, request.Value), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        return Results.Created($"/payments/{paymentId}", result.Value);
+    }
+
+    private static async Task<IResult> RemovePaymentItem(
+        [FromRoute] Guid paymentId,
+        [FromRoute] Guid itemId,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<PaymentDto>>(
+            new RemovePaymentItemCommand(paymentId, itemId), ct);
+
+        return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
+    }
+
     private static IResult ToErrorResult(Error error) => error.Type switch
     {
         ErrorType.Unauthorized => Results.Problem(error.Description, statusCode: StatusCodes.Status401Unauthorized),
@@ -125,3 +202,17 @@ internal sealed record CreatePaymentRequest(
 internal sealed record UpdatePaymentItemStatusRequest(
     PaymentStatus Status,
     string? Notes);
+
+internal sealed record UpdatePaymentRequest(
+    DateOnly ExecutionDate,
+    string AppointmentNumber,
+    string? AuthorizationCode,
+    string BeneficiaryCard,
+    string BeneficiaryName,
+    string ExecutionLocation,
+    string PaymentLocation,
+    string? Notes);
+
+internal sealed record AddPaymentItemRequest(
+    Guid ProcedureId,
+    decimal Value);
