@@ -12,5 +12,5 @@ export class App {
   // Injetado aqui para garantir instanciação eager na inicialização do app,
   // independente de qual rota está ativa. Sem isto, ThemeService só seria
   // criado ao visitar /settings, e o tema salvo não seria aplicado no reload.
-  readonly #theme = inject(ThemeService);
+  protected readonly theme = inject(ThemeService);
 }
