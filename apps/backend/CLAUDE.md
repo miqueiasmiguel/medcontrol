@@ -297,13 +297,18 @@ public sealed class Payment : BaseAuditableEntity, IAggregateRoot, IHasTenant
     public IReadOnlyList<PaymentItem> Items { get; }       // mínimo 1
 
     public static class Errors { AppointmentNumberRequired, BeneficiaryCardRequired, BeneficiaryNameRequired,
-                                  ExecutionLocationRequired, PaymentLocationRequired, ItemsRequired, ItemNotFound }
+                                  ExecutionLocationRequired, PaymentLocationRequired, ItemsRequired, ItemNotFound,
+                                  MinimumItemsRequired }
 
     public static Result<Payment> Create(Guid tenantId, Guid doctorId, Guid healthPlanId, DateOnly executionDate,
         string appointmentNumber, string? authorizationCode, string beneficiaryCard, string beneficiaryName,
         string executionLocation, string paymentLocation, string? notes,
         IEnumerable<(Guid ProcedureId, decimal Value)> items)
+    public Result Update(DateOnly executionDate, string appointmentNumber, string? authorizationCode,
+        string beneficiaryCard, string beneficiaryName, string executionLocation, string paymentLocation, string? notes)
     public Result<PaymentItem> GetItem(Guid itemId)
+    public Result AddItem(Guid procedureId, decimal value)
+    public Result RemoveItem(Guid itemId)
 }
 
 public sealed class PaymentItem : BaseEntity
@@ -320,7 +325,7 @@ public sealed class PaymentItem : BaseEntity
     public Result UpdateStatus(PaymentStatus status, string? notes = null)
 }
 
-public enum PaymentStatus { Pending = 0, Paid = 1, Refused = 2 }
+public enum PaymentStatus { Pending = 0, Paid = 1, Refused = 2, PartiallyPending = 3, PartiallyRefused = 4 }
 
 // IPaymentRepository
 Task<IReadOnlyList<Payment>> ListAsync(CancellationToken ct = default);
@@ -535,7 +540,10 @@ doctors.MapDoctors();
 | `GET` | `/payments` | ✅ | Lista pagamentos do tenant; retorna `PaymentDto[]` → 200 |
 | `POST` | `/payments` | ✅ | Cria pagamento com itens; mínimo 1 item → 201 / 400 |
 | `GET` | `/payments/{id}` | ✅ | Busca pagamento por id com itens → 200 / 404 |
+| `PATCH` | `/payments/{id}` | ✅ | Atualiza campos de cabeçalho do pagamento → 200 / 404 |
 | `PATCH` | `/payments/{id}/items/{itemId}` | ✅ | Atualiza status do item (Pending/Paid/Refused) → 200 / 404 |
+| `POST` | `/payments/{id}/items` | ✅ | Adiciona item ao pagamento → 201 / 400 / 404 |
+| `DELETE` | `/payments/{id}/items/{itemId}` | ✅ | Remove item do pagamento; mínimo 1 item deve restar → 200 / 400 / 404 |
 
 ### Mapeamento Result → IResult
 
@@ -678,7 +686,7 @@ builder.ConfigureAppConfiguration((_, config) =>
 2. ~~**DoctorProfile**~~ — ✅ implementado (`DoctorProfile`: CRM, CouncilState, Specialty; `IDoctorRepository`; `CreateDoctorCommand`; `UpdateDoctorCommand`; `GetDoctorsQuery`; endpoints `GET/POST/PATCH /doctors`)
 3. ~~**HealthPlan**~~ — ✅ implementado (`HealthPlan`: name, tissCode; `IHealthPlanRepository`; `CreateHealthPlanCommand`; `UpdateHealthPlanCommand`; `GetHealthPlansQuery`; endpoints `GET/POST/PATCH /health-plans`)
 4. ~~**Procedure**~~ — ✅ implementado (`Procedure`: code, description, value, vigências (effectiveFrom/effectiveTo), source; `ProcedureImport`; `IProcedureRepository`; `IProcedureImportRepository`; `IProcedureFileParser` (TUSS + CBHPM); `CreateProcedureCommand`; `UpdateProcedureCommand`; `ImportProceduresCommand`; `GetProceduresQuery(activeOnly)`; `GetProcedureImportsQuery`; endpoints `GET/POST/PATCH /procedures`, `POST /procedures/import`, `GET /procedures/imports`)
-5. ~~**Payment**~~ — ✅ implementado (`Payment`: aggregate root com `PaymentItem`; `PaymentStatus` (Pending/Paid/Refused); `IPaymentRepository`; `CreatePaymentCommand`; `UpdatePaymentItemStatusCommand`; `ListPaymentsQuery`; `GetPaymentQuery`; endpoints `GET/POST /payments`, `GET /payments/{id}`, `PATCH /payments/{id}/items/{itemId}`; migration `AddPaymentTables`)
+5. ~~**Payment**~~ — ✅ implementado (`Payment`: aggregate root com `PaymentItem`; `PaymentStatus` (Pending/Paid/Refused/PartiallyPending/PartiallyRefused, computed); `IPaymentRepository`; `CreatePaymentCommand`; `UpdatePaymentCommand`; `UpdatePaymentItemStatusCommand`; `AddPaymentItemCommand`; `RemovePaymentItemCommand`; `ListPaymentsQuery`; `GetPaymentQuery`; endpoints `GET/POST /payments`, `GET /payments/{id}`, `PATCH /payments/{id}`, `PATCH /payments/{id}/items/{itemId}`, `POST /payments/{id}/items`, `DELETE /payments/{id}/items/{itemId}`; migration `AddPaymentTables`)
 6. **Report Query** — agrega pagamentos por período/convênio/status para o médico
 7. **Paginação e filtros** — por doutor, convênio, status, período
 
