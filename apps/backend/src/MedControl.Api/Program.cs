@@ -2,6 +2,8 @@ using MedControl.Api.Endpoints;
 using MedControl.Api.Extensions;
 using MedControl.Application.Mediator.Extensions;
 using MedControl.Infrastructure.Extensions;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using System.Reflection;
 
@@ -30,6 +32,20 @@ app.UseCookiePolicy(new CookiePolicyOptions
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = async (ctx, report) =>
+    {
+        ctx.Response.ContentType = "application/json";
+        await ctx.Response.WriteAsJsonAsync(new
+        {
+            status = report.Status.ToString().ToLowerInvariant(),
+            checks = report.Entries.ToDictionary(
+                e => e.Key,
+                e => e.Value.Status.ToString().ToLowerInvariant()),
+        });
+    },
+});
 app.MapApiEndpoints();
 
 app.Run();

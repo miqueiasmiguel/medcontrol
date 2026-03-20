@@ -87,6 +87,9 @@ public static class InfrastructureExtensions
         services.AddScoped<IProcedureFileParser, TussCsvParser>();
         services.AddScoped<IProcedureFileParser, CbhpmCsvParser>();
 
+        services.AddHealthChecks()
+            .AddDbContextCheck<ApplicationDbContext>("database");
+
         return services;
     }
 }
