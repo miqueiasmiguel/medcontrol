@@ -189,4 +189,18 @@ public class TenantRemoveMemberTests
         result.IsSuccess.Should().BeTrue();
         tenant.Members.Should().BeEmpty();
     }
+
+    [Fact]
+    public void RemoveMember_WhenUserIsOwner_ShouldReturnOwnerCannotBeRemoved()
+    {
+        var tenant = Tenant.Create("Clínica").Value;
+        var userId = Guid.NewGuid();
+        tenant.AddMember(userId, TenantRole.Owner);
+
+        var result = tenant.RemoveMember(userId);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(Tenant.Errors.OwnerCannotBeRemoved);
+        result.Error.Type.Should().Be(ErrorType.Validation);
+    }
 }
