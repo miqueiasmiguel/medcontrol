@@ -38,6 +38,10 @@ export const appRoutes: Route[] = [
           import('./payments/payments.routes').then((m) => m.paymentsRoutes),
       },
       {
+        path: 'members',
+        loadChildren: () => import('./members/members.routes').then((m) => m.membersRoutes),
+      },
+      {
         path: 'settings',
         loadChildren: () =>
           import('./settings/settings.routes').then((m) => m.settingsRoutes),
