@@ -10,6 +10,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# deploy-api needs packages: write to push Docker image to GHCR
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   detect:
     name: Detect changed areas
