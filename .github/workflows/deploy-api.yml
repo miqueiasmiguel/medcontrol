@@ -16,13 +16,10 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore dependencies
-        working-directory: apps/backend
-        run: dotnet restore MedControl.slnx
-
       - name: Run EF Core migrations
         working-directory: apps/backend
         run: |
+          dotnet restore src/MedControl.Api/MedControl.Api.csproj
           dotnet tool install --global dotnet-ef
           dotnet ef database update \
             --project src/MedControl.Infrastructure \
@@ -64,5 +61,5 @@ jobs:
               docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
             cd /opt/medcontrol
             docker compose pull api
-            docker compose up -d api
+            docker compose up -d
             docker image prune -f
