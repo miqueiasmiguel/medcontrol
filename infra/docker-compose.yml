@@ -1,0 +1,29 @@
+# Lives at /opt/medcontrol/docker-compose.yml on the Oracle Cloud VM.
+# Copy this file to the VM and create a .env alongside it.
+
+services:
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY_OWNER}/medcontrol-api:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  caddy_data:
+  caddy_config:
