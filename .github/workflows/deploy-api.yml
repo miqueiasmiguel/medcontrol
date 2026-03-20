@@ -49,6 +49,17 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Copy Caddyfile to Oracle VM
+      - name: Copy Caddyfile to Oracle VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.ORACLE_VM_HOST }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          source: infra/Caddyfile
+          target: /opt/medcontrol/
+          strip_components: 1
+
       # SSH into Oracle VM and restart the container
       - name: Deploy on Oracle VM
         uses: appleboy/ssh-action@v1
