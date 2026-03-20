@@ -12,6 +12,7 @@ import localePtBr from '@angular/common/locales/pt';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './auth/interceptors/auth.interceptor';
 import { GOOGLE_CLIENT_ID } from './core/tokens/google-client-id.token';
+import { GOOGLE_REDIRECT_URI } from './core/tokens/google-redirect-uri.token';
 import { environment } from '../environments/environment';
 
 registerLocaleData(localePtBr);
@@ -24,6 +25,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     { provide: GOOGLE_CLIENT_ID, useValue: environment.googleClientId },
+    { provide: GOOGLE_REDIRECT_URI, useValue: environment.googleRedirectUri },
     { provide: LOCALE_ID, useValue: 'pt-BR' },
   ],
 };

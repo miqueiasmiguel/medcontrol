@@ -8,6 +8,7 @@ import { LoginComponent } from './login.component';
 import { AuthService } from '../data-access/auth.service';
 import { WINDOW } from '../../core/tokens/window.token';
 import { GOOGLE_CLIENT_ID } from '../../core/tokens/google-client-id.token';
+import { GOOGLE_REDIRECT_URI } from '../../core/tokens/google-redirect-uri.token';
 
 describe('LoginComponent', () => {
   let authService: jest.Mocked<AuthService>;
@@ -144,5 +145,31 @@ describe('LoginComponent', () => {
     const googleBtn = el.querySelector<HTMLButtonElement>('[data-testid="google-btn"]')!;
     googleBtn.click();
     expect(mockWindow.location.href).toContain(encodeURIComponent('http://localhost:4200/auth/callback'));
+  });
+
+  it('should use GOOGLE_REDIRECT_URI token as origin when provided', () => {
+    mockWindow = { location: { href: '', origin: 'http://localhost:4200' } };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [LoginComponent],
+      providers: [
+        provideRouter([]),
+        provideNoopAnimations(),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: authService },
+        { provide: WINDOW, useValue: mockWindow },
+        { provide: GOOGLE_CLIENT_ID, useValue: 'test-client-id' },
+        { provide: GOOGLE_REDIRECT_URI, useValue: 'https://medcontrol-web.pages.dev' },
+      ],
+    });
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    el.querySelector<HTMLButtonElement>('[data-testid="google-btn"]')!.click();
+    expect(mockWindow.location.href).toContain(
+      encodeURIComponent('https://medcontrol-web.pages.dev/auth/callback'),
+    );
+    expect(mockWindow.location.href).not.toContain(encodeURIComponent('http://localhost:4200'));
   });
 });
