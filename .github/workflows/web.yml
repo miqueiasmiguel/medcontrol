@@ -1,18 +1,7 @@
 name: Web CI
 
 on:
-  push:
-    branches: [master, main]
-    paths:
-      - 'apps/web/**'
-      - 'packages/**'
-      - '.github/workflows/web.yml'
-  pull_request:
-    branches: [master, main]
-    paths:
-      - 'apps/web/**'
-      - 'packages/**'
-      - '.github/workflows/web.yml'
+  workflow_call:
 
 jobs:
   build-and-test:
