@@ -79,21 +79,13 @@ jobs:
   deploy-api:
     name: Deploy API
     needs: [detect, backend, all-checks-passed]
-    if: |
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      needs.detect.outputs.backend == 'true' &&
-      needs.backend.result == 'success'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect.outputs.backend == 'true' && needs.backend.result == 'success'
     uses: ./.github/workflows/deploy-api.yml
     secrets: inherit
 
   deploy-web:
     name: Deploy Web
     needs: [detect, web, all-checks-passed]
-    if: |
-      github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
-      needs.detect.outputs.web == 'true' &&
-      needs.web.result == 'success'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect.outputs.web == 'true' && needs.web.result == 'success'
     uses: ./.github/workflows/deploy-web.yml
     secrets: inherit
