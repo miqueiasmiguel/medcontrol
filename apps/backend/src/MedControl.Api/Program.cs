@@ -34,4 +34,5 @@ app.MapApiEndpoints();
 
 app.Run();
 
+// required for WebApplicationFactory in integration tests
 public partial class Program;
