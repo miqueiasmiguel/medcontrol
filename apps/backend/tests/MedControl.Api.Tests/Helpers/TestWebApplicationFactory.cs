@@ -12,6 +12,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NSubstitute;
 
 namespace MedControl.Api.Tests.Helpers;
@@ -77,6 +78,18 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton(ProcedureRepository);
             services.AddSingleton(ProcedureImportRepository);
             services.AddSingleton(PaymentRepository);
+
+            // Replace DB health check with a always-healthy mock (no real DB in tests)
+            services.Configure<HealthCheckServiceOptions>(opts =>
+            {
+                var dbReg = opts.Registrations.FirstOrDefault(r => r.Name == "database");
+                if (dbReg is not null)
+                {
+                    opts.Registrations.Remove(dbReg);
+                }
+            });
+            services.AddHealthChecks()
+                .AddCheck("database", () => HealthCheckResult.Healthy("Connected (test)"));
 
             // Replace JWT auth with a test handler that reads from X-Test-* headers
             services.AddAuthentication(TestAuthHandler.SchemeName)
