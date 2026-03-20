@@ -766,3 +766,10 @@ options.Events = new JwtBearerEvents
 
 `CookieHelper.SetAuthCookies(HttpContext, AuthTokenDto)` — seta os 3 cookies.
 `CookieHelper.ClearAuthCookies(HttpContext)` — expira os 3 cookies.
+
+## Armadilhas Conhecidas
+
+### UseForwardedHeaders obrigatório antes de UseHttpsRedirection em produção
+
+- **Problema**: o backend roda atrás de Caddy (HTTP) que recebe de Cloudflare Pages. Sem `UseForwardedHeaders`, `ctx.Request.IsHttps` é `false` e o `UseHttpsRedirection` emite um 301 para `https://<ip-do-oracle>/...` — que não tem HTTPS — quebrando qualquer request proxiado. Sintoma no frontend: tela pisca e volta para o login.
+- **Correto**: `Program.cs` usa `UseForwardedHeaders(XForwardedProto)` **antes** de `UseHttpsRedirection`. O `Caddyfile` seta `header_up X-Forwarded-Proto https` explicitamente, pois Caddy recebe HTTP e sobrescreveria o header original.
