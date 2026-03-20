@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { GoogleCallbackComponent } from './google-callback.component';
 import { AuthService } from '../data-access/auth.service';
 import { WINDOW } from '../../core/tokens/window.token';
+import { GOOGLE_REDIRECT_URI } from '../../core/tokens/google-redirect-uri.token';
 
 describe('GoogleCallbackComponent', () => {
   let authService: jest.Mocked<AuthService>;
@@ -61,5 +62,35 @@ describe('GoogleCallbackComponent', () => {
     fixture.detectChanges();
     tick();
     expect(navigateSpy).toHaveBeenCalledWith(['/auth/login']);
+  }));
+
+  it('should use GOOGLE_REDIRECT_URI token as redirect_uri when provided', fakeAsync(() => {
+    authService = {
+      loginWithGoogle: jest.fn(),
+      sendMagicLink: jest.fn(),
+      verifyMagicLink: jest.fn(),
+      logout: jest.fn(),
+    } as unknown as jest.Mocked<AuthService>;
+    authService.loginWithGoogle.mockReturnValue(of(null));
+    mockWindow = { location: { href: '', origin: 'http://localhost:4200' } };
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      imports: [GoogleCallbackComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: authService },
+        { provide: WINDOW, useValue: mockWindow },
+        { provide: GOOGLE_REDIRECT_URI, useValue: 'https://medcontrol-web.pages.dev' },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParams: { code: 'test-code' } } } },
+      ],
+    });
+    jest.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const fixture = TestBed.createComponent(GoogleCallbackComponent);
+    fixture.detectChanges();
+    tick();
+    expect(authService.loginWithGoogle).toHaveBeenCalledWith(
+      'test-code',
+      'https://medcontrol-web.pages.dev/auth/callback',
+    );
   }));
 });

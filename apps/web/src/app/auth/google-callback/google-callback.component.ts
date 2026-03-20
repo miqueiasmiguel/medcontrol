@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../data-access/auth.service';
 import { WINDOW } from '../../core/tokens/window.token';
+import { GOOGLE_REDIRECT_URI } from '../../core/tokens/google-redirect-uri.token';
 
 @Component({
   selector: 'app-google-callback',
@@ -35,6 +36,7 @@ export class GoogleCallbackComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly win = inject(WINDOW);
+  private readonly googleRedirectUri = inject(GOOGLE_REDIRECT_URI, { optional: true });
 
   readonly loading = signal(true);
 
@@ -46,7 +48,8 @@ export class GoogleCallbackComponent implements OnInit {
       return;
     }
 
-    const redirectUri = `${this.win.location.origin}/auth/callback`;
+    const origin = this.googleRedirectUri ?? this.win.location.origin;
+    const redirectUri = `${origin}/auth/callback`;
 
     this.auth.loginWithGoogle(code, redirectUri).subscribe({
       next: () => {
