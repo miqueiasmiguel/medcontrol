@@ -151,3 +151,15 @@ pnpm nx lint web
 pnpm nx run web:type-check
 pnpm nx serve web                 # http://localhost:4200
 ```
+
+## Armadilhas Conhecidas
+
+### fileReplacements obrigatório na configuração production do project.json
+- **Problema**: sem `fileReplacements`, o build com `--configuration=production` ainda usa `environment.ts` (dev). Variáveis como `googleRedirectUri` ficam `null` e comportamentos dependem de fallbacks incorretos (ex: `window.location.origin` retorna URL de preview do Cloudflare).
+- **Correto**: a configuração `production` em `project.json` deve sempre incluir:
+  ```json
+  "fileReplacements": [
+    { "replace": "apps/web/src/environments/environment.ts",
+      "with": "apps/web/src/environments/environment.production.ts" }
+  ]
+  ```
