@@ -32,8 +32,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Non-root user for security
-RUN addgroup --system --gid 1001 medcontrol \
-    && adduser --system --uid 1001 --ingroup medcontrol medcontrol
+RUN groupadd --system --gid 1001 medcontrol \
+    && useradd --system --uid 1001 --gid 1001 --no-create-home medcontrol
 
 COPY --from=publish --chown=medcontrol:medcontrol /app/publish .
 
