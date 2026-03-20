@@ -1,0 +1,72 @@
+name: Deploy API
+
+on:
+  workflow_call:
+
+jobs:
+  deploy:
+    name: Build, push & deploy to Oracle Cloud
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Run migrations directly from CI against the production database
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        working-directory: apps/backend
+        run: dotnet restore MedControl.slnx
+
+      - name: Run EF Core migrations
+        working-directory: apps/backend
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet ef database update \
+            --project src/MedControl.Infrastructure \
+            --startup-project src/MedControl.Api
+        env:
+          ConnectionStrings__Database: ${{ secrets.DATABASE_URL }}
+
+      # Build amd64 image and push to GHCR (VM is x86_64)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/backend
+          file: apps/backend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/medcontrol-api:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # SSH into Oracle VM and restart the container
+      - name: Deploy on Oracle VM
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.ORACLE_VM_HOST }}
+          username: ${{ secrets.ORACLE_VM_USER }}
+          key: ${{ secrets.ORACLE_VM_SSH_KEY }}
+          script: |
+            echo "${{ secrets.GHCR_TOKEN }}" | \
+              docker login ghcr.io -u "${{ secrets.GHCR_USER }}" --password-stdin
+            cd /opt/medcontrol
+            docker compose pull api
+            docker compose up -d api
+            docker image prune -f
