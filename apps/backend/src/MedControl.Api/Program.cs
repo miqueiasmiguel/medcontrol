@@ -3,6 +3,7 @@ using MedControl.Api.Extensions;
 using MedControl.Application.Mediator.Extensions;
 using MedControl.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Scalar.AspNetCore;
 using System.Reflection;
@@ -21,6 +22,13 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+// Trust X-Forwarded-Proto from Caddy so IsHttps is correct behind the Cloudflare → Caddy proxy.
+// KnownNetworks/KnownProxies cleared to trust any upstream (Caddy is in the same Docker network).
+var forwardedOptions = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto };
+forwardedOptions.KnownIPNetworks.Clear();
+forwardedOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedOptions);
 
 app.UseApiExceptionHandler();
 app.UseCors("WebApp");
