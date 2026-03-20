@@ -556,6 +556,7 @@ doctors.MapDoctors();
 | `POST` | `/members` | ✅ | Adiciona membro por email; requer role admin/owner → 201 / 401 / 404 / 409 |
 | `PATCH` | `/members/{userId}` | ✅ | Atualiza role do membro; requer role admin/owner → 200 / 401 / 404 |
 | `DELETE` | `/members/{userId}` | ✅ | Remove membro; requer role admin/owner → 204 / 401 / 404 |
+| `GET` | `/health` | ❌ | Verifica conectividade da api e do banco → 200 (healthy) / 503 (unhealthy) |
 
 ### Mapeamento Result → IResult
 
