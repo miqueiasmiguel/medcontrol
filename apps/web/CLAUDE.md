@@ -62,6 +62,15 @@ src/app/
 │   ├── payments-list/        ← tabela de pagamentos + filtro por status (todos os 5 valores); enriched com doctor/healthPlan names; uses payment.status direto do dto
 │   ├── payment-form/         ← slide-over (600px) para criar pagamento; FormArray de itens com procedureId+value; auto-fill value ao selecionar procedimento
 │   └── payment-detail/       ← slide-over (560px) para ver/editar cabeçalho, atualizar status de itens, adicionar e remover itens
+├── members/
+│   ├── members.routes.ts     ← { path: '' → MembersComponent }
+│   ├── data-access/
+│   │   └── members.service.ts ← getMembers, addMember, updateMemberRole, removeMember; MemberDto
+│   ├── member-form/          ← slide-over panel; @Input member (null=add, set=edit role only); @Output saved/closed
+│   │                            add mode: email + role; edit mode: role only (email disabled)
+│   │                            roleOptions: admin/operator/doctor (sem owner via UI)
+│   └── members.component.ts  ← tabela de membros; signals: members, loading, formOpen, selectedMember
+│                                getRoleLabel(role) → mapa: admin/operator/doctor/owner → labels PT-BR
 └── tenants/
     ├── tenants.routes.ts     ← lazy routes: /new, /select
     ├── data-access/
@@ -80,7 +89,8 @@ src/app/
   ├── doctors/                  ← DoctorsListComponent (lazy)
   ├── health-plans/             ← HealthPlansListComponent (lazy)
   ├── procedures/               ← ProceduresListComponent (lazy)
-  └── payments/                 ← PaymentsListComponent (lazy)
+  ├── payments/                 ← PaymentsListComponent (lazy)
+  └── members/                  ← MembersComponent (lazy)
 /auth/**                        ← sem guards
 /tenants/**                     ← authGuard
 /**                             → redirect /auth/login

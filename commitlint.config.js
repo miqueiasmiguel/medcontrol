@@ -10,7 +10,7 @@ module.exports = {
     'scope-enum': [
       1,
       'always',
-      ['domain', 'app', 'infra', 'api', 'web', 'mobile', 'contracts', 'ci', 'deps', 'auth', 'tenants', 'users', 'payments', 'doctors', 'health-plans', 'procedures', 'design-system'],
+      ['domain', 'app', 'infra', 'api', 'web', 'mobile', 'contracts', 'ci', 'deps', 'auth', 'tenants', 'users', 'payments', 'doctors', 'health-plans', 'procedures', 'members', 'design-system'],
     ],
     'subject-case': [2, 'always', 'lower-case'],
     'subject-max-length': [2, 'always', 100],
