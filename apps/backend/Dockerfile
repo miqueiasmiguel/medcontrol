@@ -2,19 +2,18 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy solution and project files first (better layer caching)
-COPY MedControl.slnx ./
+# Copy project files first (better layer caching; test projects excluded — not needed in production)
 COPY src/MedControl.Domain/MedControl.Domain.csproj src/MedControl.Domain/
 COPY src/MedControl.Application/MedControl.Application.csproj src/MedControl.Application/
 COPY src/MedControl.Infrastructure/MedControl.Infrastructure.csproj src/MedControl.Infrastructure/
 COPY src/MedControl.Api/MedControl.Api.csproj src/MedControl.Api/
 
-RUN dotnet restore MedControl.slnx
+RUN dotnet restore src/MedControl.Api/MedControl.Api.csproj
 
 # Copy source
 COPY src/ src/
 
-RUN dotnet build MedControl.slnx \
+RUN dotnet build src/MedControl.Api/MedControl.Api.csproj \
     --no-restore \
     --configuration Release \
     --warnaserror
