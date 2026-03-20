@@ -81,6 +81,9 @@ jobs:
     name: Deploy API
     needs: backend
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.backend.result == 'success'
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/deploy-api.yml
     secrets: inherit
 
