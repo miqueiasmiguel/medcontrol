@@ -40,6 +40,11 @@ src/
 │   │   ├── Queries/      ← GetProceduresQuery(Handler), GetProcedureImportsQuery(Handler)
 │   │   ├── Parsers/      ← IProcedureFileParser, ParsedProcedureRow, ParseResult
 │   │   └── DTOs/         ← ProcedureDto, ProcedureImportDto
+│   ├── Members/
+│   │   ├── Commands/     ← AddMemberCommand(Handler+Validator), UpdateMemberRoleCommand(Handler+Validator),
+│   │   │                    RemoveMemberCommand(Handler)
+│   │   ├── Queries/      ← ListMembersQuery(Handler)
+│   │   └── DTOs/         ← MemberDto
 │   └── Common/
 │       ├── Interfaces/   ← IUnitOfWork, ICurrentTenantService, ICurrentUserService,
 │       │                    IEmailService, ITokenService, IMagicLinkService, IGoogleAuthService
@@ -133,16 +138,17 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
     public bool IsActive { get; private set; } = true
     public IReadOnlyList<TenantMember> Members { get; }
 
-    public static class Errors { NameRequired, MemberAlreadyExists, MemberNotFound, InvalidRole }
+    public static class Errors { NameRequired, MemberAlreadyExists, MemberNotFound, InvalidRole, CannotUpdateOwnRole, OwnerCannotBeRemoved }
 
-    public static Result<Tenant> Create(string name)         // Raises TenantCreatedEvent
+    public static Result<Tenant> Create(string name)                                   // Raises TenantCreatedEvent
     public Result Update(string name)
-    public Result AddMember(Guid userId, TenantRole role)    // validates Enum.IsDefined
-    public Result RemoveMember(Guid userId)
+    public Result AddMember(Guid userId, TenantRole role)                              // validates Enum.IsDefined
+    public Result UpdateMemberRole(Guid userId, Guid currentUserId, TenantRole role)   // CannotUpdateOwnRole se userId==currentUserId
+    public Result RemoveMember(Guid userId)                                            // OwnerCannotBeRemoved se member.Role==Owner
     public void Deactivate()
 }
 
-public enum TenantRole { Admin = 0, Operator = 1, Doctor = 2 }
+public enum TenantRole { Admin = 0, Operator = 1, Doctor = 2, Owner = 3 }
 ```
 
 ### User
@@ -410,7 +416,7 @@ DomainEventDispatchInterceptor  → após SaveChanges: coleta eventos de BaseEnt
 ### Repositories
 
 ```
-UserRepository      : GetByIdAsync, GetByEmailAsync, AddAsync, UpdateAsync
+UserRepository      : GetByIdAsync, GetByIdsAsync(IEnumerable<Guid>), GetByEmailAsync, AddAsync, UpdateAsync
 TenantRepository    : GetByIdAsync (Include Members), GetBySlugAsync, AddAsync, UpdateAsync
                       ListByUserAsync → usa .IgnoreQueryFilters() para bypass do filtro multi-tenant
 DoctorRepository    : ExistsByCrmAsync(tenantId, crm, councilState), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
@@ -546,6 +552,10 @@ doctors.MapDoctors();
 | `PATCH` | `/payments/{id}/items/{itemId}` | ✅ | Atualiza status do item (Pending/Paid/Refused) → 200 / 404 |
 | `POST` | `/payments/{id}/items` | ✅ | Adiciona item ao pagamento → 201 / 400 / 404 |
 | `DELETE` | `/payments/{id}/items/{itemId}` | ✅ | Remove item do pagamento; mínimo 1 item deve restar → 200 / 400 / 404 |
+| `GET` | `/members` | ✅ | Lista membros do tenant; retorna `MemberDto[]` → 200 |
+| `POST` | `/members` | ✅ | Adiciona membro por email; requer role admin/owner → 201 / 401 / 404 / 409 |
+| `PATCH` | `/members/{userId}` | ✅ | Atualiza role do membro; requer role admin/owner → 200 / 401 / 404 |
+| `DELETE` | `/members/{userId}` | ✅ | Remove membro; requer role admin/owner → 204 / 401 / 404 |
 
 ### Mapeamento Result → IResult
 
@@ -647,8 +657,9 @@ public string Name { get; private set; } = default!;
 | `X-Test-UserId` | `sub` |
 | `X-Test-Email` | `email` |
 | `X-Test-TenantId` | `tenant_id` |
+| `X-Test-Roles` | `roles` (um claim por valor; separados por vírgula) |
 
-`CreateAuthenticatedClient(userId, email, tenantId?)` cria um `HttpClient` com esses headers pré-configurados. O `tenantId` é necessário para qualquer endpoint que dependa de `ICurrentTenantService`.
+`CreateAuthenticatedClient(userId, email, tenantId?, roles?)` cria um `HttpClient` com esses headers pré-configurados. O `tenantId` é necessário para endpoints que dependem de `ICurrentTenantService`. O `roles` é necessário para endpoints que verificam permissão de admin/owner (ex: `POST/PATCH/DELETE /members`).
 
 ### Mocks disponíveis em TestWebApplicationFactory
 
@@ -684,13 +695,14 @@ builder.ConfigureAppConfiguration((_, config) =>
 
 **Ordem de implementação recomendada:**
 
-1. ~~**Tenant Roles**~~ — ✅ implementado (`TenantRole` enum: Admin/Operator/Doctor; validação no `AddMember` e `UpdateRole`)
+1. ~~**Tenant Roles**~~ — ✅ implementado (`TenantRole` enum: Admin/Operator/Doctor/Owner; validação no `AddMember`, `UpdateRole`, `UpdateMemberRole`)
 2. ~~**DoctorProfile**~~ — ✅ implementado (`DoctorProfile`: CRM, CouncilState, Specialty; `IDoctorRepository`; `CreateDoctorCommand`; `UpdateDoctorCommand`; `GetDoctorsQuery`; endpoints `GET/POST/PATCH /doctors`)
 3. ~~**HealthPlan**~~ — ✅ implementado (`HealthPlan`: name, tissCode; `IHealthPlanRepository`; `CreateHealthPlanCommand`; `UpdateHealthPlanCommand`; `GetHealthPlansQuery`; endpoints `GET/POST/PATCH /health-plans`)
 4. ~~**Procedure**~~ — ✅ implementado (`Procedure`: code, description, value, vigências (effectiveFrom/effectiveTo), source; `ProcedureImport`; `IProcedureRepository`; `IProcedureImportRepository`; `IProcedureFileParser` (TUSS + CBHPM); `CreateProcedureCommand`; `UpdateProcedureCommand`; `ImportProceduresCommand`; `GetProceduresQuery(activeOnly)`; `GetProcedureImportsQuery`; endpoints `GET/POST/PATCH /procedures`, `POST /procedures/import`, `GET /procedures/imports`)
 5. ~~**Payment**~~ — ✅ implementado (`Payment`: aggregate root com `PaymentItem`; `PaymentStatus` (Pending/Paid/Refused/PartiallyPending/PartiallyRefused, computed); `IPaymentRepository`; `CreatePaymentCommand`; `UpdatePaymentCommand`; `UpdatePaymentItemStatusCommand`; `AddPaymentItemCommand`; `RemovePaymentItemCommand`; `ListPaymentsQuery`; `GetPaymentQuery`; endpoints `GET/POST /payments`, `GET /payments/{id}`, `PATCH /payments/{id}`, `PATCH /payments/{id}/items/{itemId}`, `POST /payments/{id}/items`, `DELETE /payments/{id}/items/{itemId}`; migration `AddPaymentTables`)
-6. **Report Query** — agrega pagamentos por período/convênio/status para o médico
-7. **Paginação e filtros** — por doutor, convênio, status, período
+6. ~~**Member Management**~~ — ✅ implementado (`Tenant.UpdateMemberRole`; `Tenant.Errors.CannotUpdateOwnRole`; `IUserRepository.GetByIdsAsync`; `ListMembersQuery`; `AddMemberCommand`; `UpdateMemberRoleCommand`; `RemoveMemberCommand`; `MemberDto`; endpoints `GET/POST /members`, `PATCH/DELETE /members/{userId}`; web: `/members` com `MembersComponent` + `MemberFormComponent` + `MembersService`)
+7. **Report Query** — agrega pagamentos por período/convênio/status para o médico
+8. **Paginação e filtros** — por doutor, convênio, status, período
 
 ---
 

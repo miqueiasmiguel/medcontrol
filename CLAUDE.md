@@ -26,6 +26,14 @@ Payments     ← aggregate root Payment (core domain) — backend implementado
 Users        ← User.UpdateProfile() — backend + web implementados
              ← endpoints: GET /users/me, PATCH /users/me/profile
              ← web: /settings (ThemeService: light/dark/system via data-theme attr; SettingsService: getMe/updateProfile)
+Members      ← gerenciamento de membros do tenant — backend + web implementados
+             ← Tenant.UpdateMemberRole(userId, currentUserId, role) + Tenant.Errors.CannotUpdateOwnRole
+             ← IUserRepository.GetByIdsAsync — busca múltiplos usuários por IDs
+             ← endpoints: GET/POST /members, PATCH /members/{userId}, DELETE /members/{userId}
+             ← permissão: role "admin" ou "owner" para POST/PATCH/DELETE
+             ← web: /members (MembersComponent + MemberFormComponent + MembersService)
+             ← TestAuthHandler: X-Test-Roles header (comma-separated) → claims "roles"
+             ← CreateAuthenticatedClient: parâmetro opcional roles string[]
 Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
 HealthPlans  ← Convênio (nome, código TISS)
 Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor, vigências) — UI pronta, backend implementado
@@ -40,6 +48,9 @@ Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor, vigência
 | `operator` | Operador/secretaria | CRUD completo de pagamentos, cadastros |
 | `doctor` | Médico | Leitura dos próprios pagamentos, relatórios |
 | `admin` | Administrador do tenant | Gerencia membros e configurações |
+| `owner` | Proprietário | Mesmas permissões de admin (role máximo) |
+
+> Verificação de permissão nos handlers: `Roles.Contains("admin", OrdinalIgnoreCase) || Roles.Contains("owner", OrdinalIgnoreCase)`
 
 ### Payment — Campos
 
@@ -152,7 +163,7 @@ public record CreateTenantCommand(string Name) : ICommand<TenantDto>;
 
 O hook de commit valida a mensagem com `commitlint`. Regras obrigatórias:
 
-- **scope** deve ser um de: `domain`, `app`, `infra`, `api`, `web`, `mobile`, `contracts`, `ci`, `deps`, `auth`, `tenants`, `users`, `payments`, `doctors`, `health-plans`, `procedures`
+- **scope** deve ser um de: `domain`, `app`, `infra`, `api`, `web`, `mobile`, `contracts`, `ci`, `deps`, `auth`, `tenants`, `users`, `payments`, `doctors`, `health-plans`, `procedures`, `members`
 - **subject** deve ser 100% minúsculo — sem exceções, incluindo siglas e nomes de arquivo
 
 ```bash

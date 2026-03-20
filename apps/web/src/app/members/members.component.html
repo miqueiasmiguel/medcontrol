@@ -1,0 +1,76 @@
+<div class="members">
+  <div class="members__header">
+    <div>
+      <h1 class="members__title">Membros</h1>
+      <p class="members__subtitle">Gerencie os membros da organização</p>
+    </div>
+    <button class="btn btn--primary" (click)="openAddForm()" type="button">
+      Adicionar membro
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="members__error" role="alert">{{ errorMessage() }}</div>
+  }
+
+  <div class="members__card">
+    @if (loading()) {
+      <div class="members__loading">Carregando membros…</div>
+    } @else if (members().length === 0) {
+      <div class="members__empty">
+        <p>Nenhum membro cadastrado.</p>
+        <button class="btn btn--secondary" (click)="openAddForm()" type="button">
+          Adicionar primeiro membro
+        </button>
+      </div>
+    } @else {
+      <table class="members__table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Função</th>
+            <th>Desde</th>
+            <th><span class="sr-only">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (member of members(); track member.userId) {
+            <tr class="members__row">
+              <td>{{ member.displayName ?? '—' }}</td>
+              <td>{{ member.email ?? '—' }}</td>
+              <td>
+                <span class="members__role-badge members__role-badge--{{ member.role }}">{{ getRoleLabel(member.role) }}</span>
+              </td>
+              <td>{{ member.joinedAt | date: 'dd/MM/yyyy' }}</td>
+              <td class="members__actions">
+                <button
+                  class="btn btn--ghost btn--sm"
+                  (click)="openEditForm(member)"
+                  type="button"
+                >
+                  Editar
+                </button>
+                <button
+                  class="btn btn--ghost btn--sm btn--danger"
+                  (click)="removeMember(member)"
+                  type="button"
+                >
+                  Remover
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
+
+@if (formOpen()) {
+  <app-member-form
+    [member]="selectedMember()"
+    (saved)="onSaved($event)"
+    (closed)="closeForm()"
+  />
+}

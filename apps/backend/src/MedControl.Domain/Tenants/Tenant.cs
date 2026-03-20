@@ -21,6 +21,8 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
         public static readonly Error MemberAlreadyExists = Error.Conflict("Tenant.MemberAlreadyExists", "User is already a member of this tenant.");
         public static readonly Error MemberNotFound = Error.NotFound("Tenant.MemberNotFound", "User is not a member of this tenant.");
         public static readonly Error InvalidRole = Error.Validation("Tenant.InvalidRole", "The specified role is not valid.");
+        public static readonly Error CannotUpdateOwnRole = Error.Validation("Tenant.CannotUpdateOwnRole", "You cannot update your own role.");
+        public static readonly Error OwnerCannotBeRemoved = Error.Validation("Tenant.OwnerCannotBeRemoved", "The owner cannot be removed from the tenant.");
     }
 
     public static Result<Tenant> Create(string name)
@@ -68,6 +70,22 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
         return Result.Success();
     }
 
+    public Result UpdateMemberRole(Guid userId, Guid currentUserId, TenantRole role)
+    {
+        if (userId == currentUserId)
+        {
+            return Result.Failure(Errors.CannotUpdateOwnRole);
+        }
+
+        var member = _members.FirstOrDefault(m => m.UserId == userId);
+        if (member is null)
+        {
+            return Result.Failure(Errors.MemberNotFound);
+        }
+
+        return member.UpdateRole(role);
+    }
+
     public Result RemoveMember(Guid userId)
     {
         var member = _members.FirstOrDefault(m => m.UserId == userId);
@@ -75,6 +93,11 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
         if (member is null)
         {
             return Result.Failure(Errors.MemberNotFound);
+        }
+
+        if (member.Role == TenantRole.Owner)
+        {
+            return Result.Failure(Errors.OwnerCannotBeRemoved);
         }
 
         _members.Remove(member);
