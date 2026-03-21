@@ -1,23 +1,18 @@
-const { getDefaultConfig } = require('@expo/metro-config');
-const { mergeConfig } = require('metro-config');
+const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
-const defaultConfig = getDefaultConfig(__dirname);
-const { assetExts, sourceExts } = defaultConfig.resolver;
+const projectRoot = __dirname;
+const monorepoRoot = path.resolve(projectRoot, '../..');
 
-/**
- * Metro configuration
- * https://reactnative.dev/docs/metro
- *
- * @type {import('metro-config').MetroConfig}
- */
-const customConfig = {
-  transformer: {
-    babelTransformerPath: require.resolve('react-native-svg-transformer'),
-  },
-  resolver: {
-    assetExts: assetExts.filter((ext) => ext !== 'svg'),
-    sourceExts: [...sourceExts, 'cjs', 'mjs', 'svg'],
-  },
-};
+const config = getDefaultConfig(projectRoot);
 
-module.exports = mergeConfig(defaultConfig, customConfig);
+// Watch all files in the monorepo
+config.watchFolders = [monorepoRoot];
+
+// Resolve modules from the monorepo root first, then the project root
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(monorepoRoot, 'node_modules'),
+];
+
+module.exports = config;
