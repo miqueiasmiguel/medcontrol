@@ -1,8 +1,8 @@
-.PHONY: dev docker-up migrate api web stop reset help
+.PHONY: dev docker-up migrate api web mobile stop reset help
 
-# Sobe docker, aplica migrations e inicia a API + web em paralelo
+# Sobe docker, aplica migrations e inicia a API + web + mobile em paralelo
 dev: docker-up migrate
-	$(MAKE) -j2 api web
+	$(MAKE) -j3 api web mobile
 
 # Inicia postgres e redis; aguarda health checks passarem
 docker-up:
@@ -22,6 +22,10 @@ api:
 web:
 	pnpm nx serve web
 
+# Inicia o app Expo (foreground) — abra no Expo Go ou emulador
+mobile:
+	pnpm nx serve mobile
+
 # Para e remove os containers (dados persistem nos volumes)
 stop:
 	docker compose down
@@ -32,11 +36,12 @@ reset:
 
 help:
 	@echo ""
-	@echo "  make dev        Sobe docker + migrations + API + web (paralelo)"
+	@echo "  make dev        Sobe docker + migrations + API + web + mobile (paralelo)"
 	@echo "  make docker-up  Só sobe postgres e redis"
 	@echo "  make migrate    Só aplica migrations"
 	@echo "  make api        Só inicia a API"
 	@echo "  make web        Só inicia o Angular"
+	@echo "  make mobile     Só inicia o Expo (React Native)"
 	@echo "  make stop       Para os containers"
 	@echo "  make reset      Para containers e apaga volumes (reset do banco)"
 	@echo ""
