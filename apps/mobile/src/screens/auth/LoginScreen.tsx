@@ -1,165 +1,156 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
-import { AuthStackParamList } from '../../navigation/types';
-import { Button } from '../../components/ui/Button/Button';
-import { TextInput } from '../../components/ui/TextInput/TextInput';
-import { colors, fontSizes, fontWeights, spacing } from '../../theme';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Text } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import * as Google from 'expo-auth-session/providers/google';
+import { makeRedirectUri } from 'expo-auth-session';
+import { useForm, Controller } from 'react-hook-form';
+import { AppButton } from '../../components/ui/AppButton';
+import { AppTextInput } from '../../components/ui/AppTextInput';
+import { AuthService } from '../../services/auth.service';
+import { colors, spacing } from '../../theme';
 
-type Props = {
-  navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
-  route: RouteProp<AuthStackParamList, 'Login'>;
-};
-
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+interface LoginForm {
+  email: string;
 }
 
-export function LoginScreen({ navigation }: Props) {
-  const [email, setEmail] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [loading, setLoading] = useState(false);
+export function LoginScreen() {
+  const router = useRouter();
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleMagicLink() {
-    if (!isValidEmail(email)) {
-      setEmailError('Informe um e-mail válido');
-      return;
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({ defaultValues: { email: '' } });
+
+  const redirectUri = makeRedirectUri({ scheme: 'medcontrol', path: 'google-callback' });
+
+  const [, googleResponse, promptAsync] = Google.useAuthRequest({
+    clientId: '',
+    redirectUri,
+  });
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const { code } = googleResponse.params;
+      AuthService.loginWithGoogle(code, redirectUri)
+        .then(() => router.replace('/(app)'))
+        .catch((err: Error) => setApiError(err.message));
     }
-    setEmailError('');
-    setLoading(true);
-    // Navigate immediately — auth service will be wired later
-    setLoading(false);
-    navigation.navigate('MagicLinkSent', { email });
-  }
+  }, [googleResponse, redirectUri, router]);
 
-  function handleGoogle() {
-    // Google OAuth flow — to be implemented
-  }
+  const onSubmitEmail = handleSubmit(async ({ email }) => {
+    setApiError(null);
+    setIsSubmitting(true);
+    try {
+      await AuthService.sendMagicLink(email);
+      router.push({ pathname: '/(auth)/magic-link-sent', params: { email } });
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : 'Erro desconhecido');
+    } finally {
+      setIsSubmitting(false);
+    }
+  });
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.card}>
-            <Text style={styles.logo}>MedControl</Text>
-            <Text style={styles.title}>Entrar na sua conta</Text>
-            <Text style={styles.subtitle}>Use seu e-mail ou conta Google</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text variant="headlineLarge" style={styles.title}>
+          Bem-vindo
+        </Text>
+        <Text variant="bodyMedium" style={styles.subtitle}>
+          Entre com seu email ou Google
+        </Text>
+      </View>
 
-            <View style={styles.form}>
-              <TextInput
-                label="E-mail"
-                value={email}
-                onChangeText={(text) => {
-                  setEmail(text);
-                  if (emailError) setEmailError('');
-                }}
-                placeholder="seu@email.com"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                error={emailError}
-              />
-
-              <Button
-                testID="btn-magic-link"
-                label="Enviar link"
-                onPress={handleMagicLink}
-                loading={loading}
-              />
-            </View>
-
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>ou</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <Button
-              testID="btn-google"
-              label="Continuar com Google"
-              onPress={handleGoogle}
-              variant="ghost"
+      <View style={styles.form}>
+        <Controller
+          control={control}
+          name="email"
+          rules={{
+            required: 'Email é obrigatório',
+            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Email inválido' },
+          }}
+          render={({ field: { onChange, value } }) => (
+            <AppTextInput
+              label="Email"
+              value={value}
+              onChangeText={onChange}
+              placeholder="seu@email.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
+              errorMessage={errors.email?.message}
             />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          )}
+        />
+
+        {apiError ? <Text style={styles.apiError}>{apiError}</Text> : null}
+
+        <AppButton
+          label="Continuar com Email"
+          onPress={onSubmitEmail}
+          loading={isSubmitting}
+        />
+
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>ou</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <AppButton
+          label="Continuar com Google"
+          onPress={() => promptAsync()}
+          variant="outline"
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
+  container: {
     flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: colors.neutral[100],
-  },
-  scrollContent: {
-    flexGrow: 1,
+    backgroundColor: colors.background,
+    padding: spacing.lg,
     justifyContent: 'center',
-    paddingHorizontal: spacing[5],
-    paddingVertical: spacing[8],
   },
-  card: {
-    backgroundColor: colors.neutral[0],
-    borderRadius: 12,
-    padding: spacing[6],
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  logo: {
-    fontSize: fontSizes['2xl'],
-    fontWeight: fontWeights.bold,
-    color: colors.navy[900],
-    marginBottom: spacing[6],
-    textAlign: 'center',
+  header: {
+    marginBottom: spacing.xl,
+    alignItems: 'center',
   },
   title: {
-    fontSize: fontSizes['2xl'],
-    fontWeight: fontWeights.semibold,
-    color: colors.neutral[900],
-    marginBottom: spacing[1],
+    color: colors.textPrimary,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
   },
   subtitle: {
-    fontSize: fontSizes.sm,
-    color: colors.neutral[500],
-    marginBottom: spacing[6],
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
   form: {
-    gap: spacing[3],
+    gap: spacing.md,
+  },
+  apiError: {
+    color: colors.error,
+    fontSize: 14,
+    textAlign: 'center',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: spacing[5],
+    gap: spacing.sm,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.neutral[200],
+    backgroundColor: colors.border,
   },
   dividerText: {
-    marginHorizontal: spacing[3],
-    fontSize: fontSizes.sm,
-    color: colors.neutral[500],
+    color: colors.textSecondary,
+    fontSize: 14,
   },
 });
