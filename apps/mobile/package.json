@@ -6,25 +6,25 @@
     "eas-build-post-install": "cd ../../ && node tools/scripts/eas-build-post-install.mjs . apps/mobile"
   },
   "dependencies": {
-    "@expo/metro-config": "*",
-    "@react-navigation/native": "*",
-    "@react-navigation/native-stack": "*",
-    "expo": "*",
-    "expo-splash-screen": "*",
-    "expo-status-bar": "*",
-    "expo-system-ui": "*",
-    "metro-config": "*",
-    "metro-resolver": "*",
-    "react": "*",
-    "react-native": "^0.79.6",
+    "@expo/metro-config": "~0.21.0",
+    "@react-navigation/native": "^7.1.6",
+    "@react-navigation/native-stack": "^7.3.10",
+    "expo": "~54.0.0",
+    "expo-splash-screen": "~0.30.9",
+    "expo-status-bar": "~2.2.3",
+    "expo-system-ui": "~5.0.8",
+    "metro-config": "~0.82.5",
+    "metro-resolver": "~0.82.5",
+    "react": "19.1.0",
+    "react-native": "0.79.6",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "^4.11.1",
-    "react-native-svg": "*",
-    "react-native-svg-transformer": "*",
-    "react-native-web": "*"
+    "react-native-svg": "~15.11.2",
+    "react-native-svg-transformer": "~1.5.1",
+    "react-native-web": "~0.20.0"
   },
   "devDependencies": {
-    "@testing-library/react-native": "*",
-    "jest-expo": "*"
+    "@testing-library/react-native": "~13.3.0",
+    "jest-expo": "~54.0.0"
   }
 }
