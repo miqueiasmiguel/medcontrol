@@ -2,7 +2,7 @@
 
 ## Stack
 
-React Native (Expo SDK 53) + TypeScript strict, testado com Jest + `@testing-library/react-native`.
+React Native (Expo SDK 54) + TypeScript strict, testado com Jest + `@testing-library/react-native`.
 
 ## Estrutura de Pastas
 
