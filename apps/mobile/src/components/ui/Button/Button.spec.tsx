@@ -4,7 +4,7 @@ import { Button } from './Button';
 
 describe('Button', () => {
   it('renders the label', () => {
-    const { getByText } = render(<Button label="Entrar" onPress={() => {}} />);
+    const { getByText } = render(<Button label="Entrar" onPress={jest.fn()} />);
     expect(getByText('Entrar')).toBeTruthy();
   });
 
@@ -26,7 +26,7 @@ describe('Button', () => {
 
   it('shows loading indicator and hides label when loading', () => {
     const { getByTestId, queryByText } = render(
-      <Button label="Enviar" onPress={() => {}} loading />
+      <Button label="Enviar" onPress={jest.fn()} loading />
     );
     expect(getByTestId('button-loading')).toBeTruthy();
     expect(queryByText('Enviar')).toBeNull();
@@ -43,7 +43,7 @@ describe('Button', () => {
 
   it('renders ghost variant with correct testID', () => {
     const { getByTestId } = render(
-      <Button label="Google" onPress={() => {}} variant="ghost" testID="btn-google" />
+      <Button label="Google" onPress={jest.fn()} variant="ghost" testID="btn-google" />
     );
     expect(getByTestId('btn-google')).toBeTruthy();
   });

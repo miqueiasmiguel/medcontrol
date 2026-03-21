@@ -5,7 +5,7 @@ import { TextInput } from './TextInput';
 describe('TextInput', () => {
   it('renders the label', () => {
     const { getByText } = render(
-      <TextInput label="E-mail" value="" onChangeText={() => {}} />
+      <TextInput label="E-mail" value="" onChangeText={jest.fn()} />
     );
     expect(getByText('E-mail')).toBeTruthy();
   });
@@ -15,7 +15,7 @@ describe('TextInput', () => {
       <TextInput
         label="E-mail"
         value=""
-        onChangeText={() => {}}
+        onChangeText={jest.fn()}
         placeholder="seu@email.com"
       />
     );
@@ -41,7 +41,7 @@ describe('TextInput', () => {
       <TextInput
         label="E-mail"
         value=""
-        onChangeText={() => {}}
+        onChangeText={jest.fn()}
         error="E-mail inválido"
       />
     );
@@ -50,7 +50,7 @@ describe('TextInput', () => {
 
   it('does not show error message when error is absent', () => {
     const { queryByTestId } = render(
-      <TextInput label="E-mail" value="" onChangeText={() => {}} />
+      <TextInput label="E-mail" value="" onChangeText={jest.fn()} />
     );
     expect(queryByTestId('input-error')).toBeNull();
   });

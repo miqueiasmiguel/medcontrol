@@ -26,8 +26,7 @@ jest.mock('../navigation/RootNavigator', () => ({
       popToTop: jest.fn(),
     };
     const mockRoute = { key: 'Login', name: 'Login', params: undefined };
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const React = require('react');
+    const React = require('react'); // eslint-disable-line @typescript-eslint/no-require-imports
     return React.createElement(LoginScreen, { navigation: mockNav, route: mockRoute });
   },
 }));
