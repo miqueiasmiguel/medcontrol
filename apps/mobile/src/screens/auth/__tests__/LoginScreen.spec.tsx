@@ -13,16 +13,22 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: () => 'medcontrol://google-callback',
+  makeRedirectUri: () => 'https://auth.expo.io/@miqueiasmiguel/medcontrol',
 }));
 
+let mockGoogleResponse: { type: string; params?: { code: string } } | null = null;
+const mockPromptAsync = jest.fn();
 jest.mock('expo-auth-session/providers/google', () => ({
-  useAuthRequest: () => [null, null, jest.fn()],
+  useAuthRequest: () => [null, mockGoogleResponse, mockPromptAsync],
 }));
 
 jest.mock('expo-linking', () => ({
   createURL: jest.fn(() => 'medcontrol://'),
   resolveScheme: jest.fn(() => 'medcontrol'),
+}));
+
+jest.mock('@expo/vector-icons', () => ({
+  AntDesign: () => null,
 }));
 
 const mockAuthService = AuthService as jest.Mocked<typeof AuthService>;
@@ -33,6 +39,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockGoogleResponse = null;
 });
 
 describe('LoginScreen', () => {
@@ -108,6 +115,64 @@ describe('LoginScreen', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Serviço indisponível')).toBeTruthy();
+    });
+  });
+
+  describe('Google OAuth', () => {
+    it('chama loginWithGoogle com code e redirectUri proxy ao receber resposta success', async () => {
+      mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
+      mockAuthService.loginWithGoogle.mockResolvedValue({
+        accessToken: 'token',
+        refreshToken: 'refresh',
+        expiresIn: 3600,
+        tokenType: 'Bearer',
+      });
+
+      render(<LoginScreen />, { wrapper });
+
+      await waitFor(() => {
+        expect(mockAuthService.loginWithGoogle).toHaveBeenCalledWith(
+          'auth-code-123',
+          'https://auth.expo.io/@miqueiasmiguel/medcontrol',
+        );
+      });
+    });
+
+    it('navega para /(app) após login google bem-sucedido', async () => {
+      mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
+      mockAuthService.loginWithGoogle.mockResolvedValue({
+        accessToken: 'token',
+        refreshToken: 'refresh',
+        expiresIn: 3600,
+        tokenType: 'Bearer',
+      });
+
+      render(<LoginScreen />, { wrapper });
+
+      await waitFor(() => {
+        expect(mockReplace).toHaveBeenCalledWith('/(app)');
+      });
+    });
+
+    it('exibe erro de api quando loginWithGoogle falha', async () => {
+      mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
+      mockAuthService.loginWithGoogle.mockRejectedValueOnce(new Error('Conta não encontrada'));
+
+      render(<LoginScreen />, { wrapper });
+
+      await waitFor(() => {
+        expect(screen.getByText('Conta não encontrada')).toBeTruthy();
+      });
+    });
+
+    it('não chama loginWithGoogle quando resposta google não é success', async () => {
+      mockGoogleResponse = { type: 'cancel' };
+
+      render(<LoginScreen />, { wrapper });
+
+      await waitFor(() => {
+        expect(mockAuthService.loginWithGoogle).not.toHaveBeenCalled();
+      });
     });
   });
 });

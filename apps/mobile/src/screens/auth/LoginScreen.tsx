@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Text } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { AntDesign } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
+import Constants from 'expo-constants';
 import { useForm, Controller } from 'react-hook-form';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppTextInput } from '../../components/ui/AppTextInput';
 import { AuthService } from '../../services/auth.service';
-import { colors, spacing } from '../../theme';
+import { colors, spacing, typography } from '../../theme';
 
 interface LoginForm {
   email: string;
@@ -25,10 +34,10 @@ export function LoginScreen() {
     formState: { errors },
   } = useForm<LoginForm>({ defaultValues: { email: '' } });
 
-  const redirectUri = makeRedirectUri({ scheme: 'medcontrol', path: 'google-callback' });
+  const redirectUri = makeRedirectUri({ useProxy: true });
 
   const [, googleResponse, promptAsync] = Google.useAuthRequest({
-    clientId: '',
+    clientId: (Constants.expoConfig?.extra?.googleClientId as string | undefined) ?? '',
     redirectUri,
   });
 
@@ -55,88 +64,174 @@ export function LoginScreen() {
   });
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text variant="headlineLarge" style={styles.title}>
-          Bem-vindo
-        </Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          Entre com seu email ou Google
-        </Text>
-      </View>
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Hero — fundo navy escuro com identidade da marca */}
+          <View style={styles.hero}>
+            <View style={styles.logoBadge}>
+              <Text style={styles.logoBadgeText}>M</Text>
+            </View>
+            <Text style={styles.wordmark}>
+              Med<Text style={styles.wordmarkAccent}>Control</Text>
+            </Text>
+            <Text style={styles.heroTagline}>Gestão médica simplificada</Text>
+          </View>
 
-      <View style={styles.form}>
-        <Controller
-          control={control}
-          name="email"
-          rules={{
-            required: 'Email é obrigatório',
-            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Email inválido' },
-          }}
-          render={({ field: { onChange, value } }) => (
-            <AppTextInput
-              label="Email"
-              value={value}
-              onChangeText={onChange}
-              placeholder="seu@email.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              errorMessage={errors.email?.message}
-            />
-          )}
-        />
+          {/* Card do formulário — flutua sobre o hero */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Entrar na sua conta</Text>
+            <Text style={styles.cardSubtitle}>Use seu e-mail ou conta Google</Text>
 
-        {apiError ? <Text style={styles.apiError}>{apiError}</Text> : null}
+            <View style={styles.form}>
+              <Controller
+                control={control}
+                name="email"
+                rules={{
+                  required: 'Email é obrigatório',
+                  pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Email inválido' },
+                }}
+                render={({ field: { onChange, value } }) => (
+                  <AppTextInput
+                    label="Email"
+                    value={value}
+                    onChangeText={onChange}
+                    placeholder="seu@email.com"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    errorMessage={errors.email?.message}
+                  />
+                )}
+              />
 
-        <AppButton
-          label="Continuar com Email"
-          onPress={onSubmitEmail}
-          loading={isSubmitting}
-        />
+              {apiError ? <Text style={styles.apiError}>{apiError}</Text> : null}
 
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>ou</Text>
-          <View style={styles.dividerLine} />
-        </View>
+              <AppButton
+                label="Continuar com Email"
+                onPress={onSubmitEmail}
+                loading={isSubmitting}
+              />
 
-        <AppButton
-          label="Continuar com Google"
-          onPress={() => promptAsync()}
-          variant="outline"
-        />
-      </View>
-    </View>
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>ou</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <AppButton
+                label="Continuar com Google"
+                onPress={() => promptAsync()}
+                variant="outline"
+                leftIcon={<AntDesign name="google" size={18} color={colors.navy} />}
+              />
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: colors.background,
-    padding: spacing.lg,
-    justifyContent: 'center',
+    backgroundColor: colors.navyDark,
   },
-  header: {
-    marginBottom: spacing.xl,
+  flex: {
+    flex: 1,
+  },
+  scroll: {
+    flexGrow: 1,
+  },
+
+  // ── Hero ──────────────────────────────────────────────────────────────────
+  hero: {
+    backgroundColor: colors.navyDark,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xxl + spacing.lg,
+    paddingHorizontal: spacing.lg,
     alignItems: 'center',
   },
-  title: {
-    color: colors.textPrimary,
+  logoBadge: {
+    width: 60,
+    height: 60,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  logoBadgeText: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: colors.white,
+    letterSpacing: -0.5,
+  },
+  wordmark: {
+    fontSize: typography.sizes.xl,
     fontWeight: '700',
+    color: colors.white,
+    letterSpacing: 0.3,
     marginBottom: spacing.xs,
   },
-  subtitle: {
-    color: colors.textSecondary,
-    textAlign: 'center',
+  wordmarkAccent: {
+    color: colors.primary,
   },
+  heroTagline: {
+    fontSize: typography.sizes.sm,
+    color: 'rgba(255, 255, 255, 0.50)',
+    letterSpacing: 0.4,
+  },
+
+  // ── Card ──────────────────────────────────────────────────────────────────
+  card: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
+    marginTop: -spacing.lg,
+    shadowColor: colors.navyDark,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 20,
+    elevation: 14,
+  },
+  cardTitle: {
+    fontSize: typography.sizes.xl,
+    fontWeight: '700',
+    color: colors.navy,
+    marginBottom: spacing.xs,
+  },
+  cardSubtitle: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginBottom: spacing.lg,
+  },
+
+  // ── Formulário ────────────────────────────────────────────────────────────
   form: {
     gap: spacing.md,
   },
   apiError: {
     color: colors.error,
-    fontSize: 14,
+    fontSize: typography.sizes.sm,
     textAlign: 'center',
   },
   divider: {
@@ -151,6 +246,6 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: colors.textSecondary,
-    fontSize: 14,
+    fontSize: typography.sizes.sm,
   },
 });
