@@ -23,9 +23,9 @@ api:
 web:
 	pnpm nx serve web
 
-# Inicia o app Expo (foreground) — abra no Expo Go ou emulador
+# Inicia o app Expo diretamente (sem Nx) para o QR code aparecer no terminal
 mobile:
-	pnpm nx serve mobile
+	cd apps/mobile && npx expo start --clear
 
 # Para e remove os containers (dados persistem nos volumes)
 stop:
