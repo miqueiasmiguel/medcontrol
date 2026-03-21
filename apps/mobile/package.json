@@ -7,6 +7,8 @@
   },
   "dependencies": {
     "@expo/metro-config": "*",
+    "@react-navigation/native": "*",
+    "@react-navigation/native-stack": "*",
     "expo": "*",
     "expo-splash-screen": "*",
     "expo-status-bar": "*",
@@ -14,14 +16,12 @@
     "metro-config": "*",
     "metro-resolver": "*",
     "react": "*",
-    "react-native": "*",
+    "react-native": "^0.79.6",
+    "react-native-safe-area-context": "^5.4.0",
+    "react-native-screens": "^4.11.1",
     "react-native-svg": "*",
     "react-native-svg-transformer": "*",
-    "react-native-web": "*",
-    "@react-navigation/native": "*",
-    "@react-navigation/native-stack": "*",
-    "react-native-safe-area-context": "*",
-    "react-native-screens": "*"
+    "react-native-web": "*"
   },
   "devDependencies": {
     "@testing-library/react-native": "*",
