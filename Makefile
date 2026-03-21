@@ -1,8 +1,9 @@
 .PHONY: dev docker-up migrate api web mobile stop reset help
 
-# Sobe docker, aplica migrations e inicia a API + web + mobile em paralelo
+# Sobe docker, aplica migrations e inicia a API + web em paralelo
+# Mobile roda separado (make mobile) para o QR code do Expo aparecer corretamente
 dev: docker-up migrate
-	$(MAKE) -j3 api web mobile
+	$(MAKE) -j2 api web
 
 # Inicia postgres e redis; aguarda health checks passarem
 docker-up:
@@ -36,7 +37,7 @@ reset:
 
 help:
 	@echo ""
-	@echo "  make dev        Sobe docker + migrations + API + web + mobile (paralelo)"
+	@echo "  make dev        Sobe docker + migrations + API + web (paralelo)"
 	@echo "  make docker-up  Só sobe postgres e redis"
 	@echo "  make migrate    Só aplica migrations"
 	@echo "  make api        Só inicia a API"
