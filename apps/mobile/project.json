@@ -5,6 +5,13 @@
   "projectType": "application",
   "tags": [],
   "targets": {
+    "serve": {
+      "executor": "@nx/expo:start",
+      "options": {
+        "tunnel": false,
+        "clear": true
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint"
     },
