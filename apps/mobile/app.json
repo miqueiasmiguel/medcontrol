@@ -40,7 +40,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "http://localhost:5000",
+      "apiUrl": "http://192.168.0.230:5000",
       "googleWebClientId": "545148539649-i7o6fr6n733qp12si6f7jnvg6g93p85s.apps.googleusercontent.com",
       "googleAndroidClientId": "545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo.apps.googleusercontent.com",
       "router": {},

@@ -42,18 +42,11 @@ export function LoginScreen() {
     native: `${reverseClientId}:/oauth2redirect/google`,
   });
 
-  console.log('[OAuth Debug] androidClientId:', androidClientId);
-  console.log('[OAuth Debug] reverseClientId:', reverseClientId);
-  console.log('[OAuth Debug] redirectUri:', redirectUri);
-
-  const [request, googleResponse, promptAsync] = Google.useAuthRequest({
+  const [, googleResponse, promptAsync] = Google.useAuthRequest({
     androidClientId,
     webClientId: (Constants.expoConfig?.extra?.googleWebClientId as string | undefined) ?? '',
     redirectUri,
   });
-
-  console.log('[OAuth Debug] request?.redirectUri:', request?.redirectUri);
-  console.log('[OAuth Debug] request?.clientId:', (request as any)?.clientId);
 
   useEffect(() => {
     if (googleResponse?.type === 'success') {
