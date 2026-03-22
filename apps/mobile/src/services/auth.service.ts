@@ -5,26 +5,18 @@ const API_BASE: string = (Constants.expoConfig?.extra?.apiUrl as string | undefi
 const headers = { 'Content-Type': 'application/json' };
 
 async function request(path: string, options: RequestInit): Promise<Response> {
-  const url = `${API_BASE}${path}`;
-  console.log('[AuthService] fetch →', options.method ?? 'GET', url);
-  try {
-    const res = await fetch(url, {
-      credentials: 'include',
-      headers,
-      ...options,
-    });
+  const res = await fetch(`${API_BASE}${path}`, {
+    credentials: 'include',
+    headers,
+    ...options,
+  });
 
-    console.log('[AuthService] fetch ←', res.status, url);
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error((body as { message?: string }).message ?? `HTTP ${res.status}`);
-    }
-
-    return res;
-  } catch (err) {
-    console.error('[AuthService] fetch error:', (err as Error).message);
-    throw err;
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error((body as { message?: string }).message ?? `HTTP ${res.status}`);
   }
+
+  return res;
 }
 
 export const AuthService = {
