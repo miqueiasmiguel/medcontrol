@@ -55,12 +55,7 @@ describe('GoogleOAuthCallback', () => {
   });
 
   it('chama loginWithGoogle com code e redirectUri corretos', async () => {
-    mockAuthService.loginWithGoogle.mockResolvedValueOnce({
-      accessToken: 'token',
-      refreshToken: 'refresh',
-      expiresIn: 3600,
-      tokenType: 'Bearer',
-    });
+    mockAuthService.loginWithGoogle.mockResolvedValueOnce(undefined);
 
     render(<GoogleOAuthCallback />, { wrapper });
 
@@ -73,12 +68,7 @@ describe('GoogleOAuthCallback', () => {
   });
 
   it('navega para /(app) após login bem-sucedido', async () => {
-    mockAuthService.loginWithGoogle.mockResolvedValueOnce({
-      accessToken: 'token',
-      refreshToken: 'refresh',
-      expiresIn: 3600,
-      tokenType: 'Bearer',
-    });
+    mockAuthService.loginWithGoogle.mockResolvedValueOnce(undefined);
 
     render(<GoogleOAuthCallback />, { wrapper });
 

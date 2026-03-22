@@ -127,12 +127,7 @@ describe('LoginScreen', () => {
   describe('Google OAuth', () => {
     it('chama loginWithGoogle com code e redirectUri proxy ao receber resposta success', async () => {
       mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
-      mockAuthService.loginWithGoogle.mockResolvedValue({
-        accessToken: 'token',
-        refreshToken: 'refresh',
-        expiresIn: 3600,
-        tokenType: 'Bearer',
-      });
+      mockAuthService.loginWithGoogle.mockResolvedValue(undefined);
 
       render(<LoginScreen />, { wrapper });
 
@@ -146,12 +141,7 @@ describe('LoginScreen', () => {
 
     it('chama setSession e navega para /(app) após login google bem-sucedido', async () => {
       mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
-      mockAuthService.loginWithGoogle.mockResolvedValue({
-        accessToken: 'token',
-        refreshToken: 'refresh',
-        expiresIn: 3600,
-        tokenType: 'Bearer',
-      });
+      mockAuthService.loginWithGoogle.mockResolvedValue(undefined);
 
       render(<LoginScreen />, { wrapper });
 

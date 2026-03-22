@@ -9,13 +9,13 @@ beforeEach(() => {
 
 describe('AuthService', () => {
   describe('sendMagicLink', () => {
-    it('faz POST para /api/auth/magic-link/send com o email', async () => {
+    it('faz POST para /auth/magic-link/send com o email', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true, status: 204 });
 
       await AuthService.sendMagicLink('user@test.com');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/magic-link/send'),
+        expect.stringContaining('/auth/magic-link/send'),
         expect.objectContaining({
           method: 'POST',
           credentials: 'include',
@@ -33,13 +33,13 @@ describe('AuthService', () => {
   });
 
   describe('verifyMagicLink', () => {
-    it('faz POST para /api/auth/magic-link/verify com o token', async () => {
+    it('faz POST para /auth/magic-link/verify com o token', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true, status: 204 });
 
       await AuthService.verifyMagicLink('my-token-123');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/magic-link/verify'),
+        expect.stringContaining('/auth/magic-link/verify'),
         expect.objectContaining({
           method: 'POST',
           credentials: 'include',
@@ -56,26 +56,19 @@ describe('AuthService', () => {
   });
 
   describe('loginWithGoogle', () => {
-    it('faz POST para /api/auth/google/callback com code e redirectUri', async () => {
-      const tokenResponse = {
-        accessToken: 'acc-token',
-        refreshToken: 'ref-token',
-        expiresIn: 3600,
-        tokenType: 'Bearer',
-      };
-      mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: async () => tokenResponse });
+    it('faz POST para /auth/google/callback com code e redirectUri', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, status: 204 });
 
-      const result = await AuthService.loginWithGoogle('auth-code', 'medcontrol://google-callback');
+      await AuthService.loginWithGoogle('auth-code', 'medcontrol://google-callback');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/google/callback'),
+        expect.stringContaining('/auth/google/callback'),
         expect.objectContaining({
           method: 'POST',
           credentials: 'include',
           body: JSON.stringify({ code: 'auth-code', redirectUri: 'medcontrol://google-callback' }),
         }),
       );
-      expect(result).toEqual(tokenResponse);
     });
 
     it('lança erro quando código do Google é inválido', async () => {
@@ -86,13 +79,13 @@ describe('AuthService', () => {
   });
 
   describe('logout', () => {
-    it('faz POST para /api/auth/logout', async () => {
+    it('faz POST para /auth/logout', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true, status: 204 });
 
       await AuthService.logout();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/auth/logout'),
+        expect.stringContaining('/auth/logout'),
         expect.objectContaining({
           method: 'POST',
           credentials: 'include',
