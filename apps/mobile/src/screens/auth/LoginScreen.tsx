@@ -17,6 +17,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppTextInput } from '../../components/ui/AppTextInput';
 import { AuthService } from '../../services/auth.service';
+import { useAuth } from '../../hooks/useAuth';
 import { colors, spacing, typography } from '../../theme';
 
 interface LoginForm {
@@ -25,6 +26,7 @@ interface LoginForm {
 
 export function LoginScreen() {
   const router = useRouter();
+  const { setSession } = useAuth();
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -40,17 +42,27 @@ export function LoginScreen() {
     native: `${reverseClientId}:/oauth2redirect/google`,
   });
 
-  const [, googleResponse, promptAsync] = Google.useAuthRequest({
+  console.log('[OAuth Debug] androidClientId:', androidClientId);
+  console.log('[OAuth Debug] reverseClientId:', reverseClientId);
+  console.log('[OAuth Debug] redirectUri:', redirectUri);
+
+  const [request, googleResponse, promptAsync] = Google.useAuthRequest({
     androidClientId,
     webClientId: (Constants.expoConfig?.extra?.googleWebClientId as string | undefined) ?? '',
     redirectUri,
   });
 
+  console.log('[OAuth Debug] request?.redirectUri:', request?.redirectUri);
+  console.log('[OAuth Debug] request?.clientId:', (request as any)?.clientId);
+
   useEffect(() => {
     if (googleResponse?.type === 'success') {
       const { code } = googleResponse.params;
       AuthService.loginWithGoogle(code, redirectUri)
-        .then(() => router.replace('/(app)'))
+        .then(async () => {
+          await setSession(true);
+          router.replace('/(app)');
+        })
         .catch((err: Error) => setApiError(err.message));
     }
   }, [googleResponse, redirectUri, router]);

@@ -17,6 +17,11 @@ jest.mock('expo-auth-session', () => ({
     'com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo:/oauth2redirect/google',
 }));
 
+const mockSetSession = jest.fn().mockResolvedValue(undefined);
+jest.mock('../../../hooks/useAuth', () => ({
+  useAuth: () => ({ setSession: mockSetSession }),
+}));
+
 let mockGoogleResponse: { type: string; params?: { code: string } } | null = null;
 const mockPromptAsync = jest.fn();
 jest.mock('expo-auth-session/providers/google', () => ({
@@ -139,7 +144,7 @@ describe('LoginScreen', () => {
       });
     });
 
-    it('navega para /(app) após login google bem-sucedido', async () => {
+    it('chama setSession e navega para /(app) após login google bem-sucedido', async () => {
       mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
       mockAuthService.loginWithGoogle.mockResolvedValue({
         accessToken: 'token',
@@ -151,6 +156,7 @@ describe('LoginScreen', () => {
       render(<LoginScreen />, { wrapper });
 
       await waitFor(() => {
+        expect(mockSetSession).toHaveBeenCalledWith(true);
         expect(mockReplace).toHaveBeenCalledWith('/(app)');
       });
     });
