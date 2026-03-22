@@ -34,12 +34,14 @@ export function LoginScreen() {
     formState: { errors },
   } = useForm<LoginForm>({ defaultValues: { email: '' } });
 
+  const androidClientId = (Constants.expoConfig?.extra?.googleAndroidClientId as string | undefined) ?? '';
+  const reverseClientId = androidClientId.split('.').reverse().join('.');
   const redirectUri = makeRedirectUri({
-    native: 'com.medcontrol.app:/oauth2redirect/google',
+    native: `${reverseClientId}:/oauth2redirect/google`,
   });
 
   const [, googleResponse, promptAsync] = Google.useAuthRequest({
-    androidClientId: (Constants.expoConfig?.extra?.googleAndroidClientId as string | undefined) ?? '',
+    androidClientId,
     webClientId: (Constants.expoConfig?.extra?.googleWebClientId as string | undefined) ?? '',
     redirectUri,
   });

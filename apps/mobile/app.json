@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "medcontrol",
+    "scheme": [
+      "medcontrol",
+      "com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo"
+    ],
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",

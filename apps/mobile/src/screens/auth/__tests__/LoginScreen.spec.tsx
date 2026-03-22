@@ -13,7 +13,8 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: () => 'com.medcontrol.app:/oauth2redirect/google',
+  makeRedirectUri: () =>
+    'com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo:/oauth2redirect/google',
 }));
 
 let mockGoogleResponse: { type: string; params?: { code: string } } | null = null;
@@ -133,7 +134,7 @@ describe('LoginScreen', () => {
       await waitFor(() => {
         expect(mockAuthService.loginWithGoogle).toHaveBeenCalledWith(
           'auth-code-123',
-          'com.medcontrol.app:/oauth2redirect/google',
+          'com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo:/oauth2redirect/google',
         );
       });
     });
