@@ -34,10 +34,13 @@ export function LoginScreen() {
     formState: { errors },
   } = useForm<LoginForm>({ defaultValues: { email: '' } });
 
-  const redirectUri = makeRedirectUri({ useProxy: true });
+  const redirectUri = makeRedirectUri({
+    native: 'com.medcontrol.app:/oauth2redirect/google',
+  });
 
   const [, googleResponse, promptAsync] = Google.useAuthRequest({
-    clientId: (Constants.expoConfig?.extra?.googleClientId as string | undefined) ?? '',
+    androidClientId: (Constants.expoConfig?.extra?.googleAndroidClientId as string | undefined) ?? '',
+    webClientId: (Constants.expoConfig?.extra?.googleWebClientId as string | undefined) ?? '',
     redirectUri,
   });
 

@@ -13,7 +13,7 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: () => 'https://auth.expo.io/@miqueiasmiguel/medcontrol',
+  makeRedirectUri: () => 'com.medcontrol.app:/oauth2redirect/google',
 }));
 
 let mockGoogleResponse: { type: string; params?: { code: string } } | null = null;
@@ -133,7 +133,7 @@ describe('LoginScreen', () => {
       await waitFor(() => {
         expect(mockAuthService.loginWithGoogle).toHaveBeenCalledWith(
           'auth-code-123',
-          'https://auth.expo.io/@miqueiasmiguel/medcontrol',
+          'com.medcontrol.app:/oauth2redirect/google',
         );
       });
     });
