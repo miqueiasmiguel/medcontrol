@@ -13,6 +13,7 @@ internal sealed class GoogleAuthService(
 {
     private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
     private const string UserInfoEndpoint = "https://www.googleapis.com/oauth2/v3/userinfo";
+    private const string TokenInfoEndpoint = "https://oauth2.googleapis.com/tokeninfo";
 
     public async Task<GoogleUserInfo?> ExchangeCodeAsync(string code, string redirectUri, CancellationToken ct = default)
     {
@@ -67,9 +68,33 @@ internal sealed class GoogleAuthService(
         return new GoogleUserInfo(userInfo.Email, userInfo.Name ?? userInfo.Email, avatarUrl);
     }
 
+    public async Task<GoogleUserInfo?> VerifyIdTokenAsync(string idToken, CancellationToken ct = default)
+    {
+        var response = await httpClient.GetAsync(
+            $"{TokenInfoEndpoint}?id_token={Uri.EscapeDataString(idToken)}", ct);
+        if (!response.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        var tokenInfo = await response.Content.ReadFromJsonAsync<GoogleTokenInfoResponse>(ct);
+        if (tokenInfo?.Email is null)
+        {
+            return null;
+        }
+
+        Uri? avatarUrl = Uri.TryCreate(tokenInfo.Picture, UriKind.Absolute, out var uri) ? uri : null;
+        return new GoogleUserInfo(tokenInfo.Email, tokenInfo.Name ?? tokenInfo.Email, avatarUrl);
+    }
+
     private sealed record GoogleTokenResponse([property: JsonPropertyName("access_token")] string? AccessToken);
 
     private sealed record GoogleUserInfoResponse(
+        [property: JsonPropertyName("email")] string? Email,
+        [property: JsonPropertyName("name")] string? Name,
+        [property: JsonPropertyName("picture")] string? Picture);
+
+    private sealed record GoogleTokenInfoResponse(
         [property: JsonPropertyName("email")] string? Email,
         [property: JsonPropertyName("name")] string? Name,
         [property: JsonPropertyName("picture")] string? Picture);

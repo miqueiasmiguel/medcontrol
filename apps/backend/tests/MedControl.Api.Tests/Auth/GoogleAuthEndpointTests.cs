@@ -60,4 +60,46 @@ public sealed class GoogleAuthEndpointTests : IClassFixture<TestWebApplicationFa
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task POST_auth_google_verify_IdTokenValido_Retorna204ComCookies()
+    {
+        var email = "user@example.com";
+        var user = User.CreateFromGoogle(email, "User Name", null).Value;
+        var tokenPair = new TokenPair("access-token", "refresh-token", DateTimeOffset.UtcNow.AddHours(1));
+        var googleUserInfo = new GoogleUserInfo(email, "User Name", null);
+
+        _factory.GoogleAuthService
+            .VerifyIdTokenAsync("valid-id-token", Arg.Any<CancellationToken>())
+            .Returns(googleUserInfo);
+        _factory.UserRepository.GetByEmailAsync(email, Arg.Any<CancellationToken>())
+            .Returns(user);
+        _factory.TokenService.GenerateTokenPair(
+                Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<Guid?>(),
+                Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyList<string>>())
+            .Returns(tokenPair);
+
+        var response = await _client.PostAsJsonAsync("/auth/google/verify",
+            new { idToken = "valid-id-token" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var cookies = response.Headers.GetValues("Set-Cookie").ToList();
+        cookies.Should().Contain(c => c.StartsWith("mmc_access_token=") && c.Contains("httponly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_refresh_token=") && c.Contains("httponly"));
+        cookies.Should().Contain(c => c.StartsWith("mmc_session=1") && !c.Contains("httponly"));
+    }
+
+    [Fact]
+    public async Task POST_auth_google_verify_TokenInvalido_Retorna401()
+    {
+        _factory.GoogleAuthService
+            .VerifyIdTokenAsync("bad-token", Arg.Any<CancellationToken>())
+            .Returns((GoogleUserInfo?)null);
+
+        var response = await _client.PostAsJsonAsync("/auth/google/verify",
+            new { idToken = "bad-token" });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 }
