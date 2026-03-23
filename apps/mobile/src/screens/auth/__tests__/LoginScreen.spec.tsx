@@ -158,7 +158,7 @@ describe('LoginScreen', () => {
 
       render(<LoginScreen />, { wrapper });
 
-      await act(async () => {});
+      await act(() => Promise.resolve());
 
       expect(mockAuthService.verifyGoogleIdToken).not.toHaveBeenCalled();
     });

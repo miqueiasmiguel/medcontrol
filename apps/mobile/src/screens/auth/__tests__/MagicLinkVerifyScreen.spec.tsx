@@ -30,7 +30,7 @@ beforeEach(() => {
 
 describe('MagicLinkVerifyScreen', () => {
   it('exibe indicador de carregamento ao montar', () => {
-    mockAuthService.verifyMagicLink.mockImplementation(() => new Promise(() => {}));
+    mockAuthService.verifyMagicLink.mockImplementation(() => new Promise(jest.fn()));
 
     render(<MagicLinkVerifyScreen />, { wrapper });
 

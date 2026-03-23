@@ -55,7 +55,7 @@ beforeEach(async () => {
 
 describe('GoogleOAuthCallback', () => {
   it('exibe indicador de carregamento ao montar', () => {
-    mockAuthService.verifyGoogleIdToken.mockImplementation(() => new Promise(() => {}));
+    mockAuthService.verifyGoogleIdToken.mockImplementation(() => new Promise(jest.fn()));
 
     render(<GoogleOAuthCallback />, { wrapper });
 

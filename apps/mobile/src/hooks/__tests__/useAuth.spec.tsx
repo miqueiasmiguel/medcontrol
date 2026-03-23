@@ -19,7 +19,7 @@ describe('useAuth', () => {
   it('começa com isAuthenticated false e isLoading false após a inicialização', async () => {
     const { result } = renderHook(() => useAuth());
 
-    await act(async () => {});
+    await act(() => Promise.resolve());
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.isLoading).toBe(false);
@@ -29,14 +29,14 @@ describe('useAuth', () => {
     await AsyncStorage.setItem('mmc_session', '1');
 
     const { result } = renderHook(() => useAuth());
-    await act(async () => {});
+    await act(() => Promise.resolve());
 
     expect(result.current.isAuthenticated).toBe(true);
   });
 
   it('setSession armazena sessão e atualiza estado para autenticado', async () => {
     const { result } = renderHook(() => useAuth());
-    await act(async () => {});
+    await act(() => Promise.resolve());
 
     await act(async () => {
       await result.current.setSession(true);
@@ -51,7 +51,7 @@ describe('useAuth', () => {
     await AsyncStorage.setItem('mmc_session', '1');
 
     const { result } = renderHook(() => useAuth());
-    await act(async () => {});
+    await act(() => Promise.resolve());
 
     await act(async () => {
       await result.current.logout();
