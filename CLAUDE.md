@@ -114,7 +114,8 @@ Domain (sem dependências)
 ## Autenticação
 
 - **Magic Link**: token one-time em `IDistributedCache`, TTL 15 min
-- **Google OAuth**: troca de code, busca user info, cria/atualiza User
+- **Google OAuth (web)**: `POST /auth/google/callback` — troca authorization code via `webClientId + clientSecret`, cria/atualiza User
+- **Google OAuth (mobile)**: `POST /auth/google/verify` — verifica `id_token` via `GET https://oauth2.googleapis.com/tokeninfo` sem `client_secret`, cria/atualiza User
 - **JWT**: claims `sub`, `email`, `tenant_id`, `roles`, `global_roles`
 - Troca de tenant: `POST /auth/switch-tenant` re-emite JWT
 

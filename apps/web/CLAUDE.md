@@ -154,6 +154,10 @@ pnpm nx serve web                 # http://localhost:4200
 
 ## Armadilhas Conhecidas
 
+### Cloudflare Pages _redirects não suporta POST (usar Pages Function)
+- **Problema**: a regra de proxy `status 200` no `_redirects` só encaminha GET. Qualquer `POST` (como `/api/auth/google/callback`) retorna 405, o error handler do Angular redireciona para `/auth/login` — sintoma: tela pisca e volta para o login.
+- **Correto**: usar Cloudflare Pages Function em `functions/api/[[path]].js` (raiz do repo). A Function suporta todos os métodos HTTP e encaminha body, headers e cookies corretamente. O `_redirects` não deve ter regra `/api/*`.
+
 ### fileReplacements obrigatório na configuração production do project.json
 - **Problema**: sem `fileReplacements`, o build com `--configuration=production` ainda usa `environment.ts` (dev). Variáveis como `googleRedirectUri` ficam `null` e comportamentos dependem de fallbacks incorretos (ex: `window.location.origin` retorna URL de preview do Cloudflare).
 - **Correto**: a configuração `production` em `project.json` deve sempre incluir:

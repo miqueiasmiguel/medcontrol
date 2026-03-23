@@ -1,33 +1,22 @@
-const { withNxMetro } = require('@nx/expo');
-const { getDefaultConfig } = require('@expo/metro-config');
-const { mergeConfig } = require('metro-config');
+const { getDefaultConfig } = require('expo/metro-config');
+const path = require('path');
 
-const defaultConfig = getDefaultConfig(__dirname);
-const { assetExts, sourceExts } = defaultConfig.resolver;
+const projectRoot = __dirname;
+const monorepoRoot = path.resolve(projectRoot, '../..');
 
-/**
- * Metro configuration
- * https://reactnative.dev/docs/metro
- *
- * @type {import('metro-config').MetroConfig}
- */
-const customConfig = {
-  cacheVersion: 'mobile',
-  transformer: {
-    babelTransformerPath: require.resolve('react-native-svg-transformer'),
-  },
-  resolver: {
-    assetExts: assetExts.filter((ext) => ext !== 'svg'),
-    sourceExts: [...sourceExts, 'cjs', 'mjs', 'svg'],
-  },
-};
+const config = getDefaultConfig(projectRoot);
 
-module.exports = withNxMetro(mergeConfig(defaultConfig, customConfig), {
-  // Change this to true to see debugging info.
-  // Useful if you have issues resolving modules
-  debug: false,
-  // all the file extensions used for imports other than 'ts', 'tsx', 'js', 'jsx', 'json'
-  extensions: [],
-  // Specify folders to watch, in addition to Nx defaults (workspace libraries and node_modules)
-  watchFolders: [],
-});
+// Watch only the packages used by mobile (not the full monorepo root)
+// to avoid exhausting the OS file-watcher limit without Watchman
+config.watchFolders = [
+  path.resolve(monorepoRoot, 'packages'),
+  path.resolve(monorepoRoot, 'node_modules'),
+];
+
+// Resolve modules from the monorepo root first, then the project root
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(monorepoRoot, 'node_modules'),
+];
+
+module.exports = config;
