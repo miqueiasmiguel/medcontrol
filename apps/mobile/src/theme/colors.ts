@@ -1,13 +1,32 @@
 export const colors = {
-  primary: '#0EA5E9',
-  primaryDark: '#0C4A6E',
-  primaryLight: '#E0F2FE',
-  background: '#FFFFFF',
-  surface: '#F8FAFC',
+  // Brand primary — laranja MM Fature
+  primary: '#F97316',
+  primaryDark: '#EA6310',
+  primaryLight: '#FFF4ED',
+
+  // Brand secondary — navy MM Fature
+  navy: '#1B2E63',
+  navyDark: '#0F1A40',
+
+  // Superfícies
+  background: '#F8F9FA',
+  surface: '#FFFFFF',
+
+  // Status semânticos
   error: '#EF4444',
-  textPrimary: '#0F172A',
-  textSecondary: '#64748B',
-  border: '#E2E8F0',
+  success: '#10B981',
+  warning: '#F59E0B',
+
+  // Texto
+  textPrimary: '#212529',
+  textSecondary: '#868E96',
+  textDisabled: '#CED4DA',
+
+  // Bordas
+  border: '#E9ECEF',
+  borderStrong: '#DEE2E6',
+
+  // Utilitários
   white: '#FFFFFF',
   black: '#000000',
 } as const;

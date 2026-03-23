@@ -3,10 +3,17 @@ import { colors, spacing, typography, theme } from '../index';
 describe('Design System', () => {
   describe('colors', () => {
     it('tem as cores obrigatórias do MedControl', () => {
-      expect(colors.primary).toBe('#0EA5E9');
-      expect(colors.primaryDark).toBe('#0C4A6E');
+      // Laranja — brand primary
+      expect(colors.primary).toBe('#F97316');
+      expect(colors.primaryDark).toBe('#EA6310');
+      // Navy — brand secondary
+      expect(colors.navy).toBe('#1B2E63');
+      expect(colors.navyDark).toBe('#0F1A40');
+      // Semânticas
       expect(colors.error).toBe('#EF4444');
-      expect(colors.background).toBe('#FFFFFF');
+      // Superfícies
+      expect(colors.background).toBe('#F8F9FA');
+      expect(colors.surface).toBe('#FFFFFF');
     });
   });
 

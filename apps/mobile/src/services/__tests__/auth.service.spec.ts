@@ -78,6 +78,33 @@ describe('AuthService', () => {
     });
   });
 
+  describe('verifyGoogleIdToken', () => {
+    it('faz POST para /auth/google/verify com o idToken', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true, status: 204 });
+
+      await AuthService.verifyGoogleIdToken('my-id-token');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/google/verify'),
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+          body: JSON.stringify({ idToken: 'my-id-token' }),
+        }),
+      );
+    });
+
+    it('lança erro quando id_token é inválido', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: 'Unauthorized' }),
+      });
+
+      await expect(AuthService.verifyGoogleIdToken('bad-token')).rejects.toThrow();
+    });
+  });
+
   describe('logout', () => {
     it('faz POST para /auth/logout', async () => {
       mockFetch.mockResolvedValueOnce({ ok: true, status: 204 });

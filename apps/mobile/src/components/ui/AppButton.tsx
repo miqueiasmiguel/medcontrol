@@ -9,9 +9,10 @@ interface AppButtonProps {
   disabled?: boolean;
   loading?: boolean;
   variant?: 'filled' | 'outline';
+  leftIcon?: React.ReactNode;
 }
 
-export function AppButton({ label, onPress, disabled = false, loading = false, variant = 'filled' }: AppButtonProps) {
+export function AppButton({ label, onPress, disabled = false, loading = false, variant = 'filled', leftIcon }: AppButtonProps) {
   if (loading) {
     return (
       <View style={[styles.container, styles.filled]}>
@@ -28,6 +29,7 @@ export function AppButton({ label, onPress, disabled = false, loading = false, v
         disabled={disabled}
         accessibilityRole="button"
       >
+        {leftIcon ? <View style={styles.iconSlot}>{leftIcon}</View> : null}
         <Text style={[styles.outlineText, disabled && styles.disabledText]}>{label}</Text>
       </TouchableOpacity>
     );
@@ -60,13 +62,21 @@ const styles = StyleSheet.create({
   },
   outline: {
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: colors.borderStrong,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     height: 48,
+    gap: 8,
+  },
+  iconSlot: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   outlineText: {
-    color: colors.primary,
+    color: colors.navy,
     fontWeight: '600',
     fontSize: 14,
   },

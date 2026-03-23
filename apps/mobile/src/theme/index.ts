@@ -12,6 +12,8 @@ export const theme: MD3Theme = {
     primary: colors.primary,
     primaryContainer: colors.primaryLight,
     onPrimary: colors.white,
+    secondary: colors.navy,
+    onSecondary: colors.white,
     background: colors.background,
     surface: colors.surface,
     error: colors.error,

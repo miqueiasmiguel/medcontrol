@@ -41,6 +41,13 @@ export const AuthService = {
     });
   },
 
+  verifyGoogleIdToken: async (idToken: string): Promise<void> => {
+    await request('/auth/google/verify', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    });
+  },
+
   logout: async (): Promise<void> => {
     await request('/auth/logout', { method: 'POST' });
   },
