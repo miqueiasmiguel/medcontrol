@@ -8,16 +8,11 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 const mockReplace = jest.fn();
-let mockCode: string | undefined = 'google-auth-code-123';
+let mockCode: string | undefined = 'auth-code-from-google-123';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace }),
   useLocalSearchParams: () => ({ code: mockCode }),
-}));
-
-jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: () =>
-    'com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo:/oauth2redirect/google',
 }));
 
 jest.mock('expo-constants', () => ({
@@ -31,6 +26,10 @@ jest.mock('expo-constants', () => ({
   },
 }));
 
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthService } from '../../../src/services/auth.service';
 import GoogleOAuthCallback from '../google';
 
@@ -40,35 +39,47 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   <PaperProvider>{children}</PaperProvider>
 );
 
-beforeEach(() => {
+beforeEach(async () => {
   jest.clearAllMocks();
-  mockCode = 'google-auth-code-123';
+  mockCode = 'auth-code-from-google-123';
+  await AsyncStorage.setItem('oauth_code_verifier', 'test-code-verifier-xyz');
+  await AsyncStorage.setItem(
+    'oauth_redirect_uri',
+    'com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo:/oauth2redirect/google',
+  );
+  mockFetch.mockResolvedValue({
+    ok: true,
+    json: async () => ({ id_token: 'eyJhbGciOiJSUzI1NiJ9.exchanged-id-token' }),
+  });
 });
 
 describe('GoogleOAuthCallback', () => {
   it('exibe indicador de carregamento ao montar', () => {
-    mockAuthService.loginWithGoogle.mockImplementation(() => new Promise(() => {}));
+    mockAuthService.verifyGoogleIdToken.mockImplementation(() => new Promise(() => {}));
 
     render(<GoogleOAuthCallback />, { wrapper });
 
     expect(screen.getByTestId('google-callback-loading')).toBeTruthy();
   });
 
-  it('chama loginWithGoogle com code e redirectUri corretos', async () => {
-    mockAuthService.loginWithGoogle.mockResolvedValueOnce(undefined);
+  it('troca o code pelo id_token e chama verifyGoogleIdToken', async () => {
+    mockAuthService.verifyGoogleIdToken.mockResolvedValueOnce(undefined);
 
     render(<GoogleOAuthCallback />, { wrapper });
 
     await waitFor(() => {
-      expect(mockAuthService.loginWithGoogle).toHaveBeenCalledWith(
-        'google-auth-code-123',
-        'com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo:/oauth2redirect/google',
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://oauth2.googleapis.com/token',
+        expect.objectContaining({ method: 'POST' }),
+      );
+      expect(mockAuthService.verifyGoogleIdToken).toHaveBeenCalledWith(
+        'eyJhbGciOiJSUzI1NiJ9.exchanged-id-token',
       );
     });
   });
 
   it('navega para /(app) após login bem-sucedido', async () => {
-    mockAuthService.loginWithGoogle.mockResolvedValueOnce(undefined);
+    mockAuthService.verifyGoogleIdToken.mockResolvedValueOnce(undefined);
 
     render(<GoogleOAuthCallback />, { wrapper });
 
@@ -85,16 +96,46 @@ describe('GoogleOAuthCallback', () => {
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');
     });
-    expect(mockAuthService.loginWithGoogle).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockAuthService.verifyGoogleIdToken).not.toHaveBeenCalled();
   });
 
-  it('redireciona para login quando loginWithGoogle falha', async () => {
-    mockAuthService.loginWithGoogle.mockRejectedValueOnce(new Error('Token inválido'));
+  it('redireciona para login com erro quando troca de código falha', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, json: async () => ({}) });
 
     render(<GoogleOAuthCallback />, { wrapper });
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: '/(auth)/login',
+        params: { error: 'Falha na troca do código OAuth' },
+      });
+    });
+  });
+
+  it('redireciona para login com erro quando id_token está ausente na resposta', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({}) });
+
+    render(<GoogleOAuthCallback />, { wrapper });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: '/(auth)/login',
+        params: { error: 'id_token ausente na resposta' },
+      });
+    });
+  });
+
+  it('redireciona para login com erro quando verifyGoogleIdToken falha', async () => {
+    mockAuthService.verifyGoogleIdToken.mockRejectedValueOnce(new Error('Token inválido'));
+
+    render(<GoogleOAuthCallback />, { wrapper });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: '/(auth)/login',
+        params: { error: 'Token inválido' },
+      });
     });
   });
 });

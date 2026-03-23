@@ -37,7 +37,7 @@ apps/mobile/
 │   │   ├── typography.ts        # Tamanhos e pesos de fonte
 │   │   └── index.ts             # Exporta tudo + tema React Native Paper
 │   ├── services/
-│   │   └── auth.service.ts      # HTTP: sendMagicLink, verifyMagicLink, loginWithGoogle, logout
+│   │   └── auth.service.ts      # HTTP: sendMagicLink, verifyMagicLink, loginWithGoogle, verifyGoogleIdToken, logout
 │   ├── hooks/
 │   │   └── useAuth.ts           # Estado de sessão (AsyncStorage key: mmc_session)
 │   └── components/ui/
@@ -59,12 +59,21 @@ apps/mobile/
 4. `MagicLinkVerifyScreen` chama `AuthService.verifyMagicLink(token)`
 5. Backend valida token, seta cookies HttpOnly → app navega para `/(app)`
 
-### Fluxo Google OAuth
+### Fluxo Google OAuth (Mobile — authorization code + PKCE)
 
-1. `LoginScreen` usa `Google.useAuthRequest` (expo-auth-session) com `redirectUri: medcontrol://google-callback`
-2. `promptAsync()` abre browser → usuário consente
-3. `response.type === 'success'` → `AuthService.loginWithGoogle(code, redirectUri)`
-4. Backend troca code por tokens, retorna `AuthTokenDto` no body → app navega para `/(app)`
+1. `LoginScreen` usa `Google.useAuthRequest` com `androidClientId`, `responseType: ResponseType.Code`, `usePKCE: true`
+2. Antes de chamar `promptAsync()`, salva `request.codeVerifier` e `redirectUri` no AsyncStorage
+3. `promptAsync()` abre browser → usuário consente
+4. Google retorna `code` como query param no redirect URI nativo (`<reverse-client-id>:/oauth2redirect/google`)
+5. Expo Router roteia para `app/oauth2redirect/google.tsx`, que lê `code` via `useLocalSearchParams`
+6. `google.tsx` lê `codeVerifier` e `redirectUri` do AsyncStorage e troca o `code` por tokens em `https://oauth2.googleapis.com/token` (sem `client_secret` — Android clients não precisam)
+7. `AuthService.verifyGoogleIdToken(id_token)` → `POST /auth/google/verify` no backend
+8. Backend verifica via `GET https://oauth2.googleapis.com/tokeninfo?id_token=...` (sem `client_secret`)
+9. Backend cria/atualiza usuário, seta cookies HttpOnly → app navega para `/(app)`
+
+> **Por que `ResponseType.Code` e não `IdToken`**: Android OAuth clients do Google Cloud Console **não suportam `response_type=id_token`** (fluxo implícito). Apenas `response_type=code` é aceito. A troca do code é feita no próprio app (sem secret) porque Android clients são clientes públicos.
+
+> **Separação web vs mobile**: o web Angular usa `response_type=code` com `webClientId` + exchange server-side (`POST /auth/google/callback`). O mobile usa `response_type=code` com PKCE + troca client-side + verificação do `id_token` (`POST /auth/google/verify`). Os dois fluxos coexistem no backend.
 
 ### Sessão
 
@@ -79,7 +88,7 @@ Scheme configurado: `medcontrol://`
 | URL | Destino |
 |---|---|
 | `medcontrol://verify?token=xxx` | `app/(auth)/verify.tsx` |
-| `medcontrol://google-callback` | Capturado pelo expo-auth-session internamente |
+| `<reverse-client-id>:/oauth2redirect/google?id_token=...` | `app/oauth2redirect/google.tsx` |
 
 ## Testes
 
@@ -119,12 +128,13 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ token: 'test-token' }),
 }));
 
-// Mock de expo-auth-session
+// Mock de expo-auth-session (incluir ResponseType para LoginScreen)
 jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: () => 'medcontrol://google-callback',
+  makeRedirectUri: () => 'com.googleusercontent.apps.XXX:/oauth2redirect/google',
+  ResponseType: { IdToken: 'id_token', Code: 'code' },
 }));
 jest.mock('expo-auth-session/providers/google', () => ({
-  useAuthRequest: () => [null, null, jest.fn()],
+  useAuthRequest: () => [{ codeVerifier: 'test-verifier' }, null, jest.fn()],
 }));
 ```
 
@@ -150,6 +160,23 @@ pnpm nx run mobile:android
 | `googleClientId` | Client ID do Google OAuth |
 
 Configurar em `app.json > expo > extra` ou via `app.config.ts` para produção.
+
+## Armadilhas Conhecidas
+
+### Google OAuth — handler duplicado causa race condition no Android físico
+- **Problema**: No Android com dev build, quando o callback OAuth chega, **dois handlers disparam simultaneamente**: o `useEffect` que observa `googleResponse` em `LoginScreen` (via expo-auth-session) E o `google.tsx` (via Expo Router). O primeiro consome o código (uso único) com sucesso e navega para `/(app)`; o segundo falha com código já consumido e redireciona silenciosamente para `/(auth)/login`, sobrescrevendo a navegação.
+- **Correto**: `LoginScreen` **não deve chamar `loginWithGoogle` diretamente**. O único handler é `app/oauth2redirect/google.tsx`, roteado pelo Expo Router. `LoginScreen` usa `useAuthRequest` apenas para chamar `promptAsync()`.
+
+### Google OAuth — erros de autenticação devem ser visíveis ao usuário
+- **Problema**: O catch em `google.tsx` redirecionava para login sem passar o erro, deixando o usuário sem feedback.
+- **Correto**: Usar `router.replace({ pathname: '/(auth)/login', params: { error: msg } })` e exibir `oauthError` via `useLocalSearchParams` em `LoginScreen`.
+
+### Google OAuth — mobile usa authorization code + PKCE, não id_token implícito
+- **Problema**: Android OAuth clients do Google não suportam `response_type=id_token` (fluxo implícito). Tentativas de usar `ResponseType.IdToken` com `androidClientId` resultam em `400 unsupported_response_type` do Google.
+- **Correto**: Mobile usa `responseType: ResponseType.Code` com `usePKCE: true` e `androidClientId`. Antes de `promptAsync()`, salvar `request.codeVerifier` e `redirectUri` no AsyncStorage. Em `google.tsx`, trocar o `code` por tokens em `https://oauth2.googleapis.com/token` (sem `client_secret` — Android clients são públicos) e extrair o `id_token` da resposta para enviar ao backend via `POST /auth/google/verify`.
+
+### IP do backend no app.json precisa refletir o IP real da máquina
+- O campo `extra.apiUrl` em `apps/mobile/app.json` deve usar o IP local da máquina de desenvolvimento (ex: `http://192.168.0.xxx:5113`). `localhost` não funciona em dispositivos físicos. Atualizar sempre que o IP mudar (DHCP).
 
 ## O que ainda não foi implementado
 

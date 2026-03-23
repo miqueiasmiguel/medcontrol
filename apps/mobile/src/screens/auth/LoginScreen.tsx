@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,15 +9,15 @@ import {
 import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Google from 'expo-auth-session/providers/google';
-import { makeRedirectUri } from 'expo-auth-session';
+import { makeRedirectUri, ResponseType } from 'expo-auth-session';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useForm, Controller } from 'react-hook-form';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppTextInput } from '../../components/ui/AppTextInput';
 import { AuthService } from '../../services/auth.service';
-import { useAuth } from '../../hooks/useAuth';
 import { colors, spacing, typography } from '../../theme';
 
 interface LoginForm {
@@ -26,7 +26,7 @@ interface LoginForm {
 
 export function LoginScreen() {
   const router = useRouter();
-  const { setSession } = useAuth();
+  const { error: oauthError } = useLocalSearchParams<{ error?: string }>();
   const [apiError, setApiError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,29 +36,27 @@ export function LoginScreen() {
     formState: { errors },
   } = useForm<LoginForm>({ defaultValues: { email: '' } });
 
-  const androidClientId = (Constants.expoConfig?.extra?.googleAndroidClientId as string | undefined) ?? '';
-  const reverseClientId = androidClientId.split('.').reverse().join('.');
+  const androidClientId =
+    (Constants.expoConfig?.extra?.googleAndroidClientId as string | undefined) ?? '';
   const redirectUri = makeRedirectUri({
-    native: `${reverseClientId}:/oauth2redirect/google`,
+    native: `${androidClientId.split('.').reverse().join('.')}:/oauth2redirect/google`,
   });
 
-  const [, googleResponse, promptAsync] = Google.useAuthRequest({
+  const [request, , promptAsync] = Google.useAuthRequest({
     androidClientId,
-    webClientId: (Constants.expoConfig?.extra?.googleWebClientId as string | undefined) ?? '',
     redirectUri,
+    responseType: ResponseType.Code,
+    usePKCE: true,
+    scopes: ['openid', 'profile', 'email'],
   });
 
-  useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      const { code } = googleResponse.params;
-      AuthService.loginWithGoogle(code, redirectUri)
-        .then(async () => {
-          await setSession(true);
-          router.replace('/(app)');
-        })
-        .catch((err: Error) => setApiError(err.message));
+  const handleGooglePress = async () => {
+    if (request?.codeVerifier) {
+      await AsyncStorage.setItem('oauth_code_verifier', request.codeVerifier);
+      await AsyncStorage.setItem('oauth_redirect_uri', redirectUri);
     }
-  }, [googleResponse, redirectUri, router]);
+    promptAsync();
+  };
 
   const onSubmitEmail = handleSubmit(async ({ email }) => {
     setApiError(null);
@@ -123,7 +121,9 @@ export function LoginScreen() {
                 )}
               />
 
-              {apiError ? <Text style={styles.apiError}>{apiError}</Text> : null}
+              {(apiError ?? oauthError) ? (
+                <Text style={styles.apiError}>{apiError ?? oauthError}</Text>
+              ) : null}
 
               <AppButton
                 label="Continuar com Email"
@@ -139,7 +139,7 @@ export function LoginScreen() {
 
               <AppButton
                 label="Continuar com Google"
-                onPress={() => promptAsync()}
+                onPress={handleGooglePress}
                 variant="outline"
                 leftIcon={<AntDesign name="google" size={18} color={colors.navy} />}
               />

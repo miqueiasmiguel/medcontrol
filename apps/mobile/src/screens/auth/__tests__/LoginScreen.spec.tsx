@@ -1,6 +1,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { PaperProvider } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LoginScreen } from '../LoginScreen';
 import { AuthService } from '../../../services/auth.service';
 
@@ -8,24 +9,26 @@ jest.mock('../../../services/auth.service');
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
+let mockSearchParams: Record<string, string> = {};
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useLocalSearchParams: () => mockSearchParams,
 }));
 
 jest.mock('expo-auth-session', () => ({
-  makeRedirectUri: () =>
-    'com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo:/oauth2redirect/google',
+  makeRedirectUri: () => 'com.googleusercontent.apps.test:/oauth2redirect/google',
+  ResponseType: { IdToken: 'id_token', Code: 'code' },
 }));
 
-const mockSetSession = jest.fn().mockResolvedValue(undefined);
-jest.mock('../../../hooks/useAuth', () => ({
-  useAuth: () => ({ setSession: mockSetSession }),
-}));
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
 
 let mockGoogleResponse: { type: string; params?: { code: string } } | null = null;
 const mockPromptAsync = jest.fn();
+const mockRequest = { codeVerifier: 'test-code-verifier-abc123' };
 jest.mock('expo-auth-session/providers/google', () => ({
-  useAuthRequest: () => [null, mockGoogleResponse, mockPromptAsync],
+  useAuthRequest: () => [mockRequest, mockGoogleResponse, mockPromptAsync],
 }));
 
 jest.mock('expo-linking', () => ({
@@ -46,6 +49,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 beforeEach(() => {
   jest.clearAllMocks();
   mockGoogleResponse = null;
+  mockSearchParams = {};
 });
 
 describe('LoginScreen', () => {
@@ -125,51 +129,46 @@ describe('LoginScreen', () => {
   });
 
   describe('Google OAuth', () => {
-    it('chama loginWithGoogle com code e redirectUri proxy ao receber resposta success', async () => {
-      mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
-      mockAuthService.loginWithGoogle.mockResolvedValue(undefined);
-
+    it('chama promptAsync ao pressionar botão do google', async () => {
       render(<LoginScreen />, { wrapper });
 
-      await waitFor(() => {
-        expect(mockAuthService.loginWithGoogle).toHaveBeenCalledWith(
-          'auth-code-123',
-          'com.googleusercontent.apps.545148539649-m12d16iqkq3vvjorm7aqjftkohlmuibo:/oauth2redirect/google',
-        );
+      await act(async () => {
+        fireEvent.press(screen.getByText('Continuar com Google'));
       });
+
+      expect(mockPromptAsync).toHaveBeenCalled();
     });
 
-    it('chama setSession e navega para /(app) após login google bem-sucedido', async () => {
-      mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
-      mockAuthService.loginWithGoogle.mockResolvedValue(undefined);
-
+    it('salva codeVerifier e redirectUri no AsyncStorage antes de chamar promptAsync', async () => {
       render(<LoginScreen />, { wrapper });
 
-      await waitFor(() => {
-        expect(mockSetSession).toHaveBeenCalledWith(true);
-        expect(mockReplace).toHaveBeenCalledWith('/(app)');
+      await act(async () => {
+        fireEvent.press(screen.getByText('Continuar com Google'));
       });
+
+      expect(await AsyncStorage.getItem('oauth_code_verifier')).toBe('test-code-verifier-abc123');
+      expect(await AsyncStorage.getItem('oauth_redirect_uri')).toBeTruthy();
     });
 
-    it('exibe erro de api quando loginWithGoogle falha', async () => {
+    it('não chama verifyGoogleIdToken diretamente — delega para google.tsx via roteamento do expo-router', async () => {
+      // Garante que o handler de googleResponse foi removido do LoginScreen.
+      // Antes: LoginScreen chamava loginWithGoogle diretamente, causando race condition
+      // com google.tsx (segundo handler usava código já consumido e redirecionava para login).
       mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
-      mockAuthService.loginWithGoogle.mockRejectedValueOnce(new Error('Conta não encontrada'));
 
       render(<LoginScreen />, { wrapper });
 
-      await waitFor(() => {
-        expect(screen.getByText('Conta não encontrada')).toBeTruthy();
-      });
+      await act(async () => {});
+
+      expect(mockAuthService.verifyGoogleIdToken).not.toHaveBeenCalled();
     });
 
-    it('não chama loginWithGoogle quando resposta google não é success', async () => {
-      mockGoogleResponse = { type: 'cancel' };
+    it('exibe erro de autenticação google vindo da url quando google.tsx redireciona com erro', async () => {
+      mockSearchParams = { error: 'Google authentication failed.' };
 
       render(<LoginScreen />, { wrapper });
 
-      await waitFor(() => {
-        expect(mockAuthService.loginWithGoogle).not.toHaveBeenCalled();
-      });
+      expect(screen.getByText('Google authentication failed.')).toBeTruthy();
     });
   });
 });
