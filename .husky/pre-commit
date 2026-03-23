@@ -1,3 +1,20 @@
 #!/bin/sh
-# Run lint and type-check only on affected projects
-pnpm exec nx affected --target=lint --base=HEAD~1 --head=HEAD 2>/dev/null || true
+set -e
+
+# 1. Lockfile em sincronia com package.json
+#    Roda apenas quando algum package.json está staged — evita custo em outros commits
+if git diff --cached --name-only | grep -q "package\.json$"; then
+  if ! pnpm install --frozen-lockfile > /dev/null 2>&1; then
+    echo ""
+    echo "❌  pnpm-lock.yaml está desatualizado em relação ao package.json."
+    echo "    Execute 'pnpm install' e inclua o lockfile atualizado no commit."
+    echo ""
+    exit 1
+  fi
+fi
+
+# 2. Lint nos projetos afetados (sem || true — erros bloqueiam o commit)
+pnpm exec nx affected --target=lint --base=HEAD~1 --head=HEAD
+
+# 3. Type-check nos projetos afetados
+pnpm exec nx affected --target=type-check --base=HEAD~1 --head=HEAD

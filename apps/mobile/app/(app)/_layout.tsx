@@ -13,6 +13,6 @@ export default function AppLayout() {
   }, [isAuthenticated, isLoading, router]);
 
   return (
-    <Stack screenOptions={{ headerShown: true }} />
+    <Stack screenOptions={{ headerShown: false }} />
   );
 }

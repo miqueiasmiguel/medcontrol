@@ -5,6 +5,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@medcontrol/design-system/native": [
+        "../../packages/design-system/src/native/theme.ts"
       ]
     }
   },
