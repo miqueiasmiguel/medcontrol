@@ -1,0 +1,160 @@
+import React from 'react';
+import { Alert } from 'react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
+import HomeScreen from '../index';
+import { useAuth } from '../../../src/hooks/useAuth';
+
+// ── Mocks ────────────────────────────────────────────────────────────────────
+
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);
+
+jest.mock('../../../src/hooks/useAuth');
+
+jest.mock('@medcontrol/design-system/native', () => ({
+  useTheme: () => ({
+    colors: {
+      primary: '#0EA5E9',
+      primaryLight: '#E0F2FE',
+      secondary: '#0F172A',
+      secondaryText: '#94A3B8',
+      success: { base: '#22C55E' },
+      warning: { base: '#F59E0B' },
+      error: { base: '#EF4444' },
+      border: '#E2E8F0',
+      borderStrong: '#94A3B8',
+      divider: '#F1F5F9',
+      text: {
+        primary: '#0F172A',
+        secondary: '#64748B',
+        tertiary: '#94A3B8',
+        onDark: '#FFFFFF',
+        onDarkSubtle: 'rgba(255,255,255,0.7)',
+      },
+      surface: {
+        background: '#F8FAFC',
+        card: '#FFFFFF',
+        cardPressed: '#F1F5F9',
+        overlay: 'rgba(0,0,0,0.5)',
+      },
+      paymentStatus: {
+        pending: { bg: '#FEF3C7', border: '#FCD34D', dot: '#F59E0B', text: '#92400E' },
+        paid: { bg: '#DCFCE7', border: '#86EFAC', dot: '#22C55E', text: '#166534' },
+        refused: { bg: '#FEE2E2', border: '#FCA5A5', dot: '#EF4444', text: '#991B1B' },
+      },
+    },
+    spacing: new Proxy({}, { get: (_t, p) => Number(p) * 4 }),
+    borderRadius: new Proxy({}, { get: () => 8 }),
+    typography: {
+      fontSize: { xs: 12, sm: 14, md: 16, lg: 18, xl: 20 },
+      fontWeight: { regular: '400', medium: '500', semibold: '600', bold: '700' },
+    },
+    shadows: { sm: {} },
+    components: { avatarMd: 40, inputHeight: 48 },
+  }),
+}));
+
+jest.mock('react-native-safe-area-context', () => ({
+  useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+
+jest.mock('react-native-paper', () => ({
+  Text: ({ children }: { children: React.ReactNode }) => {
+    const { Text: RNText } = jest.requireActual('react-native');
+    return <RNText>{children}</RNText>;
+  },
+}));
+
+jest.mock('@expo/vector-icons', () => ({
+  Ionicons: () => null,
+}));
+
+jest.mock('expo-constants', () => ({
+  default: { expoConfig: { extra: { apiUrl: 'http://localhost:5000' } } },
+}));
+
+const mockReplace = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ replace: mockReplace }),
+}));
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const mockLogout = jest.fn();
+
+function setupAuth(overrides?: Partial<ReturnType<typeof useAuth>>) {
+  jest.mocked(useAuth).mockReturnValue({
+    isAuthenticated: true,
+    isLoading: false,
+    logout: mockLogout,
+    setSession: jest.fn(),
+    ...overrides,
+  });
+}
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  setupAuth();
+  jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+  mockReplace.mockReset();
+});
+
+// ── Testes ────────────────────────────────────────────────────────────────────
+
+describe('HomeScreen — logout', () => {
+  it('renderiza o botão de logout', () => {
+    const { getByTestId } = render(<HomeScreen />);
+    expect(getByTestId('logout-button')).toBeTruthy();
+  });
+
+  it('exibe Alert de confirmação ao pressionar o botão de logout', () => {
+    const { getByTestId } = render(<HomeScreen />);
+    fireEvent.press(getByTestId('logout-button'));
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Sair',
+      expect.any(String),
+      expect.arrayContaining([
+        expect.objectContaining({ text: expect.stringMatching(/cancelar/i) }),
+        expect.objectContaining({ text: expect.stringMatching(/sair/i) }),
+      ]),
+    );
+  });
+
+  it('chama logout() ao confirmar o Alert', async () => {
+    mockLogout.mockResolvedValue(undefined);
+    const { getByTestId } = render(<HomeScreen />);
+    fireEvent.press(getByTestId('logout-button'));
+
+    const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as Array<{
+      text: string;
+      onPress?: () => void;
+    }>;
+    const confirmBtn = buttons.find((b) => /sair/i.test(b.text));
+
+    await act(async () => {
+      confirmBtn?.onPress?.();
+    });
+
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('navega para /(auth)/login após confirmar o logout', async () => {
+    mockLogout.mockResolvedValue(undefined);
+    const { getByTestId } = render(<HomeScreen />);
+    fireEvent.press(getByTestId('logout-button'));
+
+    const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as Array<{
+      text: string;
+      onPress?: () => void;
+    }>;
+    const confirmBtn = buttons.find((b) => /sair/i.test(b.text));
+
+    await act(async () => {
+      confirmBtn?.onPress?.();
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');
+  });
+});
