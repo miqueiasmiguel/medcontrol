@@ -10,8 +10,7 @@ import { Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import * as Google from 'expo-auth-session/providers/google';
-import { makeRedirectUri, ResponseType } from 'expo-auth-session';
+import { useAuthRequest, makeRedirectUri, ResponseType } from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useForm, Controller } from 'react-hook-form';
@@ -19,6 +18,11 @@ import { AppButton } from '../../components/ui/AppButton';
 import { AppTextInput } from '../../components/ui/AppTextInput';
 import { AuthService } from '../../services/auth.service';
 import { colors, spacing, typography } from '../../theme';
+
+const GOOGLE_PKCE_DISCOVERY = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+};
 
 interface LoginForm {
   email: string;
@@ -42,13 +46,16 @@ export function LoginScreen() {
     native: `${androidClientId.split('.').reverse().join('.')}:/oauth2redirect/google`,
   });
 
-  const [request, , promptAsync] = Google.useAuthRequest({
-    androidClientId,
-    redirectUri,
-    responseType: ResponseType.Code,
-    usePKCE: true,
-    scopes: ['openid', 'profile', 'email'],
-  });
+  const [request, , promptAsync] = useAuthRequest(
+    {
+      clientId: androidClientId,
+      redirectUri,
+      responseType: ResponseType.Code,
+      usePKCE: true,
+      scopes: ['openid', 'profile', 'email'],
+    },
+    GOOGLE_PKCE_DISCOVERY,
+  );
 
   const handleGooglePress = async () => {
     if (request?.codeVerifier) {

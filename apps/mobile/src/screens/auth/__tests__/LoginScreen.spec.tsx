@@ -15,21 +15,17 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: () => mockSearchParams,
 }));
 
+const mockPromptAsync = jest.fn();
+const mockRequest = { codeVerifier: 'test-code-verifier-abc123' };
 jest.mock('expo-auth-session', () => ({
   makeRedirectUri: () => 'com.googleusercontent.apps.test:/oauth2redirect/google',
   ResponseType: { IdToken: 'id_token', Code: 'code' },
+  useAuthRequest: () => [mockRequest, null, mockPromptAsync],
 }));
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
-
-let mockGoogleResponse: { type: string; params?: { code: string } } | null = null;
-const mockPromptAsync = jest.fn();
-const mockRequest = { codeVerifier: 'test-code-verifier-abc123' };
-jest.mock('expo-auth-session/providers/google', () => ({
-  useAuthRequest: () => [mockRequest, mockGoogleResponse, mockPromptAsync],
-}));
 
 jest.mock('expo-linking', () => ({
   createURL: jest.fn(() => 'medcontrol://'),
@@ -48,7 +44,6 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockGoogleResponse = null;
   mockSearchParams = {};
 });
 
@@ -151,11 +146,10 @@ describe('LoginScreen', () => {
     });
 
     it('não chama verifyGoogleIdToken diretamente — delega para google.tsx via roteamento do expo-router', async () => {
-      // Garante que o handler de googleResponse foi removido do LoginScreen.
-      // Antes: LoginScreen chamava loginWithGoogle diretamente, causando race condition
-      // com google.tsx (segundo handler usava código já consumido e redirecionava para login).
-      mockGoogleResponse = { type: 'success', params: { code: 'auth-code-123' } };
-
+      // LoginScreen não deve processar a resposta OAuth — apenas disparar promptAsync.
+      // O único handler do code exchange é app/oauth2redirect/google.tsx.
+      // Usar useAuthRequest (base) em vez de Google.useAuthRequest (providers/google)
+      // elimina o auto-exchange interno que disputava o código de uso único com google.tsx.
       render(<LoginScreen />, { wrapper });
 
       await act(() => Promise.resolve());
