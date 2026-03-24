@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Platform,
@@ -14,17 +15,17 @@ import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@medcontrol/design-system/native';
+import { usePayments } from '../../src/hooks/usePayments';
 import {
-  MOCK_HEALTH_PLANS,
-  MOCK_PAYMENTS,
-  type MockPayment,
-  type PaymentStatus,
-} from '../../src/mocks/payments';
+  HealthPlanService,
+  type HealthPlanDto,
+} from '../../src/services/health-plan.service';
+import { type PaymentDto, type PaymentStatus } from '../../src/services/payment.service';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-type StatusFilter = 'All' | PaymentStatus;
+type DisplayStatusFilter = 'All' | 'Pending' | 'Paid' | 'Refused';
 type PeriodFilter = 'All' | 'Today' | 'Week' | 'Month';
 
 // ---------------------------------------------------------------------------
@@ -52,10 +53,25 @@ function isWithinDays(iso: string, days: number): boolean {
   return date >= cutoff;
 }
 
+function matchesStatusFilter(paymentStatus: PaymentStatus, filter: DisplayStatusFilter): boolean {
+  if (filter === 'All') {
+    return true;
+  }
+  if (filter === 'Pending') {
+    return paymentStatus === 'Pending' || paymentStatus === 'PartiallyPending';
+  }
+  if (filter === 'Refused') {
+    return paymentStatus === 'Refused' || paymentStatus === 'PartiallyRefused';
+  }
+  return paymentStatus === filter;
+}
+
 const STATUS_LABELS: Record<PaymentStatus, string> = {
   Pending: 'Pendente',
   Paid: 'Pago',
   Refused: 'Recusado',
+  PartiallyPending: 'Parcial',
+  PartiallyRefused: 'Glosa parcial',
 };
 
 const PERIOD_LABELS: Record<PeriodFilter, string> = {
@@ -71,9 +87,17 @@ const PERIOD_LABELS: Record<PeriodFilter, string> = {
 
 function StatusBadge({ status }: { status: PaymentStatus }) {
   const t = useTheme();
-  const s = t.colors.paymentStatus[
-    status === 'Pending' ? 'pending' : status === 'Paid' ? 'paid' : 'refused'
-  ];
+  const baseStatus =
+    status === 'PartiallyPending'
+      ? 'pending'
+      : status === 'PartiallyRefused'
+        ? 'refused'
+        : status === 'Paid'
+          ? 'paid'
+          : status === 'Refused'
+            ? 'refused'
+            : 'pending';
+  const s = t.colors.paymentStatus[baseStatus];
   return (
     <View
       style={{
@@ -177,12 +201,18 @@ function SummaryCard({
 
 function PaymentCard({
   payment,
+  healthPlanName,
   onPress,
 }: {
-  payment: MockPayment;
+  payment: PaymentDto;
+  healthPlanName: string;
   onPress: () => void;
 }) {
   const t = useTheme();
+  const itemCount = payment.items.length;
+  const procedureSummary =
+    itemCount === 1 ? '1 procedimento' : `${itemCount} procedimentos`;
+
   return (
     <Pressable
       onPress={onPress}
@@ -227,7 +257,7 @@ function PaymentCard({
         <StatusBadge status={payment.status} />
       </View>
 
-      {/* Procedure */}
+      {/* Procedure summary */}
       <Text
         style={{
           fontSize: t.typography.fontSize.sm,
@@ -236,7 +266,7 @@ function PaymentCard({
         }}
         numberOfLines={1}
       >
-        {payment.procedure}
+        {procedureSummary}
       </Text>
 
       {/* Divider */}
@@ -276,7 +306,7 @@ function PaymentCard({
             }}
             numberOfLines={1}
           >
-            {payment.healthPlan}
+            {healthPlanName}
           </Text>
         </View>
 
@@ -304,7 +334,7 @@ function PaymentCard({
               color: t.colors.text.primary,
             }}
           >
-            {formatCurrency(payment.value)}
+            {formatCurrency(payment.totalValue)}
           </Text>
         </View>
       </View>
@@ -593,7 +623,7 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
 // ---------------------------------------------------------------------------
 // Main screen
 // ---------------------------------------------------------------------------
-const STATUS_FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
+const STATUS_FILTER_OPTIONS: { value: DisplayStatusFilter; label: string }[] = [
   { value: 'All', label: 'Todos' },
   { value: 'Pending', label: 'Pendente' },
   { value: 'Paid', label: 'Pago' },
@@ -607,16 +637,33 @@ const PERIOD_OPTIONS: { value: PeriodFilter; label: string }[] = [
   { value: 'Month', label: 'Últimos 30 dias' },
 ];
 
-const HEALTH_PLAN_OPTIONS = [
-  { value: 'all', label: 'Todos os convênios' },
-  ...MOCK_HEALTH_PLANS.map((hp) => ({ value: hp.id, label: hp.name })),
-];
-
 export default function HomeScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { logout } = useAuth();
+
+  const { payments, loading, error, refetch } = usePayments();
+  const [healthPlans, setHealthPlans] = useState<HealthPlanDto[]>([]);
+
+  useEffect(() => {
+    HealthPlanService.listHealthPlans()
+      .then(setHealthPlans)
+      .catch(() => { /* health plans are optional for display */ });
+  }, []);
+
+  const healthPlanMap = useMemo(
+    () => new Map(healthPlans.map((hp) => [hp.id, hp.name])),
+    [healthPlans],
+  );
+
+  const healthPlanOptions = useMemo(
+    () => [
+      { value: 'all', label: 'Todos os convênios' },
+      ...healthPlans.map((hp) => ({ value: hp.id, label: hp.name })),
+    ],
+    [healthPlans],
+  );
 
   function handleLogoutPress() {
     Alert.alert('Sair', 'Deseja realmente sair da sua conta?', [
@@ -633,7 +680,7 @@ export default function HomeScreen() {
   }
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
+  const [statusFilter, setStatusFilter] = useState<DisplayStatusFilter>('All');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('All');
   const [healthPlanFilter, setHealthPlanFilter] = useState('all');
   const [showPeriodModal, setShowPeriodModal] = useState(false);
@@ -644,38 +691,49 @@ export default function HomeScreen() {
 
   // Apply filters
   const filteredPayments = useMemo(() => {
-    return MOCK_PAYMENTS.filter((p) => {
+    return payments.filter((p) => {
       if (
         searchQuery &&
         !p.beneficiaryName.toLowerCase().includes(searchQuery.toLowerCase())
       ) {
         return false;
       }
-      if (statusFilter !== 'All' && p.status !== statusFilter) return false;
-      if (healthPlanFilter !== 'all' && p.healthPlanId !== healthPlanFilter)
+      if (!matchesStatusFilter(p.status, statusFilter)) {
         return false;
-      if (periodFilter === 'Today' && p.executionDate !== today) return false;
-      if (periodFilter === 'Week' && !isWithinDays(p.executionDate, 7))
+      }
+      if (healthPlanFilter !== 'all' && p.healthPlanId !== healthPlanFilter) {
         return false;
-      if (periodFilter === 'Month' && !isWithinDays(p.executionDate, 30))
+      }
+      if (periodFilter === 'Today' && p.executionDate !== today) {
         return false;
+      }
+      if (periodFilter === 'Week' && !isWithinDays(p.executionDate, 7)) {
+        return false;
+      }
+      if (periodFilter === 'Month' && !isWithinDays(p.executionDate, 30)) {
+        return false;
+      }
       return true;
     });
-  }, [searchQuery, statusFilter, healthPlanFilter, periodFilter, today]);
+  }, [payments, searchQuery, statusFilter, healthPlanFilter, periodFilter, today]);
 
   // Summary totals (from filtered payments)
   const summary = useMemo(() => {
-    const total = filteredPayments.reduce((acc, p) => acc + p.value, 0);
-    const pending = filteredPayments.filter((p) => p.status === 'Pending');
+    const total = filteredPayments.reduce((acc, p) => acc + p.totalValue, 0);
+    const pending = filteredPayments.filter(
+      (p) => p.status === 'Pending' || p.status === 'PartiallyPending',
+    );
     const paid = filteredPayments.filter((p) => p.status === 'Paid');
-    const refused = filteredPayments.filter((p) => p.status === 'Refused');
+    const refused = filteredPayments.filter(
+      (p) => p.status === 'Refused' || p.status === 'PartiallyRefused',
+    );
     return {
       total,
       pendingCount: pending.length,
-      pendingValue: pending.reduce((acc, p) => acc + p.value, 0),
-      paidValue: paid.reduce((acc, p) => acc + p.value, 0),
+      pendingValue: pending.reduce((acc, p) => acc + p.totalValue, 0),
+      paidValue: paid.reduce((acc, p) => acc + p.totalValue, 0),
       refusedCount: refused.length,
-      refusedValue: refused.reduce((acc, p) => acc + p.value, 0),
+      refusedValue: refused.reduce((acc, p) => acc + p.totalValue, 0),
     };
   }, [filteredPayments]);
 
@@ -688,8 +746,7 @@ export default function HomeScreen() {
   const selectedHealthPlanLabel =
     healthPlanFilter === 'all'
       ? 'Convênio'
-      : MOCK_HEALTH_PLANS.find((hp) => hp.id === healthPlanFilter)?.name ??
-        'Convênio';
+      : (healthPlanMap.get(healthPlanFilter) ?? 'Convênio');
 
   const s = makeStyles(t);
 
@@ -702,7 +759,7 @@ export default function HomeScreen() {
             <Ionicons name="person" size={20} color={t.colors.secondaryText} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.heroGreeting}>Olá, Dr. Carlos</Text>
+            <Text style={s.heroGreeting}>Olá, doutor</Text>
             <Text style={s.heroDate}>{todayFormatted}</Text>
           </View>
           <Pressable style={s.notificationBtn}>
@@ -849,24 +906,62 @@ export default function HomeScreen() {
       {/* ── List header ──────────────────────────────────────── */}
       <View style={s.listHeader}>
         <Text style={s.listTitle}>Pagamentos</Text>
-        <View style={s.countBadge}>
-          <Text style={s.countText}>{filteredPayments.length}</Text>
-        </View>
+        {loading ? (
+          <ActivityIndicator size="small" color={t.colors.primary} />
+        ) : (
+          <View style={s.countBadge}>
+            <Text style={s.countText}>{filteredPayments.length}</Text>
+          </View>
+        )}
       </View>
+
+      {error != null && (
+        <Pressable
+          onPress={() => void refetch()}
+          style={{
+            marginHorizontal: t.spacing[4],
+            marginBottom: t.spacing[3],
+            padding: t.spacing[3],
+            backgroundColor: `${t.colors.error.base}1A`,
+            borderRadius: t.borderRadius.lg,
+            borderWidth: 1,
+            borderColor: t.colors.error.base,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: t.spacing[2],
+          }}
+        >
+          <Ionicons name="alert-circle-outline" size={16} color={t.colors.error.base} />
+          <Text
+            style={{
+              flex: 1,
+              fontSize: t.typography.fontSize.sm,
+              color: t.colors.error.base,
+            }}
+          >
+            {error} — Toque para tentar novamente
+          </Text>
+        </Pressable>
+      )}
     </>
   );
 
   return (
-    // Root com fundo navy — cobre a status bar quando headerShown: false
     <View style={[s.root, { backgroundColor: t.colors.secondary }]}>
       <FlatList
         data={filteredPayments}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <PaymentCard payment={item} onPress={noop} />
+          <PaymentCard
+            payment={item}
+            healthPlanName={healthPlanMap.get(item.healthPlanId) ?? '—'}
+            onPress={noop}
+          />
         )}
         ListHeaderComponent={ListHeader}
-        ListEmptyComponent={<EmptyState hasFilters={hasActiveFilters} />}
+        ListEmptyComponent={
+          loading ? null : <EmptyState hasFilters={hasActiveFilters} />
+        }
         contentContainerStyle={
           filteredPayments.length === 0
             ? { flexGrow: 1, paddingBottom: insets.bottom + 24 }
@@ -890,7 +985,7 @@ export default function HomeScreen() {
       <PickerModal
         visible={showHealthPlanModal}
         title="Convênio"
-        options={HEALTH_PLAN_OPTIONS}
+        options={healthPlanOptions}
         selected={healthPlanFilter}
         onSelect={setHealthPlanFilter}
         onClose={() => setShowHealthPlanModal(false)}

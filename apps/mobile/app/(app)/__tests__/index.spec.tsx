@@ -12,6 +12,21 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 
 jest.mock('../../../src/hooks/useAuth');
 
+jest.mock('../../../src/hooks/usePayments', () => ({
+  usePayments: () => ({
+    payments: [],
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
+  }),
+}));
+
+jest.mock('../../../src/services/health-plan.service', () => ({
+  HealthPlanService: {
+    listHealthPlans: jest.fn().mockResolvedValue([]),
+  },
+}));
+
 jest.mock('@medcontrol/design-system/native', () => ({
   useTheme: () => ({
     colors: {

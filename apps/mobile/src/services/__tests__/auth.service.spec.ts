@@ -103,6 +103,21 @@ describe('AuthService', () => {
 
       await expect(AuthService.verifyGoogleIdToken('bad-token')).rejects.toThrow();
     });
+
+    it('usa body.detail quando body.message está ausente (formato ProblemDetails do backend)', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({
+          detail: 'Your account is not associated with any tenant. Contact your administrator.',
+          status: 401,
+        }),
+      });
+
+      await expect(AuthService.verifyGoogleIdToken('any-token')).rejects.toThrow(
+        'Your account is not associated with any tenant. Contact your administrator.',
+      );
+    });
   });
 
   describe('logout', () => {

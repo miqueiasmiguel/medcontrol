@@ -6,12 +6,11 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { Text } from 'react-native-paper';
+import { Button, Dialog, Portal, Text } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AntDesign } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import * as Google from 'expo-auth-session/providers/google';
-import { makeRedirectUri, ResponseType } from 'expo-auth-session';
+import { useAuthRequest, makeRedirectUri, ResponseType } from 'expo-auth-session';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useForm, Controller } from 'react-hook-form';
@@ -20,14 +19,23 @@ import { AppTextInput } from '../../components/ui/AppTextInput';
 import { AuthService } from '../../services/auth.service';
 import { colors, spacing, typography } from '../../theme';
 
+const GOOGLE_PKCE_DISCOVERY = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+};
+
 interface LoginForm {
   email: string;
 }
 
 export function LoginScreen() {
   const router = useRouter();
-  const { error: oauthError } = useLocalSearchParams<{ error?: string }>();
+  const { error: oauthError, noTenantError } = useLocalSearchParams<{
+    error?: string;
+    noTenantError?: string;
+  }>();
   const [apiError, setApiError] = useState<string | null>(null);
+  const [noTenantModalVisible, setNoTenantModalVisible] = useState(noTenantError === 'true');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -42,13 +50,16 @@ export function LoginScreen() {
     native: `${androidClientId.split('.').reverse().join('.')}:/oauth2redirect/google`,
   });
 
-  const [request, , promptAsync] = Google.useAuthRequest({
-    androidClientId,
-    redirectUri,
-    responseType: ResponseType.Code,
-    usePKCE: true,
-    scopes: ['openid', 'profile', 'email'],
-  });
+  const [request, , promptAsync] = useAuthRequest(
+    {
+      clientId: androidClientId,
+      redirectUri,
+      responseType: ResponseType.Code,
+      usePKCE: true,
+      scopes: ['openid', 'profile', 'email'],
+    },
+    GOOGLE_PKCE_DISCOVERY,
+  );
 
   const handleGooglePress = async () => {
     if (request?.codeVerifier) {
@@ -147,6 +158,21 @@ export function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <Portal>
+        <Dialog visible={noTenantModalVisible} onDismiss={() => setNoTenantModalVisible(false)}>
+          <Dialog.Title>Acesso não autorizado</Dialog.Title>
+          <Dialog.Content>
+            <Text>
+              Você não é membro de nenhuma organização e não pode acessar o aplicativo. Se acredita
+              que deveria ter acesso, entre em contato com a organização da qual faz parte ou com a
+              equipe de suporte.
+            </Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setNoTenantModalVisible(false)}>Entendido</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </SafeAreaView>
   );
 }

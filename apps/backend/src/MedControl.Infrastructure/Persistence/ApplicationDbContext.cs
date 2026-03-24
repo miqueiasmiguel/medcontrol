@@ -39,22 +39,22 @@ public sealed class ApplicationDbContext(
 
         // Global query filters for multi-tenancy
         modelBuilder.Entity<TenantMember>()
-            .HasQueryFilter(m => m.TenantId == currentUser.TenantId!.Value);
+            .HasQueryFilter(m => currentUser.TenantId.HasValue && m.TenantId == currentUser.TenantId.GetValueOrDefault());
 
         modelBuilder.Entity<DoctorProfile>()
-            .HasQueryFilter(d => d.TenantId == currentUser.TenantId!.Value);
+            .HasQueryFilter(d => currentUser.TenantId.HasValue && d.TenantId == currentUser.TenantId.GetValueOrDefault());
 
         modelBuilder.Entity<HealthPlan>()
-            .HasQueryFilter(hp => hp.TenantId == currentUser.TenantId!.Value);
+            .HasQueryFilter(hp => currentUser.TenantId.HasValue && hp.TenantId == currentUser.TenantId.GetValueOrDefault());
 
         modelBuilder.Entity<Procedure>()
-            .HasQueryFilter(p => p.TenantId == currentUser.TenantId!.Value);
+            .HasQueryFilter(p => currentUser.TenantId.HasValue && p.TenantId == currentUser.TenantId.GetValueOrDefault());
 
         modelBuilder.Entity<ProcedureImport>()
-            .HasQueryFilter(i => i.TenantId == currentUser.TenantId!.Value);
+            .HasQueryFilter(i => currentUser.TenantId.HasValue && i.TenantId == currentUser.TenantId.GetValueOrDefault());
 
         modelBuilder.Entity<Payment>()
-            .HasQueryFilter(p => p.TenantId == currentUser.TenantId!.Value);
+            .HasQueryFilter(p => currentUser.TenantId.HasValue && p.TenantId == currentUser.TenantId.GetValueOrDefault());
 
         base.OnModelCreating(modelBuilder);
     }

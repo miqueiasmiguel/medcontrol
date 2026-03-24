@@ -50,7 +50,11 @@ export default function GoogleOAuthCallback() {
         router.replace('/(app)');
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Erro de autenticação com Google';
-        router.replace({ pathname: '/(auth)/login', params: { error: msg } });
+        if (msg.includes('not associated with any tenant')) {
+          router.replace({ pathname: '/(auth)/login', params: { noTenantError: 'true' } });
+        } else {
+          router.replace({ pathname: '/(auth)/login', params: { error: msg } });
+        }
       }
     })();
   }, []);

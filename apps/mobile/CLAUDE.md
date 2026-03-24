@@ -39,9 +39,12 @@ apps/mobile/
 │   │   ├── typography.ts        # Tamanhos e pesos de fonte
 │   │   └── index.ts             # Exporta tudo + tema React Native Paper
 │   ├── services/
-│   │   └── auth.service.ts      # HTTP: sendMagicLink, verifyMagicLink, loginWithGoogle, verifyGoogleIdToken, logout
+│   │   ├── auth.service.ts      # HTTP: sendMagicLink, verifyMagicLink, loginWithGoogle, verifyGoogleIdToken, logout
+│   │   ├── payment.service.ts   # HTTP: listPayments (GET /payments) — PaymentDto, PaymentStatus, ListPaymentsParams
+│   │   └── health-plan.service.ts # HTTP: listHealthPlans (GET /health-plans) — HealthPlanDto
 │   ├── hooks/
-│   │   └── useAuth.ts           # Estado de sessão (AsyncStorage key: mmc_session)
+│   │   ├── useAuth.ts           # Estado de sessão (AsyncStorage key: mmc_session)
+│   │   └── usePayments.ts       # Carrega pagamentos do backend; retorna { payments, loading, error, refetch }
 │   └── components/ui/
 │       ├── AppButton.tsx        # Botão com variante filled/outline + loading
 │       └── AppTextInput.tsx     # Input com label Paper + mensagem de erro
@@ -180,9 +183,28 @@ Configurar em `app.json > expo > extra` ou via `app.config.ts` para produção.
 ### IP do backend no app.json precisa refletir o IP real da máquina
 - O campo `extra.apiUrl` em `apps/mobile/app.json` deve usar o IP local da máquina de desenvolvimento (ex: `http://192.168.0.xxx:5113`). `localhost` não funciona em dispositivos físicos. Atualizar sempre que o IP mudar (DHCP).
 
+## Serviços HTTP
+
+Além do `AuthService`, existem:
+
+| Serviço | Arquivo | Endpoints |
+|---|---|---|
+| `PaymentService` | `src/services/payment.service.ts` | `GET /payments` com `ListPaymentsParams` opcionais |
+| `HealthPlanService` | `src/services/health-plan.service.ts` | `GET /health-plans` |
+
+### Tipos compartilhados
+
+`payment.service.ts` exporta:
+- `PaymentStatus` — `'Pending' | 'Paid' | 'Refused' | 'PartiallyPending' | 'PartiallyRefused'`
+- `PaymentItemDto` — `{ id, procedureId, value, status, notes? }`
+- `PaymentDto` — campos completos + `totalValue` (soma dos itens) + `items`
+
+### Hook `usePayments`
+
+`src/hooks/usePayments.ts` — carrega pagamentos do backend via `PaymentService.listPayments()`. Retorna `{ payments, loading, error, refetch }`.
+
 ## O que ainda não foi implementado
 
-- Telas de pagamentos (módulo principal — dados mockados no HomeScreen)
 - Perfil do médico
 - Relatórios
 - Notificações push
