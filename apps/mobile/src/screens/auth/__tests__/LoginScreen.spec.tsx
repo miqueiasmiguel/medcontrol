@@ -164,5 +164,25 @@ describe('LoginScreen', () => {
 
       expect(screen.getByText('Google authentication failed.')).toBeTruthy();
     });
+
+    it('exibe modal amigável quando usuário não é membro de nenhum tenant (noTenantError=true)', () => {
+      mockSearchParams = { noTenantError: 'true' };
+
+      render(<LoginScreen />, { wrapper });
+
+      expect(screen.getByText(/não é membro de nenhuma organização/i)).toBeTruthy();
+    });
+
+    it('fecha modal de acesso negado ao pressionar o botão de confirmação', async () => {
+      mockSearchParams = { noTenantError: 'true' };
+
+      render(<LoginScreen />, { wrapper });
+
+      fireEvent.press(screen.getByText('Entendido'));
+
+      await waitFor(() => {
+        expect(screen.queryByText(/não é membro de nenhuma organização/i)).toBeNull();
+      });
+    });
   });
 });
