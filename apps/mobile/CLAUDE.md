@@ -44,7 +44,8 @@ apps/mobile/
 │   │   └── health-plan.service.ts # HTTP: listHealthPlans (GET /health-plans) — HealthPlanDto
 │   ├── hooks/
 │   │   ├── useAuth.ts           # Estado de sessão (AsyncStorage key: mmc_session)
-│   │   └── usePayments.ts       # Carrega pagamentos do backend; retorna { payments, loading, error, refetch }
+│   │   ├── usePayments.ts       # Carrega pagamentos do backend; retorna { payments, loading, error, refetch }
+│   │   └── useCurrentUser.ts    # Carrega dados do usuário autenticado; retorna { user, loading, error }
 │   └── components/ui/
 │       ├── AppButton.tsx        # Botão com variante filled/outline + loading
 │       └── AppTextInput.tsx     # Input com label Paper + mensagem de erro
@@ -191,6 +192,7 @@ Além do `AuthService`, existem:
 |---|---|---|
 | `PaymentService` | `src/services/payment.service.ts` | `GET /payments` com `ListPaymentsParams` opcionais |
 | `HealthPlanService` | `src/services/health-plan.service.ts` | `GET /health-plans` |
+| `UserService` | `src/services/user.service.ts` | `GET /users/me` — retorna `UserDto` |
 
 ### Tipos compartilhados
 
@@ -205,6 +207,5 @@ Além do `AuthService`, existem:
 
 ## O que ainda não foi implementado
 
-- Perfil do médico
 - Relatórios
 - Notificações push

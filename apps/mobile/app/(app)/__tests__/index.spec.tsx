@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { render, fireEvent, act } from '@testing-library/react-native';
 import HomeScreen from '../index';
 import { useAuth } from '../../../src/hooks/useAuth';
+import { useCurrentUser } from '../../../src/hooks/useCurrentUser';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 jest.mock('../../../src/hooks/useAuth');
+jest.mock('../../../src/hooks/useCurrentUser');
 
 jest.mock('../../../src/hooks/usePayments', () => ({
   usePayments: () => ({
@@ -75,9 +77,9 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 jest.mock('react-native-paper', () => ({
-  Text: ({ children }: { children: React.ReactNode }) => {
+  Text: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => {
     const { Text: RNText } = jest.requireActual('react-native');
-    return <RNText>{children}</RNText>;
+    return <RNText {...props}>{children}</RNText>;
   },
 }));
 
@@ -108,9 +110,19 @@ function setupAuth(overrides?: Partial<ReturnType<typeof useAuth>>) {
   });
 }
 
+function setupUser(overrides?: Partial<ReturnType<typeof useCurrentUser>>) {
+  jest.mocked(useCurrentUser).mockReturnValue({
+    user: null,
+    loading: false,
+    error: null,
+    ...overrides,
+  });
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   setupAuth();
+  setupUser();
   jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
   mockReplace.mockReset();
 });
@@ -171,5 +183,67 @@ describe('HomeScreen — logout', () => {
     });
 
     expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');
+  });
+});
+
+describe('HomeScreen — saudação personalizada', () => {
+  it('exibe o primeiro nome do displayName', () => {
+    setupUser({
+      user: {
+        id: 'u1',
+        email: 'joao@clinica.com',
+        displayName: 'João Silva',
+        isEmailVerified: true,
+        globalRole: 'user',
+      },
+    });
+    const { getByTestId } = render(<HomeScreen />);
+    expect(getByTestId('hero-greeting')).toHaveTextContent('Olá, João');
+  });
+
+  it('usa email como fallback quando displayName não está definido', () => {
+    setupUser({
+      user: {
+        id: 'u2',
+        email: 'maria@clinica.com',
+        isEmailVerified: true,
+        globalRole: 'user',
+      },
+    });
+    const { getByTestId } = render(<HomeScreen />);
+    expect(getByTestId('hero-greeting')).toHaveTextContent('Olá, maria@clinica.com');
+  });
+
+  it('exibe saudação genérica enquanto carrega', () => {
+    setupUser({ user: null, loading: true });
+    const { getByTestId } = render(<HomeScreen />);
+    expect(getByTestId('hero-greeting')).toHaveTextContent('Olá');
+  });
+
+  it('exibe Image quando avatarUrl está presente', () => {
+    setupUser({
+      user: {
+        id: 'u1',
+        email: 'joao@clinica.com',
+        avatarUrl: 'https://cdn.example.com/a.jpg',
+        isEmailVerified: true,
+        globalRole: 'user',
+      },
+    });
+    const { getByTestId } = render(<HomeScreen />);
+    expect(getByTestId('hero-avatar-image')).toBeTruthy();
+  });
+
+  it('exibe ícone genérico quando avatarUrl está ausente', () => {
+    setupUser({
+      user: {
+        id: 'u1',
+        email: 'joao@clinica.com',
+        isEmailVerified: true,
+        globalRole: 'user',
+      },
+    });
+    const { getByTestId } = render(<HomeScreen />);
+    expect(getByTestId('hero-avatar-icon')).toBeTruthy();
   });
 });
