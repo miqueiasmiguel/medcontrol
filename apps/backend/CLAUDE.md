@@ -802,6 +802,11 @@ options.Events = new JwtBearerEvents
 
 ## Armadilhas Conhecidas
 
+### Global query filter com TenantId nulo lança InvalidOperationException
+
+- **Problema**: Os global query filters usavam `currentUser.TenantId!.Value`. O operador `!` só suprime o aviso do compilador — em runtime, chamar `.Value` em um `Guid?` nulo lança `InvalidOperationException: Nullable object must have a value`. Isso ocorre quando o JWT não tem `tenant_id` (ex: login mobile sem `switch-tenant`).
+- **Correto**: Sempre usar `currentUser.TenantId.HasValue &&` como guarda antes de `.Value`: `p => currentUser.TenantId.HasValue && p.TenantId == currentUser.TenantId.Value`. Quando TenantId é nulo, o filtro retorna false e a query retorna lista vazia (comportamento seguro).
+
 ### UseForwardedHeaders obrigatório antes de UseHttpsRedirection em produção
 
 - **Problema**: o backend roda atrás de Caddy (HTTP) que recebe de Cloudflare Pages. Sem `UseForwardedHeaders`, `ctx.Request.IsHttps` é `false` e o `UseHttpsRedirection` emite um 301 para `https://<ip-do-oracle>/...` — que não tem HTTPS — quebrando qualquer request proxiado. Sintoma no frontend: tela pisca e volta para o login.
