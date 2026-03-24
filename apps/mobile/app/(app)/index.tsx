@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/hooks/useAuth';
 import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -614,12 +615,20 @@ const HEALTH_PLAN_OPTIONS = [
 export default function HomeScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { logout } = useAuth();
 
   function handleLogoutPress() {
     Alert.alert('Sair', 'Deseja realmente sair da sua conta?', [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive', onPress: logout },
+      {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          router.replace('/(auth)/login');
+        },
+      },
     ]);
   }
 

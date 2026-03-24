@@ -74,6 +74,11 @@ jest.mock('expo-constants', () => ({
   default: { expoConfig: { extra: { apiUrl: 'http://localhost:5000' } } },
 }));
 
+const mockReplace = jest.fn();
+jest.mock('expo-router', () => ({
+  useRouter: () => ({ replace: mockReplace }),
+}));
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const mockLogout = jest.fn();
@@ -92,6 +97,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   setupAuth();
   jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+  mockReplace.mockReset();
 });
 
 // ── Testes ────────────────────────────────────────────────────────────────────
@@ -132,5 +138,23 @@ describe('HomeScreen — logout', () => {
     });
 
     expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('navega para /(auth)/login após confirmar o logout', async () => {
+    mockLogout.mockResolvedValue(undefined);
+    const { getByTestId } = render(<HomeScreen />);
+    fireEvent.press(getByTestId('logout-button'));
+
+    const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as Array<{
+      text: string;
+      onPress?: () => void;
+    }>;
+    const confirmBtn = buttons.find((b) => /sair/i.test(b.text));
+
+    await act(async () => {
+      confirmBtn?.onPress?.();
+    });
+
+    expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');
   });
 });
