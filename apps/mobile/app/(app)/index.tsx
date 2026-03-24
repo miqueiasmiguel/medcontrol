@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   Platform,
   Pressable,
   StyleSheet,
@@ -16,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@medcontrol/design-system/native';
 import { usePayments } from '../../src/hooks/usePayments';
+import { useCurrentUser } from '../../src/hooks/useCurrentUser';
 import {
   HealthPlanService,
   type HealthPlanDto,
@@ -41,6 +43,11 @@ function formatDate(iso: string): string {
 }
 
 function noop() { /* placeholder */ }
+
+function getGreetingName(user: { displayName?: string; email: string }): string {
+  if (user.displayName) return user.displayName.split(' ')[0] ?? user.displayName;
+  return user.email;
+}
 
 function getTodayIso(): string {
   return new Date().toISOString().split('T')[0] ?? '';
@@ -644,6 +651,7 @@ export default function HomeScreen() {
   const { logout } = useAuth();
 
   const { payments, loading, error, refetch } = usePayments();
+  const { user } = useCurrentUser();
   const [healthPlans, setHealthPlans] = useState<HealthPlanDto[]>([]);
 
   useEffect(() => {
@@ -755,11 +763,21 @@ export default function HomeScreen() {
       {/* ── Hero header ──────────────────────────────────────── */}
       <View style={[s.hero, { paddingTop: t.spacing[6] + insets.top }]}>
         <View style={s.heroInner}>
-          <View style={s.heroAvatar}>
-            <Ionicons name="person" size={20} color={t.colors.secondaryText} />
-          </View>
+          {user?.avatarUrl ? (
+            <Image
+              testID="hero-avatar-image"
+              source={{ uri: user.avatarUrl }}
+              style={[s.heroAvatar, { borderRadius: 999 }]}
+            />
+          ) : (
+            <View testID="hero-avatar-icon" style={s.heroAvatar}>
+              <Ionicons name="person" size={20} color={t.colors.secondaryText} />
+            </View>
+          )}
           <View style={{ flex: 1 }}>
-            <Text style={s.heroGreeting}>Olá, doutor</Text>
+            <Text testID="hero-greeting" style={s.heroGreeting}>
+              {user ? `Olá, ${getGreetingName(user)}` : 'Olá'}
+            </Text>
             <Text style={s.heroDate}>{todayFormatted}</Text>
           </View>
           <Pressable style={s.notificationBtn}>
