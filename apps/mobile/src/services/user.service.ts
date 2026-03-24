@@ -28,6 +28,38 @@ export interface UserDto {
   lastLoginAt?: string;
 }
 
+export interface DoctorProfileDto {
+  id: string;
+  tenantId: string;
+  userId?: string;
+  name: string;
+  crm: string;
+  councilState: string;
+  specialty: string;
+}
+
+export interface UpdateDoctorProfileRequest {
+  name: string;
+  crm: string;
+  councilState: string;
+  specialty: string;
+}
+
 export const UserService = {
   getMe: async (): Promise<UserDto> => request<UserDto>('/users/me'),
+
+  getDoctorProfile: async (): Promise<DoctorProfileDto | null> =>
+    request<DoctorProfileDto | null>('/users/me/doctor-profile'),
+
+  updateMyDoctorProfile: async (data: UpdateDoctorProfileRequest): Promise<DoctorProfileDto[]> =>
+    request<DoctorProfileDto[]>('/users/me/doctor-profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  updateProfile: async (data: { displayName?: string }): Promise<UserDto> =>
+    request<UserDto>('/users/me/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 };
