@@ -2,6 +2,7 @@ using MedControl.Application.Auth.DTOs;
 using MedControl.Application.Common.Interfaces;
 using MedControl.Application.Mediator;
 using MedControl.Domain.Common;
+using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 
 namespace MedControl.Application.Auth.Commands.GoogleVerifyIdToken;
@@ -9,6 +10,7 @@ namespace MedControl.Application.Auth.Commands.GoogleVerifyIdToken;
 public sealed class GoogleVerifyIdTokenCommandHandler(
     IGoogleAuthService googleAuthService,
     IUserRepository userRepository,
+    ITenantRepository tenantRepository,
     IUnitOfWork unitOfWork,
     ITokenService tokenService)
     : IRequestHandler<GoogleVerifyIdTokenCommand, Result<AuthTokenDto>>
@@ -49,12 +51,32 @@ public sealed class GoogleVerifyIdTokenCommandHandler(
             globalRoles.Add("support");
         }
 
+        var tenants = await tenantRepository.ListByUserAsync(user.Id, ct);
+        var primaryTenant = tenants.Count > 0 ? tenants[0] : null;
+        Guid? tenantId = null;
+        var roles = new List<string>();
+
+        if (primaryTenant is not null)
+        {
+            tenantId = primaryTenant.Id;
+            TenantMember? member = null;
+            foreach (var m in primaryTenant.Members)
+            {
+                if (m.UserId == user.Id) { member = m; break; }
+            }
+
+            if (member is not null)
+            {
+                roles.Add(member.Role.ToString().ToLowerInvariant());
+            }
+        }
+
         var tokenPair = tokenService.GenerateTokenPair(
             user.Id,
             user.Email,
-            tenantId: null,
-            roles: [],
-            globalRoles: globalRoles);
+            tenantId,
+            roles,
+            globalRoles);
 
         return Result.Success(new AuthTokenDto(
             tokenPair.AccessToken,
