@@ -18,6 +18,9 @@ public sealed class GoogleVerifyIdTokenCommandHandler(
     private static readonly Error GoogleAuthFailed =
         Error.Unauthorized("Auth.GoogleAuthFailed", "Google authentication failed.");
 
+    private static readonly Error NoTenantAccess =
+        Error.Unauthorized("Auth.NoTenantAccess", "Your account is not associated with any tenant. Contact your administrator.");
+
     public async Task<Result<AuthTokenDto>> Handle(GoogleVerifyIdTokenCommand request, CancellationToken ct)
     {
         var googleUserInfo = await googleAuthService.VerifyIdTokenAsync(request.IdToken, ct);
@@ -52,23 +55,24 @@ public sealed class GoogleVerifyIdTokenCommandHandler(
         }
 
         var tenants = await tenantRepository.ListByUserAsync(user.Id, ct);
-        var primaryTenant = tenants.Count > 0 ? tenants[0] : null;
-        Guid? tenantId = null;
+        if (tenants.Count == 0)
+        {
+            return Result.Failure<AuthTokenDto>(NoTenantAccess);
+        }
+
+        var primaryTenant = tenants[0];
+        var tenantId = (Guid?)primaryTenant.Id;
         var roles = new List<string>();
 
-        if (primaryTenant is not null)
+        TenantMember? member = null;
+        foreach (var m in primaryTenant.Members)
         {
-            tenantId = primaryTenant.Id;
-            TenantMember? member = null;
-            foreach (var m in primaryTenant.Members)
-            {
-                if (m.UserId == user.Id) { member = m; break; }
-            }
+            if (m.UserId == user.Id) { member = m; break; }
+        }
 
-            if (member is not null)
-            {
-                roles.Add(member.Role.ToString().ToLowerInvariant());
-            }
+        if (member is not null)
+        {
+            roles.Add(member.Role.ToString().ToLowerInvariant());
         }
 
         var tokenPair = tokenService.GenerateTokenPair(

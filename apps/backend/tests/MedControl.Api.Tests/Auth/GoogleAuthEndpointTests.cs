@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FluentAssertions;
 using MedControl.Api.Tests.Helpers;
 using MedControl.Application.Common.Interfaces;
+using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 using NSubstitute;
 
@@ -66,6 +67,8 @@ public sealed class GoogleAuthEndpointTests : IClassFixture<TestWebApplicationFa
     {
         var email = "user@example.com";
         var user = User.CreateFromGoogle(email, "User Name", null).Value;
+        var tenant = Tenant.Create("Clínica ABC").Value;
+        tenant.AddMember(user.Id, TenantRole.Doctor);
         var tokenPair = new TokenPair("access-token", "refresh-token", DateTimeOffset.UtcNow.AddHours(1));
         var googleUserInfo = new GoogleUserInfo(email, "User Name", null);
 
@@ -74,6 +77,8 @@ public sealed class GoogleAuthEndpointTests : IClassFixture<TestWebApplicationFa
             .Returns(googleUserInfo);
         _factory.UserRepository.GetByEmailAsync(email, Arg.Any<CancellationToken>())
             .Returns(user);
+        _factory.TenantRepository.ListByUserAsync(user.Id, Arg.Any<CancellationToken>())
+            .Returns(new List<Tenant> { tenant });
         _factory.TokenService.GenerateTokenPair(
                 Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<Guid?>(),
                 Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyList<string>>())

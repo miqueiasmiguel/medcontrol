@@ -32,6 +32,8 @@ public sealed class GoogleVerifyIdTokenCommandHandlerTests
     {
         var email = "user@example.com";
         var user = User.CreateFromGoogle(email, "User Name", null).Value;
+        var tenant = Tenant.Create("Clínica ABC").Value;
+        tenant.AddMember(user.Id, TenantRole.Operator);
         var tokenPair = new TokenPair("access", "refresh", DateTimeOffset.UtcNow.AddHours(1));
         var googleUserInfo = new GoogleUserInfo(email, "User Name", null);
 
@@ -39,8 +41,10 @@ public sealed class GoogleVerifyIdTokenCommandHandlerTests
             .Returns(googleUserInfo);
         _userRepository.GetByEmailAsync(email, Arg.Any<CancellationToken>())
             .Returns(user);
+        _tenantRepository.ListByUserAsync(user.Id, Arg.Any<CancellationToken>())
+            .Returns(new List<Tenant> { tenant });
         _tokenService.GenerateTokenPair(
-                user.Id, email, null,
+                user.Id, email, tenant.Id,
                 Arg.Any<IReadOnlyList<string>>(),
                 Arg.Any<IReadOnlyList<string>>())
             .Returns(tokenPair);
@@ -128,30 +132,27 @@ public sealed class GoogleVerifyIdTokenCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_UsuarioSemMembership_DeveGerarTokenSemTenant()
+    public async Task Handle_UsuarioSemTenant_DeveRetornarErroUnauthorized()
     {
+        // No mobile, usuário sem tenant não pode acessar o app.
+        // Diferente do web, onde o usuário é redirecionado para criar um tenant.
         var email = "notenant@example.com";
         var user = User.CreateFromGoogle(email, "User", null).Value;
-        var tokenPair = new TokenPair("access", "refresh", DateTimeOffset.UtcNow.AddHours(1));
         var googleUserInfo = new GoogleUserInfo(email, "User", null);
 
         _googleAuthService.VerifyIdTokenAsync("valid-token", Arg.Any<CancellationToken>())
             .Returns(googleUserInfo);
         _userRepository.GetByEmailAsync(email, Arg.Any<CancellationToken>())
             .Returns(user);
-        _tokenService.GenerateTokenPair(
-                user.Id, email, null,
-                Arg.Is<IReadOnlyList<string>>(r => r.Count == 0),
-                Arg.Any<IReadOnlyList<string>>())
-            .Returns(tokenPair);
+        // tenantRepository já retorna lista vazia no construtor do fixture
 
         var result = await _sut.Handle(
             new GoogleVerifyIdTokenCommand("valid-token"), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        _tokenService.Received(1).GenerateTokenPair(
-            user.Id, email, null,
-            Arg.Is<IReadOnlyList<string>>(r => r.Count == 0),
-            Arg.Any<IReadOnlyList<string>>());
+        result.IsFailure.Should().BeTrue();
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+        _tokenService.DidNotReceive().GenerateTokenPair(
+            Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<Guid?>(),
+            Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyList<string>>());
     }
 }
