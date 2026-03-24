@@ -138,4 +138,21 @@ describe('GoogleOAuthCallback', () => {
       });
     });
   });
+
+  it('redireciona para login com noTenantError quando usuário não tem tenant', async () => {
+    mockAuthService.verifyGoogleIdToken.mockRejectedValueOnce(
+      new Error(
+        'Your account is not associated with any tenant. Contact your administrator.',
+      ),
+    );
+
+    render(<GoogleOAuthCallback />, { wrapper });
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: '/(auth)/login',
+        params: { noTenantError: 'true' },
+      });
+    });
+  });
 });
