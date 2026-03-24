@@ -30,8 +30,12 @@ apps/mobile/
 │   └── (app)/                   # Grupo protegido (requer autenticação)
 │       ├── _layout.tsx          # Redireciona para /login se não auth
 │       ├── __tests__/
-│       │   └── index.spec.tsx   # Testes do HomeScreen (logout)
-│       └── index.tsx            # HomeScreen (pagamentos + botão de logout)
+│       │   └── index.spec.tsx   # Testes do HomeScreen (logout, saudação, navegação)
+│       ├── index.tsx            # HomeScreen (lista de pagamentos)
+│       └── payments/
+│           ├── __tests__/
+│           │   └── [id].spec.tsx  # Testes da tela de detalhe
+│           └── [id].tsx           # PaymentDetailScreen — detalhe completo do pagamento
 ├── src/
 │   ├── theme/                   # Design system
 │   │   ├── colors.ts            # Tokens de cor (primary: #0EA5E9)
@@ -190,7 +194,7 @@ Além do `AuthService`, existem:
 
 | Serviço | Arquivo | Endpoints |
 |---|---|---|
-| `PaymentService` | `src/services/payment.service.ts` | `GET /payments` com `ListPaymentsParams` opcionais |
+| `PaymentService` | `src/services/payment.service.ts` | `GET /payments` (listPayments) + `GET /payments/{id}` (getPayment) |
 | `HealthPlanService` | `src/services/health-plan.service.ts` | `GET /health-plans` |
 | `UserService` | `src/services/user.service.ts` | `GET /users/me` — retorna `UserDto` |
 
@@ -201,9 +205,10 @@ Além do `AuthService`, existem:
 - `PaymentItemDto` — `{ id, procedureId, value, status, notes? }`
 - `PaymentDto` — campos completos + `totalValue` (soma dos itens) + `items`
 
-### Hook `usePayments`
+### Hooks de pagamentos
 
-`src/hooks/usePayments.ts` — carrega pagamentos do backend via `PaymentService.listPayments()`. Retorna `{ payments, loading, error, refetch }`.
+- `src/hooks/usePayments.ts` — carrega lista de pagamentos via `PaymentService.listPayments()`. Retorna `{ payments, loading, error, refetch }`.
+- `src/hooks/usePayment.ts` — carrega um pagamento por id via `PaymentService.getPayment(id)`. Retorna `{ payment, loading, error, refetch }`. Loading inicial é `false` quando `id` é `undefined`.
 
 ## O que ainda não foi implementado
 

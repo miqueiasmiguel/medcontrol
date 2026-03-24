@@ -4,6 +4,7 @@ import { render, fireEvent, act } from '@testing-library/react-native';
 import HomeScreen from '../index';
 import { useAuth } from '../../../src/hooks/useAuth';
 import { useCurrentUser } from '../../../src/hooks/useCurrentUser';
+import { usePayments } from '../../../src/hooks/usePayments';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -13,15 +14,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 
 jest.mock('../../../src/hooks/useAuth');
 jest.mock('../../../src/hooks/useCurrentUser');
-
-jest.mock('../../../src/hooks/usePayments', () => ({
-  usePayments: () => ({
-    payments: [],
-    loading: false,
-    error: null,
-    refetch: jest.fn(),
-  }),
-}));
+jest.mock('../../../src/hooks/usePayments');
 
 jest.mock('../../../src/services/health-plan.service', () => ({
   HealthPlanService: {
@@ -92,13 +85,24 @@ jest.mock('expo-constants', () => ({
 }));
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: mockReplace }),
+  useRouter: () => ({ replace: mockReplace, push: mockPush }),
 }));
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const mockLogout = jest.fn();
+
+function setupPayments(overrides?: Partial<ReturnType<typeof usePayments>>) {
+  jest.mocked(usePayments).mockReturnValue({
+    payments: [],
+    loading: false,
+    error: null,
+    refetch: jest.fn(),
+    ...overrides,
+  });
+}
 
 function setupAuth(overrides?: Partial<ReturnType<typeof useAuth>>) {
   jest.mocked(useAuth).mockReturnValue({
@@ -123,8 +127,10 @@ beforeEach(() => {
   jest.clearAllMocks();
   setupAuth();
   setupUser();
+  setupPayments();
   jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
   mockReplace.mockReset();
+  mockPush.mockReset();
 });
 
 // ── Testes ────────────────────────────────────────────────────────────────────
@@ -245,5 +251,32 @@ describe('HomeScreen — saudação personalizada', () => {
     });
     const { getByTestId } = render(<HomeScreen />);
     expect(getByTestId('hero-avatar-icon')).toBeTruthy();
+  });
+});
+
+describe('HomeScreen — navegação para detalhe', () => {
+  it('navega para /payments/{id} ao pressionar um PaymentCard', () => {
+    setupPayments({
+      payments: [
+        {
+          id: 'p1',
+          tenantId: 't1',
+          doctorId: 'd1',
+          healthPlanId: 'hp1',
+          executionDate: '2025-01-15',
+          appointmentNumber: 'ATD-001',
+          beneficiaryCard: '123456789',
+          beneficiaryName: 'Maria Aparecida',
+          executionLocation: 'Hospital São Lucas',
+          paymentLocation: 'Financeiro',
+          status: 'Paid',
+          totalValue: 250,
+          items: [],
+        },
+      ],
+    });
+    const { getByTestId } = render(<HomeScreen />);
+    fireEvent.press(getByTestId('payment-card-p1'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/payments/[id]', params: { id: 'p1' } });
   });
 });

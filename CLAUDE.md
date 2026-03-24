@@ -23,6 +23,11 @@ Payments     ← aggregate root Payment (core domain) — backend implementado
              ← endpoints: GET/POST /payments, GET /payments/{id}, PATCH /payments/{id}
              ←            PATCH /payments/{id}/items/{itemId}, POST /payments/{id}/items
              ←            DELETE /payments/{id}/items/{itemId}
+             ← mobile: lista (app/(app)/index.tsx) + detalhe (app/(app)/payments/[id].tsx)
+             ← PaymentService.getPayment(id) → GET /payments/{id}
+             ← usePayment(id): { payment, loading, error, refetch }
+             ← PaymentCard.onPress → router.push(`/payments/${id}`)
+             ← convênio resolvido client-side via HealthPlanService.listHealthPlans()
 Users        ← User.UpdateProfile() — backend + web implementados
              ← endpoints: GET /users/me, PATCH /users/me/profile
              ← web: /settings (ThemeService: light/dark/system via data-theme attr; SettingsService: getMe/updateProfile)
