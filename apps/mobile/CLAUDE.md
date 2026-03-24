@@ -29,7 +29,9 @@ apps/mobile/
 │   │   └── verify.tsx           # → MagicLinkVerifyScreen (deep link)
 │   └── (app)/                   # Grupo protegido (requer autenticação)
 │       ├── _layout.tsx          # Redireciona para /login se não auth
-│       └── index.tsx            # Home placeholder
+│       ├── __tests__/
+│       │   └── index.spec.tsx   # Testes do HomeScreen (logout)
+│       └── index.tsx            # HomeScreen (pagamentos + botão de logout)
 ├── src/
 │   ├── theme/                   # Design system
 │   │   ├── colors.ts            # Tokens de cor (primary: #0EA5E9)
@@ -180,8 +182,7 @@ Configurar em `app.json > expo > extra` ou via `app.config.ts` para produção.
 
 ## O que ainda não foi implementado
 
-- Telas de pagamentos (módulo principal)
+- Telas de pagamentos (módulo principal — dados mockados no HomeScreen)
 - Perfil do médico
 - Relatórios
 - Notificações push
-- Configurações do usuário
