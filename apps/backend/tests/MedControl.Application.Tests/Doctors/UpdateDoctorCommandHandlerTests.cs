@@ -12,11 +12,12 @@ public sealed class UpdateDoctorCommandHandlerTests
     private readonly IDoctorRepository _doctorRepository = Substitute.For<IDoctorRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly ICurrentTenantService _currentTenant = Substitute.For<ICurrentTenantService>();
+    private readonly ICurrentUserService _currentUser = Substitute.For<ICurrentUserService>();
     private readonly UpdateDoctorCommandHandler _sut;
 
     public UpdateDoctorCommandHandlerTests()
     {
-        _sut = new UpdateDoctorCommandHandler(_doctorRepository, _unitOfWork, _currentTenant);
+        _sut = new UpdateDoctorCommandHandler(_doctorRepository, _unitOfWork, _currentTenant, _currentUser);
     }
 
     [Fact]
@@ -96,6 +97,44 @@ public sealed class UpdateDoctorCommandHandlerTests
         _doctorRepository.ExistsByCrmAsync(tenantId, "123456", "SP", Arg.Any<CancellationToken>()).Returns(false);
 
         var command = new UpdateDoctorCommand(doctor.Id, "Dr. João Atualizado", "123456", "SP", "Neurologia");
+        var result = await _sut.Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_MedicoVinculadoAOutroUsuario_DeveRetornarForbidden()
+    {
+        var tenantId = Guid.NewGuid();
+        var linkedUserId = Guid.NewGuid();
+        var currentUserId = Guid.NewGuid();
+        var doctor = DoctorProfile.Create(tenantId, "Dr. João", "123456", "SP", "Cardiologia").Value;
+        doctor.LinkUser(linkedUserId);
+        _currentTenant.TenantId.Returns(tenantId);
+        _currentUser.UserId.Returns(currentUserId);
+        _doctorRepository.GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>()).Returns(doctor);
+
+        var command = new UpdateDoctorCommand(doctor.Id, "Dr. João", "123456", "SP", "Cardiologia");
+        var result = await _sut.Handle(command, CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(DoctorProfile.Errors.OnlyLinkedDoctorCanUpdate);
+        result.Error.Type.Should().Be(ErrorType.Forbidden);
+        await _doctorRepository.DidNotReceive().UpdateAsync(Arg.Any<DoctorProfile>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_MedicoVinculadoAoProprioUsuario_DevePermitirAtualizar()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var doctor = DoctorProfile.Create(tenantId, "Dr. João", "123456", "SP", "Cardiologia").Value;
+        doctor.LinkUser(userId);
+        _currentTenant.TenantId.Returns(tenantId);
+        _currentUser.UserId.Returns(userId);
+        _doctorRepository.GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>()).Returns(doctor);
+
+        var command = new UpdateDoctorCommand(doctor.Id, "Dr. João Atualizado", "123456", "SP", "Cardiologia");
         var result = await _sut.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
