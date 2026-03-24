@@ -13,7 +13,11 @@ async function request(path: string, options: RequestInit): Promise<Response> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error((body as { message?: string }).message ?? `HTTP ${res.status}`);
+    throw new Error(
+      (body as { message?: string; detail?: string }).message ??
+        (body as { detail?: string }).detail ??
+        `HTTP ${res.status}`,
+    );
   }
 
   return res;
