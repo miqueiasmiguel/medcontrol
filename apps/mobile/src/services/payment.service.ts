@@ -71,4 +71,7 @@ export const PaymentService = {
     const qs = entries.length > 0 ? '?' + new URLSearchParams(entries).toString() : '';
     return request<PaymentDto[]>(`/payments${qs}`);
   },
+
+  getPayment: async (id: string): Promise<PaymentDto> =>
+    request<PaymentDto>(`/payments/${id}`),
 };

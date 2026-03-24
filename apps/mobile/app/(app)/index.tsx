@@ -222,6 +222,7 @@ function PaymentCard({
 
   return (
     <Pressable
+      testID={`payment-card-${payment.id}`}
       onPress={onPress}
       style={({ pressed }) => [
         {
@@ -973,7 +974,7 @@ export default function HomeScreen() {
           <PaymentCard
             payment={item}
             healthPlanName={healthPlanMap.get(item.healthPlanId) ?? '—'}
-            onPress={noop}
+            onPress={() => router.push(`/payments/${item.id}`)}
           />
         )}
         ListHeaderComponent={ListHeader}
