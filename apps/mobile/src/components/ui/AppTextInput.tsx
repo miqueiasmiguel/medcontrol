@@ -13,6 +13,7 @@ interface AppTextInputProps {
   autoComplete?: 'email' | 'off';
   placeholder?: string;
   secureTextEntry?: boolean;
+  testID?: string;
 }
 
 export function AppTextInput({
@@ -25,10 +26,12 @@ export function AppTextInput({
   autoComplete,
   placeholder,
   secureTextEntry = false,
+  testID,
 }: AppTextInputProps) {
   return (
     <View style={styles.container}>
       <TextInput
+        testID={testID}
         label={label}
         value={value}
         onChangeText={onChangeText}

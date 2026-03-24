@@ -791,6 +791,18 @@ export default function HomeScreen() {
             <View style={s.notificationDot} />
           </Pressable>
           <Pressable
+            testID="settings-button"
+            accessibilityLabel="Configurações"
+            onPress={() => router.push('/settings')}
+            style={s.notificationBtn}
+          >
+            <Ionicons
+              name="settings-outline"
+              size={22}
+              color={t.colors.text.onDark}
+            />
+          </Pressable>
+          <Pressable
             testID="logout-button"
             accessibilityLabel="Sair"
             onPress={handleLogoutPress}

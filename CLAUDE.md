@@ -40,6 +40,14 @@ Members      ← gerenciamento de membros do tenant — backend + web implementa
              ← TestAuthHandler: X-Test-Roles header (comma-separated) → claims "roles"
              ← CreateAuthenticatedClient: parâmetro opcional roles string[]
 Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
+             ← DoctorProfile.Errors.OnlyLinkedDoctorCanUpdate (Forbidden) — apenas o user vinculado pode editar
+             ← PATCH /doctors/{id} bloqueia edição quando outro user está vinculado (403 Forbidden)
+             ← GET /users/me/doctor-profile → DoctorDto? (200 empty body se não vinculado)
+             ← PATCH /users/me/doctor-profile → IReadOnlyList<DoctorDto> (atualiza todos os perfis cross-tenant)
+             ← mobile: app/(app)/settings.tsx → EditProfileScreen (react-hook-form)
+             ← UserService.getDoctorProfile() + updateMyDoctorProfile() + updateProfile()
+             ← useDoctorProfile(): { doctorProfile, loading, error, refetch }
+             ← submit paralelo: Promise.all([updateProfile, updateMyDoctorProfile])
 HealthPlans  ← Convênio (nome, código TISS)
 Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor, vigências) — UI pronta, backend implementado
              ← ProcedureImport (histórico de importações CSV TUSS/CBHPM por tenant)

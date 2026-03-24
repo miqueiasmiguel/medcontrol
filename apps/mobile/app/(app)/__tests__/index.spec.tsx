@@ -254,6 +254,19 @@ describe('HomeScreen — saudação personalizada', () => {
   });
 });
 
+describe('HomeScreen — botão de settings', () => {
+  it('renderiza o botão de settings', () => {
+    const { getByTestId } = render(<HomeScreen />);
+    expect(getByTestId('settings-button')).toBeTruthy();
+  });
+
+  it('navega para /settings ao pressionar o botão de settings', () => {
+    const { getByTestId } = render(<HomeScreen />);
+    fireEvent.press(getByTestId('settings-button'));
+    expect(mockPush).toHaveBeenCalledWith('/settings');
+  });
+});
+
 describe('HomeScreen — navegação para detalhe', () => {
   it('navega para /payments/{id} ao pressionar um PaymentCard', () => {
     setupPayments({
