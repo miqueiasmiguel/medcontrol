@@ -72,9 +72,32 @@ public static class PaymentEndpoints
         return group;
     }
 
-    private static async Task<IResult> ListPayments(IMediator mediator, CancellationToken ct)
+    private static async Task<IResult> ListPayments(
+        [FromQuery] Guid? doctorId,
+        [FromQuery] Guid? healthPlanId,
+        [FromQuery] string? status,
+        [FromQuery] DateOnly? dateFrom,
+        [FromQuery] DateOnly? dateTo,
+        [FromQuery] string? search,
+        [FromQuery] string? sortBy,
+        [FromQuery] bool? sortDescending,
+        IMediator mediator,
+        CancellationToken ct)
     {
-        var result = await mediator.Send<Result<IReadOnlyList<PaymentDto>>>(new ListPaymentsQuery(), ct);
+        var statusEnum = Enum.TryParse<PaymentStatus>(status, ignoreCase: true, out var s) ? s : (PaymentStatus?)null;
+        var sortByEnum = Enum.TryParse<PaymentSortBy>(sortBy, ignoreCase: true, out var sb) ? sb : PaymentSortBy.ExecutionDate;
+
+        var filters = new PaymentFilters(
+            doctorId,
+            healthPlanId,
+            statusEnum,
+            dateFrom,
+            dateTo,
+            search,
+            sortByEnum,
+            sortDescending ?? true);
+
+        var result = await mediator.Send<Result<IReadOnlyList<PaymentDto>>>(new ListPaymentsQuery(filters), ct);
         return result.IsSuccess ? Results.Ok(result.Value) : ToErrorResult(result.Error);
     }
 

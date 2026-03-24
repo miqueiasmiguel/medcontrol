@@ -290,7 +290,7 @@ public sealed class Payment : BaseAuditableEntity, IAggregateRoot, IHasTenant
 {
     private Payment() { }  // EF Core
     public Guid TenantId { get; private set; }
-    public Guid DoctorId { get; private set; }        // FK → doctor_profiles
+    public Guid DoctorId { get; private set; }        // FK → doctor_profiles (= User.Id com role doctor)
     public Guid HealthPlanId { get; private set; }    // FK → health_plans
     public DateOnly ExecutionDate { get; private set; }
     public string AppointmentNumber { get; private set; }  // max 100
@@ -301,6 +301,9 @@ public sealed class Payment : BaseAuditableEntity, IAggregateRoot, IHasTenant
     public string PaymentLocation { get; private set; }    // max 256
     public string? Notes { get; private set; }
     public IReadOnlyList<PaymentItem> Items { get; }       // mínimo 1
+
+    // Status: propriedade computada em memória a partir dos itens (não armazenada no DB)
+    public PaymentStatus Status { get; }  // Pending|Paid|Refused|PartiallyPending|PartiallyRefused
 
     public static class Errors { AppointmentNumberRequired, BeneficiaryCardRequired, BeneficiaryNameRequired,
                                   ExecutionLocationRequired, PaymentLocationRequired, ItemsRequired, ItemNotFound,
@@ -333,11 +336,41 @@ public sealed class PaymentItem : BaseEntity
 
 public enum PaymentStatus { Pending = 0, Paid = 1, Refused = 2, PartiallyPending = 3, PartiallyRefused = 4 }
 
+// PaymentFilters (Domain/Payments/PaymentFilters.cs)
+public record PaymentFilters(
+    Guid? DoctorId = null,
+    Guid? HealthPlanId = null,
+    PaymentStatus? Status = null,
+    DateOnly? DateFrom = null,
+    DateOnly? DateTo = null,
+    string? Search = null,
+    PaymentSortBy SortBy = PaymentSortBy.ExecutionDate,
+    bool SortDescending = true);
+
+public enum PaymentSortBy { ExecutionDate, TotalValue }
+
 // IPaymentRepository
-Task<IReadOnlyList<Payment>> ListAsync(CancellationToken ct = default);
+Task<IReadOnlyList<Payment>> ListAsync(PaymentFilters filters, CancellationToken ct = default);
 Task<Payment?> GetByIdAsync(Guid id, CancellationToken ct = default);
 Task AddAsync(Payment payment, CancellationToken ct = default);
 Task UpdateAsync(Payment payment, CancellationToken ct = default);
+```
+
+> **Segurança — filtragem por médico**: `ListPaymentsQueryHandler` injeta `ICurrentUserService`. Se o role do usuário for `doctor`, o handler força `filters.DoctorId = currentUser.UserId` independente do que veio na query — um médico nunca consegue ver pagamentos de outro médico. Operadores/admins podem filtrar por qualquer `DoctorId` (ou ver todos).
+
+> **Status filter**: `Payment.Status` é computado em memória (não está no DB). O `PaymentRepository.ListAsync` aplica todos os outros filtros via SQL e aplica o filtro de status em memória após o `ToListAsync`.
+
+### PaymentDto
+
+```csharp
+public sealed record PaymentDto(
+    Guid Id, Guid TenantId, Guid DoctorId, Guid HealthPlanId,
+    DateOnly ExecutionDate, string AppointmentNumber, string? AuthorizationCode,
+    string BeneficiaryCard, string BeneficiaryName, string ExecutionLocation,
+    string PaymentLocation, string? Notes,
+    string Status,          // enum.ToString()
+    decimal TotalValue,     // soma de Items[*].Value
+    IReadOnlyList<PaymentItemDto> Items);
 ```
 
 ### Domain Events
@@ -545,7 +578,7 @@ doctors.MapDoctors();
 | `GET` | `/procedures/imports` | ✅ | Lista histórico de importações do tenant → 200 |
 | `GET` | `/users/me` | ✅ | Retorna dados do usuário logado → 200 / 401 / 404 |
 | `PATCH` | `/users/me/profile` | ✅ | Atualiza displayName do usuário logado → 200 / 400 / 401 / 404 |
-| `GET` | `/payments` | ✅ | Lista pagamentos do tenant; retorna `PaymentDto[]` → 200 |
+| `GET` | `/payments` | ✅ | Lista pagamentos; query params opcionais: `doctorId`, `healthPlanId`, `status`, `dateFrom`, `dateTo`, `search`, `sortBy` (ExecutionDate\|TotalValue), `sortDescending`; médicos veem apenas seus próprios pagamentos (enforçado no handler) → 200 |
 | `POST` | `/payments` | ✅ | Cria pagamento com itens; mínimo 1 item → 201 / 400 |
 | `GET` | `/payments/{id}` | ✅ | Busca pagamento por id com itens → 200 / 404 |
 | `PATCH` | `/payments/{id}` | ✅ | Atualiza campos de cabeçalho do pagamento → 200 / 404 |
@@ -703,7 +736,7 @@ builder.ConfigureAppConfiguration((_, config) =>
 5. ~~**Payment**~~ — ✅ implementado (`Payment`: aggregate root com `PaymentItem`; `PaymentStatus` (Pending/Paid/Refused/PartiallyPending/PartiallyRefused, computed); `IPaymentRepository`; `CreatePaymentCommand`; `UpdatePaymentCommand`; `UpdatePaymentItemStatusCommand`; `AddPaymentItemCommand`; `RemovePaymentItemCommand`; `ListPaymentsQuery`; `GetPaymentQuery`; endpoints `GET/POST /payments`, `GET /payments/{id}`, `PATCH /payments/{id}`, `PATCH /payments/{id}/items/{itemId}`, `POST /payments/{id}/items`, `DELETE /payments/{id}/items/{itemId}`; migration `AddPaymentTables`)
 6. ~~**Member Management**~~ — ✅ implementado (`Tenant.UpdateMemberRole`; `Tenant.Errors.CannotUpdateOwnRole`; `IUserRepository.GetByIdsAsync`; `ListMembersQuery`; `AddMemberCommand`; `UpdateMemberRoleCommand`; `RemoveMemberCommand`; `MemberDto`; endpoints `GET/POST /members`, `PATCH/DELETE /members/{userId}`; web: `/members` com `MembersComponent` + `MemberFormComponent` + `MembersService`)
 7. **Report Query** — agrega pagamentos por período/convênio/status para o médico
-8. **Paginação e filtros** — por doutor, convênio, status, período
+8. **Paginação** — paginação server-side (cursor ou offset/limit) para grandes volumes
 
 ---
 
