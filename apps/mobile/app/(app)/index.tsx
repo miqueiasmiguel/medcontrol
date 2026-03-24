@@ -974,7 +974,7 @@ export default function HomeScreen() {
           <PaymentCard
             payment={item}
             healthPlanName={healthPlanMap.get(item.healthPlanId) ?? '—'}
-            onPress={() => router.push(`/payments/${item.id}`)}
+            onPress={() => router.push({ pathname: '/payments/[id]', params: { id: item.id } })}
           />
         )}
         ListHeaderComponent={ListHeader}

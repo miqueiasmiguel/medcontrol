@@ -2,7 +2,6 @@ import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
 import PaymentDetailScreen from '../[id]';
 import { usePayment } from '../../../../src/hooks/usePayment';
-import { HealthPlanService } from '../../../../src/services/health-plan.service';
 
 // ── Mocks ────────────────────────────────────────────────────────────────────
 

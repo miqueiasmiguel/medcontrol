@@ -277,6 +277,6 @@ describe('HomeScreen — navegação para detalhe', () => {
     });
     const { getByTestId } = render(<HomeScreen />);
     fireEvent.press(getByTestId('payment-card-p1'));
-    expect(mockPush).toHaveBeenCalledWith('/payments/p1');
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/payments/[id]', params: { id: 'p1' } });
   });
 });

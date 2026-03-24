@@ -340,7 +340,7 @@ export default function PaymentDetailScreen() {
   useEffect(() => {
     HealthPlanService.listHealthPlans()
       .then(setHealthPlans)
-      .catch(() => {});
+      .catch(() => undefined);
   }, []);
 
   const healthPlanName = useMemo(
