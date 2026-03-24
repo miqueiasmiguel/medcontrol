@@ -63,6 +63,7 @@ public sealed class GoogleVerifyIdTokenCommandHandlerTests
     public async Task Handle_UsuarioNaoExistente_DeveCriarEAutenticar()
     {
         var email = "new@example.com";
+        var tenant = Tenant.Create("Clínica Nova").Value;
         var tokenPair = new TokenPair("access", "refresh", DateTimeOffset.UtcNow.AddHours(1));
         var googleUserInfo = new GoogleUserInfo(email, "New User", new Uri("https://example.com/photo.jpg"));
 
@@ -70,8 +71,10 @@ public sealed class GoogleVerifyIdTokenCommandHandlerTests
             .Returns(googleUserInfo);
         _userRepository.GetByEmailAsync(email, Arg.Any<CancellationToken>())
             .Returns((User?)null);
+        _tenantRepository.ListByUserAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Tenant> { tenant });
         _tokenService.GenerateTokenPair(
-                Arg.Any<Guid>(), email, null,
+                Arg.Any<Guid>(), email, tenant.Id,
                 Arg.Any<IReadOnlyList<string>>(),
                 Arg.Any<IReadOnlyList<string>>())
             .Returns(tokenPair);
