@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRootNavigation, useRouter } from 'expo-router';
+import { CommonActions } from '@react-navigation/native';
 import { AuthService } from '../../services/auth.service';
+import { useAuth } from '../../hooks/useAuth';
 import { AppButton } from '../../components/ui/AppButton';
 import { colors, spacing } from '../../theme';
 
 export function MagicLinkVerifyScreen() {
   const router = useRouter();
+  const rootNavigation = useRootNavigation();
+  const { setSession } = useAuth();
   const { token } = useLocalSearchParams<{ token?: string }>();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,12 +24,17 @@ export function MagicLinkVerifyScreen() {
     }
 
     AuthService.verifyMagicLink(token)
-      .then(() => router.replace('/(app)'))
+      .then(async () => {
+        await setSession(true);
+        rootNavigation?.dispatch(
+          CommonActions.reset({ index: 0, routes: [{ name: '(app)' }] }),
+        );
+      })
       .catch((err: Error) => {
         setError(err.message ?? 'Erro ao verificar o link');
         setIsLoading(false);
       });
-  }, [token, router]);
+  }, [token, setSession, rootNavigation]);
 
   if (isLoading && !error) {
     return (

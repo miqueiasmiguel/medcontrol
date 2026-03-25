@@ -10,11 +10,23 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 const mockReplace = jest.fn();
+const mockDispatch = jest.fn();
 let mockToken: string | undefined = 'valid-token-123';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace }),
   useLocalSearchParams: () => ({ token: mockToken }),
+  useRootNavigation: () => ({ dispatch: mockDispatch }),
+}));
+
+jest.mock('@react-navigation/native', () => ({
+  CommonActions: {
+    reset: jest.fn((state: unknown) => ({ type: 'RESET', state })),
+  },
+}));
+
+jest.mock('../../../hooks/useAuth', () => ({
+  useAuth: () => ({ setSession: jest.fn().mockResolvedValue(undefined) }),
 }));
 
 const mockAuthService = AuthService as jest.Mocked<typeof AuthService>;
@@ -25,6 +37,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockDispatch.mockClear();
   mockToken = 'valid-token-123';
 });
 
@@ -53,7 +66,7 @@ describe('MagicLinkVerifyScreen', () => {
     render(<MagicLinkVerifyScreen />, { wrapper });
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith('/(app)');
+      expect(mockDispatch).toHaveBeenCalled();
     });
   });
 

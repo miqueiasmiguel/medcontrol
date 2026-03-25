@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRootNavigation, useRouter } from 'expo-router';
+import { CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { AuthService } from '../../src/services/auth.service';
@@ -10,6 +11,7 @@ import { colors } from '../../src/theme';
 export default function GoogleOAuthCallback() {
   const { code } = useLocalSearchParams<{ code?: string }>();
   const router = useRouter();
+  const rootNavigation = useRootNavigation();
   const { setSession } = useAuth();
 
   useEffect(() => {
@@ -47,7 +49,9 @@ export default function GoogleOAuthCallback() {
 
         await AuthService.verifyGoogleIdToken(tokens.id_token);
         await setSession(true);
-        router.replace('/(app)');
+        rootNavigation?.dispatch(
+          CommonActions.reset({ index: 0, routes: [{ name: '(app)' }] }),
+        );
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : 'Erro de autenticação com Google';
         if (msg.includes('not associated with any tenant')) {
