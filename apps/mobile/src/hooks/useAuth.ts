@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthService } from '../services/auth.service';
+import { onUnauthorized } from '../lib/unauthorizedEmitter';
 
 const SESSION_KEY = 'mmc_session';
 
@@ -13,6 +14,12 @@ export function useAuth() {
       .then((value) => setIsAuthenticated(value === '1'))
       .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    return onUnauthorized(() => {
+      void setSession(false);
+    });
+  }, [setSession]);
 
   const setSession = useCallback(async (authenticated: boolean) => {
     if (authenticated) {
