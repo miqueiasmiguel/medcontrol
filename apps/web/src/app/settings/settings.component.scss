@@ -147,6 +147,37 @@
     border-top: 1px solid var(--mmc-divider);
   }
 
+  &__legal-link {
+    display: flex;
+    align-items: center;
+    gap: var(--mmc-space-3);
+    padding: var(--mmc-space-3) var(--mmc-space-4);
+    border-radius: var(--mmc-radius-md);
+    border: 1px solid var(--mmc-border);
+    color: var(--mmc-text-primary);
+    text-decoration: none;
+    font-size: var(--mmc-text-sm);
+    font-weight: var(--mmc-font-weight-medium);
+    transition: background 150ms ease, border-color 150ms ease;
+
+    span { flex: 1; }
+
+    &:hover {
+      background: var(--mmc-bg-card-hover);
+      border-color: var(--mmc-border-strong);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: var(--mmc-shadow-focus);
+    }
+  }
+
+  &__legal-chevron {
+    color: var(--mmc-text-tertiary);
+    flex-shrink: 0;
+  }
+
   // Segmented control para seleção de tema
   &__theme-group {
     display: inline-flex;

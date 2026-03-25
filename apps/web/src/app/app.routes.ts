@@ -4,6 +4,11 @@ import { tenantGuard } from './tenants/guards/tenant.guard';
 
 export const appRoutes: Route[] = [
   {
+    path: 'privacy',
+    loadChildren: () =>
+      import('./privacy-policy/privacy-policy.routes').then((m) => m.privacyRoutes),
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./auth/auth.routes').then((m) => m.authRoutes),
   },
