@@ -12,6 +12,7 @@ public sealed class SeedDefaultHealthPlansOnTenantCreatedHandler(
 {
     private static readonly (string Name, string TissCode)[] DefaultHealthPlans =
     [
+        // Nacionais
         ("Hapvida", "368253"),
         ("NotreDame Intermédica", "359017"),
         ("Bradesco Saúde", "421715"),
@@ -19,6 +20,15 @@ public sealed class SeedDefaultHealthPlansOnTenantCreatedHandler(
         ("SulAmérica Saúde", "006246"),
         ("Central Nacional Unimed", "339679"),
         ("GEAP Saúde", "323080"),
+        ("Golden Cross", "005762"),
+        ("Cassi", "302147"),
+        ("Postal Saúde", "325031"),
+        ("Porto Seguro Saúde", "327689"),
+        // Paraíba
+        ("Unimed João Pessoa", "320080"),
+        ("Unimed Campina Grande", "313467"),
+        ("Unimed Sousa", "303763"),
+        ("Unimed Patos", "305936"),
         ("Unimed Fortaleza", "317144"),
     ];
 
