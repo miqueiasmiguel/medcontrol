@@ -807,6 +807,11 @@ options.Events = new JwtBearerEvents
 - **Problema**: Os global query filters usavam `currentUser.TenantId!.Value`. O operador `!` só suprime o aviso do compilador — em runtime, chamar `.Value` em um `Guid?` nulo lança `InvalidOperationException: Nullable object must have a value`. Isso ocorre quando o JWT não tem `tenant_id` (ex: login mobile sem `switch-tenant`).
 - **Correto**: Sempre usar `currentUser.TenantId.HasValue &&` como guarda antes de `.Value`: `p => currentUser.TenantId.HasValue && p.TenantId == currentUser.TenantId.Value`. Quando TenantId é nulo, o filtro retorna false e a query retorna lista vazia (comportamento seguro).
 
+### Magic link verify deve incluir tenant no JWT
+
+- **Problema**: `VerifyMagicLinkCommandHandler` gerava JWT com `tenantId: null` e `roles: []`. Usuários com tenant associado (ex: médico que havia feito login via Google antes) não viam pagamentos nem configurações ao logar com magic link — os global query filters retornavam false para todos os registros tenant-scoped.
+- **Correto**: Após validar o token e encontrar o usuário, chamar `tenantRepository.ListByUserAsync(user.Id)` e incluir o tenant primário (se existir) no JWT, exatamente como faz `GoogleVerifyIdTokenCommandHandler`. Se o usuário ainda não tem tenant (novo cadastro), `tenantId` permanece `null`.
+
 ### UseForwardedHeaders obrigatório antes de UseHttpsRedirection em produção
 
 - **Problema**: o backend roda atrás de Caddy (HTTP) que recebe de Cloudflare Pages. Sem `UseForwardedHeaders`, `ctx.Request.IsHttps` é `false` e o `UseHttpsRedirection` emite um 301 para `https://<ip-do-oracle>/...` — que não tem HTTPS — quebrando qualquer request proxiado. Sintoma no frontend: tela pisca e volta para o login.

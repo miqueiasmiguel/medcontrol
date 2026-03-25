@@ -2,6 +2,7 @@ using MedControl.Application.Auth.DTOs;
 using MedControl.Application.Common.Interfaces;
 using MedControl.Application.Mediator;
 using MedControl.Domain.Common;
+using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 
 namespace MedControl.Application.Auth.Commands.VerifyMagicLink;
@@ -9,6 +10,7 @@ namespace MedControl.Application.Auth.Commands.VerifyMagicLink;
 public sealed class VerifyMagicLinkCommandHandler(
     IMagicLinkService magicLinkService,
     IUserRepository userRepository,
+    ITenantRepository tenantRepository,
     IUnitOfWork unitOfWork,
     ITokenService tokenService)
     : IRequestHandler<VerifyMagicLinkCommand, Result<AuthTokenDto>>
@@ -49,12 +51,34 @@ public sealed class VerifyMagicLinkCommandHandler(
         await userRepository.UpdateAsync(user, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
+        var tenants = await tenantRepository.ListByUserAsync(user.Id, ct);
+
+        Guid? tenantId = null;
+        var roles = new List<string>();
+
+        if (tenants.Count > 0)
+        {
+            var primaryTenant = tenants[0];
+            tenantId = primaryTenant.Id;
+
+            TenantMember? member = null;
+            foreach (var m in primaryTenant.Members)
+            {
+                if (m.UserId == user.Id) { member = m; break; }
+            }
+
+            if (member is not null)
+            {
+                roles.Add(member.Role.ToString().ToLowerInvariant());
+            }
+        }
+
         var tokenPair = tokenService.GenerateTokenPair(
             user.Id,
             user.Email,
-            tenantId: null,
-            roles: [],
-            globalRoles: globalRoles);
+            tenantId,
+            roles,
+            globalRoles);
 
         return Result.Success(new AuthTokenDto(
             tokenPair.AccessToken,
