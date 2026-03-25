@@ -1,3 +1,3 @@
-import EditProfileScreen from '../../src/screens/app/EditProfileScreen';
+import SettingsScreen from '../../src/screens/app/SettingsScreen';
 
-export default EditProfileScreen;
+export default SettingsScreen;

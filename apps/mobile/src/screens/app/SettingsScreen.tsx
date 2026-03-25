@@ -13,7 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
-import { useAppTheme as useTheme } from '../../contexts/ThemeContext';
+import { useAppTheme, useThemePreference, type ThemePreference } from '../../contexts/ThemeContext';
+import { useAuth } from '../../hooks/useAuth';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { useDoctorProfile } from '../../hooks/useDoctorProfile';
 import { UserService } from '../../services/user.service';
@@ -28,10 +29,18 @@ interface EditProfileForm {
   specialty: string;
 }
 
-export default function EditProfileScreen() {
-  const t = useTheme();
+const THEME_OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
+  { value: 'system', label: 'Sistema', icon: 'phone-portrait-outline' },
+  { value: 'light', label: 'Claro', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Escuro', icon: 'moon-outline' },
+];
+
+export default function SettingsScreen() {
+  const t = useAppTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { logout } = useAuth();
+  const { preference, setPreference } = useThemePreference();
   const { user } = useCurrentUser();
   const { doctorProfile } = useDoctorProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,6 +90,20 @@ export default function EditProfileScreen() {
     }
   }
 
+  function handleLogoutPress() {
+    Alert.alert('Sair', 'Deseja realmente sair da sua conta?', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          router.replace('/(auth)/login');
+        },
+      },
+    ]);
+  }
+
   const s = makeStyles(t);
 
   return (
@@ -89,11 +112,11 @@ export default function EditProfileScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={[s.header, { paddingTop: insets.top + 16 }]}>
-        <Pressable onPress={() => router.back()} style={s.backBtn}>
+        <Pressable onPress={() => router.back()} style={s.headerBtn}>
           <Ionicons name="arrow-back" size={22} color={t.colors.text.onDark} />
         </Pressable>
-        <Text style={s.headerTitle}>Editar Perfil</Text>
-        <View style={s.backBtn} />
+        <Text style={s.headerTitle}>Configurações</Text>
+        <View style={s.headerBtn} />
       </View>
 
       <ScrollView
@@ -101,7 +124,8 @@ export default function EditProfileScreen() {
         contentContainerStyle={[s.content, { paddingBottom: insets.bottom + 24 }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={s.sectionTitle}>Informações Pessoais</Text>
+        {/* ── Minha Conta ── */}
+        <Text style={s.sectionTitle}>Minha Conta</Text>
 
         <Controller
           control={control}
@@ -197,12 +221,50 @@ export default function EditProfileScreen() {
         >
           Salvar
         </AppButton>
+
+        {/* ── Aparência ── */}
+        <Text style={[s.sectionTitle, { marginTop: 32 }]}>Aparência</Text>
+        <View style={s.themeSelector} testID="theme-selector">
+          {THEME_OPTIONS.map((opt) => (
+            <Pressable
+              key={opt.value}
+              testID={`theme-option-${opt.value}`}
+              style={[s.themeOption, preference === opt.value && s.themeOptionActive]}
+              onPress={() => setPreference(opt.value)}
+            >
+              <Ionicons
+                name={opt.icon as keyof typeof Ionicons.glyphMap}
+                size={18}
+                color={preference === opt.value ? t.colors.text.onDark : t.colors.text.secondary}
+              />
+              <Text
+                style={[
+                  s.themeOptionLabel,
+                  preference === opt.value && s.themeOptionLabelActive,
+                ]}
+              >
+                {opt.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* ── Sair ── */}
+        <Pressable
+          testID="logout-button"
+          accessibilityLabel="Sair"
+          onPress={handleLogoutPress}
+          style={s.logoutBtn}
+        >
+          <Ionicons name="log-out-outline" size={20} color={t.colors.error.base} />
+          <Text style={s.logoutBtnText}>Sair da conta</Text>
+        </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-function makeStyles(t: ReturnType<typeof useTheme>) {
+function makeStyles(t: ReturnType<typeof useAppTheme>) {
   return StyleSheet.create({
     header: {
       backgroundColor: t.colors.secondary,
@@ -217,7 +279,7 @@ function makeStyles(t: ReturnType<typeof useTheme>) {
       fontWeight: t.typography.fontWeight.semibold,
       color: t.colors.text.onDark,
     },
-    backBtn: {
+    headerBtn: {
       width: 40,
       height: 40,
       borderRadius: 20,
@@ -235,6 +297,52 @@ function makeStyles(t: ReturnType<typeof useTheme>) {
       textTransform: 'uppercase',
       letterSpacing: 0.5,
       marginBottom: 12,
+    },
+    themeSelector: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    themeOption: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderRadius: t.borderRadius.md,
+      borderWidth: 1,
+      borderColor: t.colors.border,
+      backgroundColor: t.colors.surface.card,
+    },
+    themeOptionActive: {
+      backgroundColor: t.colors.secondary,
+      borderColor: t.colors.secondary,
+    },
+    themeOptionLabel: {
+      fontSize: t.typography.fontSize.sm,
+      fontWeight: t.typography.fontWeight.medium,
+      color: t.colors.text.secondary,
+    },
+    themeOptionLabelActive: {
+      color: t.colors.text.onDark,
+    },
+    logoutBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      marginTop: 32,
+      paddingVertical: 14,
+      borderRadius: t.borderRadius.md,
+      borderWidth: 1,
+      borderColor: t.colors.error.base,
+      backgroundColor: t.colors.error.light,
+    },
+    logoutBtnText: {
+      fontSize: t.typography.fontSize.md,
+      fontWeight: t.typography.fontWeight.semibold,
+      color: t.colors.error.base,
     },
   });
 }

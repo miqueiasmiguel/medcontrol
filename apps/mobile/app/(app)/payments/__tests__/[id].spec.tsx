@@ -19,52 +19,62 @@ jest.mock('../../../../src/services/health-plan.service', () => ({
   },
 }));
 
+const mockTheme = {
+  colors: {
+    primary: '#F97316',
+    primaryText: '#FFFFFF',
+    primaryLight: '#FFF4ED',
+    secondary: '#1B2E63',
+    success: { base: '#10B981', light: '#ECFDF5', dark: '#065F46' },
+    warning: { base: '#F59E0B', light: '#FFFBEB', dark: '#92400E' },
+    error: { base: '#EF4444', light: '#FEF2F2', dark: '#991B1B' },
+    border: '#E9ECEF',
+    borderStrong: '#DEE2E6',
+    divider: '#F1F3F5',
+    text: {
+      primary: '#212529',
+      secondary: '#868E96',
+      tertiary: '#ADB5BD',
+      disabled: '#CED4DA',
+      inverse: '#FFFFFF',
+      onDark: 'rgba(255, 255, 255, 0.87)',
+      onDarkSubtle: 'rgba(255, 255, 255, 0.55)',
+      link: '#EA6310',
+    },
+    surface: {
+      background: '#F8F9FA',
+      card: '#FFFFFF',
+      cardPressed: '#F1F3F5',
+      overlay: 'rgba(15, 26, 64, 0.48)',
+      nav: '#0F1A40',
+      navActive: '#1B2E63',
+    },
+    paymentStatus: {
+      pending: { bg: '#FFFBEB', border: '#FDE68A', dot: '#F59E0B', text: '#92400E' },
+      paid: { bg: '#ECFDF5', border: '#A7F3D0', dot: '#10B981', text: '#065F46' },
+      refused: { bg: '#FEF2F2', border: '#FECACA', dot: '#EF4444', text: '#991B1B' },
+    },
+  },
+  spacing: new Proxy({}, { get: (_t: object, p: string | symbol) => Number(p) * 4 }),
+  borderRadius: new Proxy({}, { get: () => 8 }),
+  typography: {
+    fontSize: { xs: 12, sm: 14, md: 16, lg: 18, xl: 20, '2xl': 24, '3xl': 30 },
+    fontWeight: { regular: '400', medium: '500', semibold: '600', bold: '700' },
+  },
+  shadows: { sm: {}, md: {} },
+  components: { buttonHeight: 44, buttonHeightSm: 36, avatarMd: 40, iconSm: 16, iconMd: 20, iconLg: 24, iconXl: 32 },
+};
+
 jest.mock('@medcontrol/design-system/native', () => ({
-  useTheme: () => ({
-    colors: {
-      primary: '#F97316',
-      primaryText: '#FFFFFF',
-      primaryLight: '#FFF4ED',
-      secondary: '#1B2E63',
-      success: { base: '#10B981', light: '#ECFDF5', dark: '#065F46' },
-      warning: { base: '#F59E0B', light: '#FFFBEB', dark: '#92400E' },
-      error: { base: '#EF4444', light: '#FEF2F2', dark: '#991B1B' },
-      border: '#E9ECEF',
-      borderStrong: '#DEE2E6',
-      divider: '#F1F3F5',
-      text: {
-        primary: '#212529',
-        secondary: '#868E96',
-        tertiary: '#ADB5BD',
-        disabled: '#CED4DA',
-        inverse: '#FFFFFF',
-        onDark: 'rgba(255, 255, 255, 0.87)',
-        onDarkSubtle: 'rgba(255, 255, 255, 0.55)',
-        link: '#EA6310',
-      },
-      surface: {
-        background: '#F8F9FA',
-        card: '#FFFFFF',
-        cardPressed: '#F1F3F5',
-        overlay: 'rgba(15, 26, 64, 0.48)',
-        nav: '#0F1A40',
-        navActive: '#1B2E63',
-      },
-      paymentStatus: {
-        pending: { bg: '#FFFBEB', border: '#FDE68A', dot: '#F59E0B', text: '#92400E' },
-        paid: { bg: '#ECFDF5', border: '#A7F3D0', dot: '#10B981', text: '#065F46' },
-        refused: { bg: '#FEF2F2', border: '#FECACA', dot: '#EF4444', text: '#991B1B' },
-      },
-    },
-    spacing: new Proxy({}, { get: (_t: object, p: string | symbol) => Number(p) * 4 }),
-    borderRadius: new Proxy({}, { get: () => 8 }),
-    typography: {
-      fontSize: { xs: 12, sm: 14, md: 16, lg: 18, xl: 20, '2xl': 24, '3xl': 30 },
-      fontWeight: { regular: '400', medium: '500', semibold: '600', bold: '700' },
-    },
-    shadows: { sm: {}, md: {} },
-    components: { buttonHeight: 44, buttonHeightSm: 36, avatarMd: 40, iconSm: 16, iconMd: 20, iconLg: 24, iconXl: 32 },
-  }),
+  useTheme: () => mockTheme,
+  theme: mockTheme,
+  darkTheme: mockTheme,
+}));
+
+jest.mock('../../../../src/contexts/ThemeContext', () => ({
+  useAppTheme: () => mockTheme,
+  useThemePreference: () => ({ preference: 'system', setPreference: jest.fn() }),
+  ThemePreferenceProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 jest.mock('react-native-safe-area-context', () => ({

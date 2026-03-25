@@ -44,7 +44,11 @@ Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
              ← PATCH /doctors/{id} bloqueia edição quando outro user está vinculado (403 Forbidden)
              ← GET /users/me/doctor-profile → DoctorDto? (200 empty body se não vinculado)
              ← PATCH /users/me/doctor-profile → IReadOnlyList<DoctorDto> (atualiza todos os perfis cross-tenant)
-             ← mobile: app/(app)/settings.tsx → EditProfileScreen (react-hook-form)
+             ← mobile: app/(app)/settings.tsx → SettingsScreen (perfil + tema + logout)
+             ← SettingsScreen: edita perfil + seleção de tema (sistema/claro/escuro) + botão sair
+             ← ThemePreferenceProvider (src/contexts/ThemeContext.tsx): persiste preferência em AsyncStorage (mmc_theme)
+             ← useAppTheme(): retorna tema correto baseado na preferência; substitui useTheme() de @medcontrol/design-system/native
+             ← useThemePreference(): { preference, setPreference } — usado em SettingsScreen
              ← UserService.getDoctorProfile() + updateMyDoctorProfile() + updateProfile()
              ← useDoctorProfile(): { doctorProfile, loading, error, refetch }
              ← submit paralelo: Promise.all([updateProfile, updateMyDoctorProfile])

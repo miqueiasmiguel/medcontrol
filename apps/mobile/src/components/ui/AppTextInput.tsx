@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { HelperText, TextInput } from 'react-native-paper';
-import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../contexts/ThemeContext';
 
 interface AppTextInputProps {
   label: string;
@@ -28,6 +28,8 @@ export function AppTextInput({
   secureTextEntry = false,
   testID,
 }: AppTextInputProps) {
+  const t = useAppTheme();
+
   return (
     <View style={styles.container}>
       <TextInput
@@ -42,9 +44,16 @@ export function AppTextInput({
         placeholder={placeholder}
         secureTextEntry={secureTextEntry}
         error={!!errorMessage}
-        outlineColor={colors.border}
-        activeOutlineColor={colors.primary}
-        style={styles.input}
+        outlineColor={t.colors.border}
+        activeOutlineColor={t.colors.primary}
+        textColor={t.colors.text.primary}
+        placeholderTextColor={t.colors.text.tertiary}
+        style={{ backgroundColor: t.colors.surface.card }}
+        theme={{
+          colors: {
+            onSurfaceVariant: t.colors.text.secondary,
+          },
+        }}
       />
       {errorMessage ? (
         <HelperText type="error" visible>
@@ -58,8 +67,5 @@ export function AppTextInput({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-  },
-  input: {
-    backgroundColor: colors.background,
   },
 });

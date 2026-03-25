@@ -16,31 +16,41 @@ jest.mock('../../../hooks/useCurrentUser');
 jest.mock('../../../hooks/useDoctorProfile');
 jest.mock('../../../services/user.service');
 
+const mockTheme = {
+  colors: {
+    primary: '#0EA5E9',
+    primaryLight: '#E0F2FE',
+    secondary: '#0F172A',
+    error: { base: '#EF4444' },
+    border: '#E2E8F0',
+    text: {
+      primary: '#0F172A',
+      secondary: '#64748B',
+      tertiary: '#94A3B8',
+      onDark: '#FFFFFF',
+    },
+    surface: { background: '#F8FAFC', card: '#FFFFFF' },
+  },
+  spacing: new Proxy({}, { get: (_t: object, p: string | symbol) => Number(p) * 4 }),
+  borderRadius: new Proxy({}, { get: () => 8 }),
+  typography: {
+    fontSize: { xs: 12, sm: 14, md: 16, lg: 18, xl: 20 },
+    fontWeight: { regular: '400', medium: '500', semibold: '600', bold: '700' },
+  },
+  shadows: { sm: {} },
+  components: { avatarMd: 40, inputHeight: 48 },
+};
+
 jest.mock('@medcontrol/design-system/native', () => ({
-  useTheme: () => ({
-    colors: {
-      primary: '#0EA5E9',
-      primaryLight: '#E0F2FE',
-      secondary: '#0F172A',
-      error: { base: '#EF4444' },
-      border: '#E2E8F0',
-      text: {
-        primary: '#0F172A',
-        secondary: '#64748B',
-        tertiary: '#94A3B8',
-        onDark: '#FFFFFF',
-      },
-      surface: { background: '#F8FAFC', card: '#FFFFFF' },
-    },
-    spacing: new Proxy({}, { get: (_t: object, p: string | symbol) => Number(p) * 4 }),
-    borderRadius: new Proxy({}, { get: () => 8 }),
-    typography: {
-      fontSize: { xs: 12, sm: 14, md: 16, lg: 18, xl: 20 },
-      fontWeight: { regular: '400', medium: '500', semibold: '600', bold: '700' },
-    },
-    shadows: { sm: {} },
-    components: { avatarMd: 40, inputHeight: 48 },
-  }),
+  useTheme: () => mockTheme,
+  theme: mockTheme,
+  darkTheme: mockTheme,
+}));
+
+jest.mock('../../../contexts/ThemeContext', () => ({
+  useAppTheme: () => mockTheme,
+  useThemePreference: () => ({ preference: 'system', setPreference: jest.fn() }),
+  ThemePreferenceProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
