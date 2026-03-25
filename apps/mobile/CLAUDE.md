@@ -191,6 +191,10 @@ Configurar em `app.json > expo > extra` ou via `app.config.ts` para produção.
 - **Problema**: Android OAuth clients do Google não suportam `response_type=id_token` (fluxo implícito). Tentativas de usar `ResponseType.IdToken` com `androidClientId` resultam em `400 unsupported_response_type` do Google.
 - **Correto**: Mobile usa `responseType: ResponseType.Code` com `usePKCE: true` e `androidClientId`. Antes de `promptAsync()`, salvar `request.codeVerifier` e `redirectUri` no AsyncStorage. Em `google.tsx`, trocar o `code` por tokens em `https://oauth2.googleapis.com/token` (sem `client_secret` — Android clients são públicos) e extrair o `id_token` da resposta para enviar ao backend via `POST /auth/google/verify`.
 
+### Grupo /(auth) deve redirecionar usuários autenticados para /(app)
+- **Problema**: `/(auth)/_layout.tsx` sem guard permitia que o back gesture retornasse à tela de login após autenticação, mesmo sem fazer logout.
+- **Correto**: `/(auth)/_layout.tsx` deve usar `useAuth()` e redirecionar para `/(app)` via `router.replace` quando `isAuthenticated=true`. O guard é simétrico ao de `/(app)/_layout.tsx`.
+
 ### IP do backend no app.json precisa refletir o IP real da máquina
 - O campo `extra.apiUrl` em `apps/mobile/app.json` deve usar o IP local da máquina de desenvolvimento (ex: `http://192.168.0.xxx:5113`). `localhost` não funciona em dispositivos físicos. Atualizar sempre que o IP mudar (DHCP).
 
