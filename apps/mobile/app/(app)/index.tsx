@@ -763,15 +763,6 @@ export default function HomeScreen() {
             </Text>
             <Text style={s.heroDate}>{todayFormatted}</Text>
           </View>
-          <Pressable style={s.notificationBtn}>
-            <Ionicons
-              name="notifications-outline"
-              size={22}
-              color={t.colors.text.onDark}
-            />
-            {/* Unread dot */}
-            <View style={s.notificationDot} />
-          </Pressable>
           <Pressable
             testID="settings-button"
             accessibilityLabel="Configurações"
@@ -1048,18 +1039,6 @@ function makeStyles(t: ReturnType<typeof useTheme>) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    notificationDot: {
-      position: 'absolute',
-      top: 8,
-      right: 8,
-      width: 8,
-      height: 8,
-      borderRadius: t.borderRadius.full,
-      backgroundColor: t.colors.primary,
-      borderWidth: 1.5,
-      borderColor: t.colors.secondary,
-    },
-
     // Summary
     summaryGrid: {
       gap: t.spacing[3],

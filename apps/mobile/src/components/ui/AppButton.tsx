@@ -1,7 +1,8 @@
 import React from 'react';
-import { ActivityIndicator, StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View, StyleProp, ViewStyle } from 'react-native';
 import { Button, Text } from 'react-native-paper';
-import { colors } from '../../theme/colors';
+import { useAppTheme } from '../../contexts/ThemeContext';
+import type { Theme, DarkTheme } from '@medcontrol/design-system/native';
 
 interface AppButtonProps {
   label?: string;
@@ -16,12 +17,14 @@ interface AppButtonProps {
 }
 
 export function AppButton({ label, children, onPress, disabled = false, loading = false, variant = 'filled', leftIcon, testID, style }: AppButtonProps) {
+  const t = useAppTheme();
+  const styles = createStyles(t);
   const content = children ?? label ?? '';
 
   if (loading) {
     return (
       <View testID={testID} style={[styles.container, styles.filled, style]}>
-        <ActivityIndicator testID="app-button-loading" color={colors.white} />
+        <ActivityIndicator testID="app-button-loading" color={t.colors.primaryText} />
       </View>
     );
   }
@@ -47,8 +50,8 @@ export function AppButton({ label, children, onPress, disabled = false, loading 
       mode="contained"
       onPress={onPress}
       disabled={disabled}
-      buttonColor={colors.primary}
-      textColor={colors.white}
+      buttonColor={t.colors.primary}
+      textColor={t.colors.primaryText}
       style={[styles.container, style]}
     >
       {content}
@@ -56,38 +59,40 @@ export function AppButton({ label, children, onPress, disabled = false, loading 
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: 8,
-    paddingVertical: 4,
-  },
-  filled: {
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 48,
-  },
-  outline: {
-    borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 48,
-    gap: 8,
-  },
-  iconSlot: {
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  outlineText: {
-    color: colors.navy,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  disabledText: {
-    color: colors.textSecondary,
-  },
-});
+function createStyles(t: Theme | DarkTheme) {
+  return StyleSheet.create({
+    container: {
+      borderRadius: 8,
+      paddingVertical: 4,
+    },
+    filled: {
+      backgroundColor: t.colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 48,
+    },
+    outline: {
+      borderWidth: 1.5,
+      borderColor: t.colors.borderStrong,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: 48,
+      gap: 8,
+    },
+    iconSlot: {
+      width: 20,
+      height: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    outlineText: {
+      color: t.colors.text.primary,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+    disabledText: {
+      color: t.colors.text.disabled,
+    },
+  });
+}

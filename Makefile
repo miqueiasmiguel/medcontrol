@@ -21,8 +21,9 @@ api:
 	cd apps/backend && dotnet run --project src/MedControl.Api --urls "http://0.0.0.0:5113"
 
 # Inicia o app Angular (foreground)
+# --host 0.0.0.0 permite acesso de dispositivos físicos na mesma rede (ex: magic link no celular)
 web:
-	pnpm nx serve web
+	pnpm nx serve web -- --host 0.0.0.0
 
 # Inicia o app Expo diretamente (sem Nx) para o QR code aparecer no terminal
 # --dev-client garante que o QR abra no EAS dev build, não no Expo Go
