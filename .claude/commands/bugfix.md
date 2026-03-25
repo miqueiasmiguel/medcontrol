@@ -4,6 +4,32 @@ Use este comando quando identificar um comportamento incorreto no sistema. Descr
 
 ---
 
+## Git Workflow — Obrigatório
+
+**Antes de tocar em qualquer arquivo**, crie uma branch:
+
+```bash
+git checkout -b fix/<descricao-curta-do-bug>
+# Exemplos:
+# fix/payment-status-not-computed
+# fix/magic-link-expired-token
+# fix/doctor-profile-forbidden
+```
+
+**Após cada passo relevante**, faça um commit granular:
+
+```bash
+git commit -m "test(<scope>): add failing test reproducing <bug>"
+git commit -m "fix(<scope>): <descrição da correção>"
+# Se CLAUDE.md foi atualizado:
+git commit -m "docs(<scope>): document <bug> pitfall in claude.md"
+```
+
+**Ao final**, pergunte ao usuário:
+> "Bug corrigido. Posso fazer o merge da branch `fix/<nome>` na `main` e apagá-la?"
+
+---
+
 ## Passo 1 — Entender o problema
 
 Antes de tocar em qualquer arquivo, responda:
@@ -101,18 +127,3 @@ O formato da nota deve ser objetivo e orientado a prevenção:
 
 Documente apenas se a informação não estiver óbvia no código ou já coberta pelo `CLAUDE.md` existente. Pule este passo se o bug for pontual e sem lição generalizável.
 
----
-
-## Passo 7 — Commit
-
-Use o scope correto e descreva o que foi corrigido (não o sintoma):
-
-```bash
-git add <arquivos-específicos>
-git commit -m "fix(<scope>): <o que estava errado e como foi corrigido>"
-
-# Exemplos:
-# fix(auth): prevent magic link token reuse after expiration
-# fix(payments): query filter not applied when listing by doctor
-# fix(web): form submit triggered on enter in disabled state
-```

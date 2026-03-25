@@ -1,5 +1,28 @@
 # /migration — EF Core Migration
 
+## Git Workflow — Obrigatório
+
+**Antes de criar a migration**, crie uma branch (ou use a branch da feature em andamento se houver):
+
+```bash
+git checkout -b chore/<descricao-da-migration>
+# Exemplos:
+# chore/add-doctor-profile-table
+# chore/add-payment-notes-column
+# chore/add-procedure-effective-dates
+```
+
+**Após criar e revisar a migration**, faça um commit:
+
+```bash
+git commit -m "feat(infra): add ef core migration <nome-da-migration>"
+```
+
+**Ao final**, pergunte ao usuário:
+> "Migration criada e revisada. Posso fazer o merge da branch `<nome>` na `main` e apagá-la?"
+
+---
+
 ## Criar nova migration
 
 ```bash
@@ -60,9 +83,3 @@ Sempre revisar o arquivo `.cs` gerado em `Persistence/Migrations/`:
 // ❌ Não modificar migrations já aplicadas em produção
 ```
 
-## Commit da migration
-
-```bash
-git add apps/backend/src/MedControl.Infrastructure/Persistence/Migrations/
-git commit -m "chore(infra): add migration <NomeDaMigration>"
-```

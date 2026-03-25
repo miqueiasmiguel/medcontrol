@@ -2,6 +2,32 @@
 
 Use este comando para criar uma nova **bounded context** ou feature completa seguindo Clean Architecture + DDD.
 
+## Git Workflow — Obrigatório
+
+**Antes de criar qualquer arquivo**, crie uma branch:
+
+```bash
+git checkout -b feat/<nome-da-feature>
+# Exemplos:
+# feat/billing
+# feat/appointments
+# feat/notifications
+```
+
+**Durante a implementação**, faça commits granulares por camada (use `/tdd` internamente):
+
+```bash
+git commit -m "feat(<scope>): add <entity> domain aggregate"
+git commit -m "feat(<scope>): add create <entity> command handler"
+git commit -m "feat(<scope>): add <entity> repository and ef configuration"
+git commit -m "feat(<scope>): add <entity> api endpoints"
+```
+
+**Ao final**, pergunte ao usuário:
+> "Feature completa. Posso fazer o merge da branch `feat/<nome>` na `main` e apagá-la?"
+
+---
+
 Responda as perguntas abaixo antes de criar qualquer arquivo:
 
 1. **Nome da feature/bounded context?** (ex: `Billing`, `Notifications`, `Appointments`)

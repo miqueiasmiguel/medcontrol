@@ -1,6 +1,33 @@
 # /tdd — Test-Driven Development
 
-Você entrou no modo TDD. Siga o ciclo **RED → GREEN → REFACTOR → COMMIT** estritamente.
+Você entrou no modo TDD. Siga o ciclo **RED → GREEN → REFACTOR** estritamente.
+
+## Git Workflow — Obrigatório
+
+**Antes de começar**, crie uma branch com nome sugestivo:
+
+```bash
+git checkout -b <type>/<nome-descritivo>
+# Exemplos:
+# feat/payment-status-computed
+# fix/magic-link-token-expiry
+# test/doctor-profile-update
+```
+
+**Durante a implementação**, faça commits granulares a cada ciclo RED → GREEN → REFACTOR completo:
+
+```bash
+# Após RED (teste falhando)
+git commit -m "test(<scope>): add failing test for <behavior>"
+
+# Após GREEN + REFACTOR
+git commit -m "feat(<scope>): implement <behavior>"
+```
+
+**Ao final de todos os ciclos**, pergunte ao usuário:
+> "Todos os ciclos estão completos. Posso fazer o merge da branch `<nome>` na `main` e apagá-la?"
+
+---
 
 ## Regra de ouro
 
@@ -77,15 +104,6 @@ public async Task POST_Endpoint_QuandoValido_DeveRetornar201()
 5. Execute testes após cada mudança
 6. **Nunca refatore código de teste e de produção ao mesmo tempo**
 
-### ✅ COMMIT — Fechar o ciclo
-
-```bash
-git add <arquivos-específicos>
-git commit -m "feat(scope): descrição em minúsculas"
-# Exemplo: "feat(domain): add tenant creation with domain event"
-# Exemplo: "test(app): add unit tests for magic link handler"
-```
-
 ---
 
 ## Comandos para executar testes
@@ -118,7 +136,7 @@ pnpm nx test mobile
 ❌ Testes que dependem de outros testes
 ❌ Mockar o que você não precisa
 ❌ Refatorar com testes falhando
-❌ Pular o commit após refactor
+❌ Avançar para o próximo ciclo com testes falhando
 
 ---
 
@@ -161,14 +179,11 @@ public async Task Handle(SendMagicLinkCommand cmd, CancellationToken ct)
 Extrair template do email para constante, melhorar mensagem, etc.
 → Executar: ainda verde ✓
 
-**Passo 4 — COMMIT:**
-`feat(auth): add send magic link command with email notification`
-
 ---
 
 ## 📝 PÓS-IMPLEMENTAÇÃO — Atualizar CLAUDE.md
 
-Após todos os ciclos RED → GREEN → REFACTOR → COMMIT da feature, atualize os arquivos relevantes abaixo. **Só atualize o que mudou.** Informações deriváveis do código não precisam ser documentadas.
+Após todos os ciclos RED → GREEN → REFACTOR da feature, atualize os arquivos relevantes abaixo. **Só atualize o que mudou.** Informações deriváveis do código não precisam ser documentadas.
 
 ### `apps/backend/CLAUDE.md` — atualizar quando a feature tocar o backend
 
