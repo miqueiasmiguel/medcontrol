@@ -6,26 +6,28 @@ import { MagicLinkCallbackComponent } from './magic-link-callback.component';
 import { AuthService } from '../data-access/auth.service';
 import { WINDOW } from '../../core/tokens/window.token';
 
+const IOS_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)';
+const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 14; Pixel 8)';
+const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120';
+
 describe('MagicLinkCallbackComponent', () => {
   let authService: jest.Mocked<AuthService>;
   let navigateSpy: jest.SpyInstance;
-  let mockWindow: { location: { href: string } };
+  let mockWindow: { location: { href: string }; navigator: { userAgent: string } };
   let mockVisibilityState: DocumentVisibilityState;
   let capturedVisibilityHandler: (() => void) | null;
   let addEventListenerSpy: jest.Mock;
   let removeEventListenerSpy: jest.Mock;
 
-  function setup(queryParams: Record<string, string> = {}) {
+  function setup(queryParams: Record<string, string> = {}, userAgent = DESKTOP_UA) {
     capturedVisibilityHandler = null;
     mockVisibilityState = 'visible';
-    mockWindow = { location: { href: '' } };
+    mockWindow = { location: { href: '' }, navigator: { userAgent } };
     addEventListenerSpy = jest.fn((event: string, handler: () => void) => {
       if (event === 'visibilitychange') capturedVisibilityHandler = handler;
     });
     removeEventListenerSpy = jest.fn();
 
-    // Proxy wraps the real document so Angular internals (querySelectorAll etc.) still work.
-    // Only visibilityState, addEventListener and removeEventListener are intercepted.
     const docProxy = new Proxy(document, {
       get(target, prop: string) {
         if (prop === 'visibilityState') return mockVisibilityState;
@@ -59,9 +61,9 @@ describe('MagicLinkCallbackComponent', () => {
     navigateSpy = jest.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   }
 
-  // --- Testes existentes (atualizados para o trampoline) ---
+  // --- Desktop ---
 
-  it('should redirect to /auth/login when no token in query params', fakeAsync(() => {
+  it('should redirect to /auth/login when no token', fakeAsync(() => {
     setup({});
     TestBed.createComponent(MagicLinkCallbackComponent).detectChanges();
     tick();
@@ -69,64 +71,112 @@ describe('MagicLinkCallbackComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith(['/auth/login']);
   }));
 
-  it('should call verifyMagicLink and navigate to / after 2500ms fallback', fakeAsync(() => {
+  it('should call verifyMagicLink immediately on desktop (no trampoline)', fakeAsync(() => {
     setup({ token: 'abc123' });
     authService.verifyMagicLink.mockReturnValue(of(null));
     TestBed.createComponent(MagicLinkCallbackComponent).detectChanges();
-    tick(2500);
+    tick();
     expect(authService.verifyMagicLink).toHaveBeenCalledWith('abc123');
     expect(navigateSpy).toHaveBeenCalledWith(['/']);
   }));
 
-  it('should redirect to /auth/login on error after 2500ms fallback', fakeAsync(() => {
+  it('should redirect to /auth/login on desktop verifyMagicLink error', fakeAsync(() => {
     setup({ token: 'expired-token' });
-    authService.verifyMagicLink.mockReturnValue(throwError(() => new Error('invalid token')));
+    authService.verifyMagicLink.mockReturnValue(throwError(() => new Error('invalid')));
     TestBed.createComponent(MagicLinkCallbackComponent).detectChanges();
-    tick(2500);
+    tick();
     expect(navigateSpy).toHaveBeenCalledWith(['/auth/login']);
   }));
 
-  // --- Novos testes do trampoline ---
-
-  it('should set window.location.href to deep link immediately on load', fakeAsync(() => {
+  it('should NOT set window.location.href on desktop', fakeAsync(() => {
     setup({ token: 'abc123' });
     authService.verifyMagicLink.mockReturnValue(of(null));
     TestBed.createComponent(MagicLinkCallbackComponent).detectChanges();
-    expect(mockWindow.location.href).toBe('medcontrol://verify?token=abc123');
-    expect(authService.verifyMagicLink).not.toHaveBeenCalled();
-    tick(2500); // cleanup timers
+    expect(mockWindow.location.href).toBe('');
+    tick();
   }));
 
-  it('should NOT call verifyMagicLink when visibilitychange fires (app opened)', fakeAsync(() => {
-    setup({ token: 'abc123' });
-    TestBed.createComponent(MagicLinkCallbackComponent).detectChanges();
-    // Simulate app opening: document becomes hidden
-    mockVisibilityState = 'hidden';
-    capturedVisibilityHandler?.();
-    tick(3000); // past the 2500ms timeout
-    expect(authService.verifyMagicLink).not.toHaveBeenCalled();
-  }));
-
-  it('should call verifyMagicLink as web fallback after 2500ms when app did not open', fakeAsync(() => {
-    setup({ token: 'abc123' });
-    authService.verifyMagicLink.mockReturnValue(of(null));
-    TestBed.createComponent(MagicLinkCallbackComponent).detectChanges();
-    // Do NOT fire visibilitychange — app did not open
-    tick(2500);
-    expect(authService.verifyMagicLink).toHaveBeenCalledWith('abc123');
-  }));
-
-  it('should show tryingDeepLink as true while waiting for app to open', fakeAsync(() => {
+  it('should NOT show appNotFound on desktop', fakeAsync(() => {
     setup({ token: 'abc123' });
     authService.verifyMagicLink.mockReturnValue(of(null));
     const fixture = TestBed.createComponent(MagicLinkCallbackComponent);
     fixture.detectChanges();
-    expect(fixture.componentInstance.tryingDeepLink()).toBe(true);
-    tick(2500); // cleanup timers
+    expect(fixture.componentInstance.appNotFound()).toBe(false);
+    tick();
   }));
 
-  it('should clear timeout on ngOnDestroy (no verifyMagicLink after destroy)', fakeAsync(() => {
-    setup({ token: 'abc123' });
+  // --- Mobile: trampoline ---
+
+  it('should set window.location.href to deep link on mobile', fakeAsync(() => {
+    setup({ token: 'abc123' }, IOS_UA);
+    TestBed.createComponent(MagicLinkCallbackComponent).detectChanges();
+    expect(mockWindow.location.href).toBe('medcontrol://verify?token=abc123');
+    expect(authService.verifyMagicLink).not.toHaveBeenCalled();
+    tick(2500);
+  }));
+
+  it('should show tryingDeepLink while waiting on mobile', fakeAsync(() => {
+    setup({ token: 'abc123' }, IOS_UA);
+    const fixture = TestBed.createComponent(MagicLinkCallbackComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.tryingDeepLink()).toBe(true);
+    tick(2500);
+  }));
+
+  it('should NOT call verifyMagicLink on mobile when app did not open', fakeAsync(() => {
+    setup({ token: 'abc123' }, IOS_UA);
+    TestBed.createComponent(MagicLinkCallbackComponent).detectChanges();
+    tick(2500);
+    expect(authService.verifyMagicLink).not.toHaveBeenCalled();
+  }));
+
+  it('should show appNotFound after timeout on iOS', fakeAsync(() => {
+    setup({ token: 'abc123' }, IOS_UA);
+    const fixture = TestBed.createComponent(MagicLinkCallbackComponent);
+    fixture.detectChanges();
+    tick(2500);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.appNotFound()).toBe(true);
+  }));
+
+  it('should show appNotFound after timeout on Android', fakeAsync(() => {
+    setup({ token: 'abc123' }, ANDROID_UA);
+    const fixture = TestBed.createComponent(MagicLinkCallbackComponent);
+    fixture.detectChanges();
+    tick(2500);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.appNotFound()).toBe(true);
+  }));
+
+  it('should NOT show appNotFound when app opens (visibilitychange fires)', fakeAsync(() => {
+    setup({ token: 'abc123' }, IOS_UA);
+    const fixture = TestBed.createComponent(MagicLinkCallbackComponent);
+    fixture.detectChanges();
+    mockVisibilityState = 'hidden';
+    capturedVisibilityHandler?.();
+    tick(3000);
+    expect(fixture.componentInstance.appNotFound()).toBe(false);
+    expect(authService.verifyMagicLink).not.toHaveBeenCalled();
+  }));
+
+  it('should detect iOS platform', fakeAsync(() => {
+    setup({ token: 'abc123' }, IOS_UA);
+    const fixture = TestBed.createComponent(MagicLinkCallbackComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.platform()).toBe('ios');
+    tick(2500);
+  }));
+
+  it('should detect Android platform', fakeAsync(() => {
+    setup({ token: 'abc123' }, ANDROID_UA);
+    const fixture = TestBed.createComponent(MagicLinkCallbackComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.platform()).toBe('android');
+    tick(2500);
+  }));
+
+  it('should clear timeout on ngOnDestroy', fakeAsync(() => {
+    setup({ token: 'abc123' }, IOS_UA);
     const fixture = TestBed.createComponent(MagicLinkCallbackComponent);
     fixture.detectChanges();
     fixture.destroy();
