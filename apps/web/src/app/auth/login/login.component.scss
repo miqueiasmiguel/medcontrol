@@ -1,9 +1,9 @@
-// Force light theme within the login page regardless of the global [data-theme].
-// Semantic tokens are re-declared using palette tokens (--mmc-orange-*, --mmc-neutral-*)
-// which are never overridden in dark mode — so the login always renders in light mode.
+// Force light-theme tokens for form section (card bottom).
+// Palette tokens (--mmc-orange-*, --mmc-neutral-*, --mmc-navy-*) are never
+// overridden in dark mode, so we pin to them directly.
 :host {
   color-scheme: light;
-  --mmc-bg:            var(--mmc-neutral-50);
+  --mmc-bg:            var(--mmc-navy-950);
   --mmc-bg-card:       var(--mmc-neutral-0);
   --mmc-bg-card-hover: var(--mmc-neutral-100);
   --mmc-border:        var(--mmc-neutral-200);
@@ -22,46 +22,102 @@
   --mmc-shadow-focus: 0px 0px 0px 3px rgba(249, 115, 22, 0.25);
 }
 
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 .login-page {
   min-height: 100vh;
-  background: var(--mmc-bg);
+  background: var(--mmc-navy-950);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: var(--mmc-space-4);
 }
 
+// ── Card (wraps hero + form section) ─────────────────────────────────────────
+
 .login-card {
-  background: var(--mmc-bg-card);
-  border: 1px solid var(--mmc-border);
-  border-radius: var(--mmc-radius-lg);
-  padding: var(--mmc-space-8);
   width: 100%;
   max-width: 400px;
-  box-shadow: var(--mmc-shadow-md);
+  border-radius: var(--mmc-radius-2xl);
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(15, 26, 64, 0.5);
 }
 
-.login-logo {
-  margin-bottom: var(--mmc-space-6);
+// ── Hero ─────────────────────────────────────────────────────────────────────
+
+.login-hero {
+  background: var(--mmc-navy-950);
+  padding: var(--mmc-space-10) var(--mmc-space-8) var(--mmc-space-10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--mmc-space-2);
+}
+
+.login-logo-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--mmc-orange-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--mmc-space-2);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45);
+
+  &__letter {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--mmc-neutral-0);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
 }
 
 .login-wordmark {
-  font-size: var(--mmc-text-2xl);
-  font-weight: var(--mmc-font-weight-bold);
-  color: var(--mmc-text-primary);
+  font-size: var(--mmc-text-xl);
+  font-weight: 700;
+  color: var(--mmc-neutral-0);
+  letter-spacing: 0.3px;
+  margin: 0;
+
+  &__accent {
+    color: var(--mmc-orange-500);
+  }
+}
+
+.login-tagline {
+  font-size: var(--mmc-text-sm);
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.4px;
+  margin: 0;
+}
+
+// ── Form section ─────────────────────────────────────────────────────────────
+
+.login-form-section {
+  background: var(--mmc-bg-card);
+  border-top-left-radius: var(--mmc-radius-2xl);
+  border-top-right-radius: var(--mmc-radius-2xl);
+  padding: var(--mmc-space-8);
+  margin-top: calc(var(--mmc-space-4) * -1);
+  box-shadow: 0 -6px 24px rgba(15, 26, 64, 0.14);
 }
 
 .login-title {
-  font-size: var(--mmc-text-2xl);
-  font-weight: var(--mmc-font-weight-semibold);
+  font-size: var(--mmc-text-xl);
+  font-weight: 700;
   color: var(--mmc-text-primary);
-  margin: 0 0 var(--mmc-space-2);
+  margin: 0 0 var(--mmc-space-1);
 }
 
 .login-subtitle {
+  font-size: var(--mmc-text-sm);
   color: var(--mmc-text-secondary);
   margin: 0 0 var(--mmc-space-6);
 }
+
+// ── Form fields ──────────────────────────────────────────────────────────────
 
 .form-field {
   display: flex;
@@ -107,7 +163,10 @@
   font-size: var(--mmc-text-sm);
   color: var(--mmc-error);
   margin: 0 0 var(--mmc-space-4);
+  text-align: center;
 }
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
 
 .btn-primary {
   display: flex;
@@ -158,22 +217,7 @@
   width: 100%;
 }
 
-.login-footer {
-  margin: var(--mmc-space-5) 0 0;
-  text-align: center;
-  font-size: var(--mmc-text-xs);
-  color: var(--mmc-text-tertiary);
-
-  &__link {
-    color: var(--mmc-text-link);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-
-    &:hover {
-      color: var(--mmc-text-link-hover);
-    }
-  }
-}
+// ── Divider ───────────────────────────────────────────────────────────────────
 
 .divider {
   display: flex;
@@ -192,5 +236,24 @@
     padding: 0 var(--mmc-space-3);
     font-size: var(--mmc-text-sm);
     color: var(--mmc-text-tertiary);
+  }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+.login-footer {
+  margin: var(--mmc-space-5) 0 0;
+  text-align: center;
+  font-size: var(--mmc-text-xs);
+  color: var(--mmc-text-tertiary);
+
+  &__link {
+    color: var(--mmc-text-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: var(--mmc-orange-700);
+    }
   }
 }
