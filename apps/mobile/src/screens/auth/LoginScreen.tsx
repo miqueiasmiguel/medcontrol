@@ -17,7 +17,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppTextInput } from '../../components/ui/AppTextInput';
 import { AuthService } from '../../services/auth.service';
-import { colors, spacing, typography } from '../../theme';
+import { spacing, typography } from '../../theme';
+import { useAppTheme } from '../../contexts/ThemeContext';
+import type { Theme, DarkTheme } from '@medcontrol/design-system/native';
 
 const GOOGLE_PKCE_DISCOVERY = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -29,6 +31,8 @@ interface LoginForm {
 }
 
 export function LoginScreen() {
+  const t = useAppTheme();
+  const styles = createStyles(t);
   const router = useRouter();
   const { error: oauthError, noTenantError } = useLocalSearchParams<{
     error?: string;
@@ -152,7 +156,7 @@ export function LoginScreen() {
                 label="Continuar com Google"
                 onPress={handleGooglePress}
                 variant="outline"
-                leftIcon={<AntDesign name="google" size={18} color={colors.navy} />}
+                leftIcon={<AntDesign name="google" size={18} color={t.colors.text.primary} />}
               />
             </View>
           </View>
@@ -179,111 +183,113 @@ export function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.navyDark,
-  },
-  flex: {
-    flex: 1,
-  },
-  scroll: {
-    flexGrow: 1,
-  },
+function createStyles(t: Theme | DarkTheme) {
+  return StyleSheet.create({
+    safe: {
+      flex: 1,
+      backgroundColor: t.colors.surface.nav,
+    },
+    flex: {
+      flex: 1,
+    },
+    scroll: {
+      flexGrow: 1,
+    },
 
-  // ── Hero ──────────────────────────────────────────────────────────────────
-  hero: {
-    backgroundColor: colors.navyDark,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxl + spacing.lg,
-    paddingHorizontal: spacing.lg,
-    alignItems: 'center',
-  },
-  logoBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 18,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    elevation: 8,
-  },
-  logoBadgeText: {
-    fontSize: 30,
-    fontWeight: '800',
-    color: colors.white,
-    letterSpacing: -0.5,
-  },
-  wordmark: {
-    fontSize: typography.sizes.xl,
-    fontWeight: '700',
-    color: colors.white,
-    letterSpacing: 0.3,
-    marginBottom: spacing.xs,
-  },
-  wordmarkAccent: {
-    color: colors.primary,
-  },
-  heroTagline: {
-    fontSize: typography.sizes.sm,
-    color: 'rgba(255, 255, 255, 0.50)',
-    letterSpacing: 0.4,
-  },
+    // ── Hero ────────────────────────────────────────────────────────────────
+    hero: {
+      backgroundColor: t.colors.surface.nav,
+      paddingTop: spacing.xxl,
+      paddingBottom: spacing.xxl + spacing.lg,
+      paddingHorizontal: spacing.lg,
+      alignItems: 'center',
+    },
+    logoBadge: {
+      width: 60,
+      height: 60,
+      borderRadius: 18,
+      backgroundColor: t.colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: spacing.md,
+      shadowColor: t.colors.primary,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.45,
+      shadowRadius: 14,
+      elevation: 8,
+    },
+    logoBadgeText: {
+      fontSize: 30,
+      fontWeight: '800',
+      color: t.colors.text.onDark,
+      letterSpacing: -0.5,
+    },
+    wordmark: {
+      fontSize: typography.sizes.xl,
+      fontWeight: '700',
+      color: t.colors.text.onDark,
+      letterSpacing: 0.3,
+      marginBottom: spacing.xs,
+    },
+    wordmarkAccent: {
+      color: t.colors.primary,
+    },
+    heroTagline: {
+      fontSize: typography.sizes.sm,
+      color: t.colors.text.onDarkSubtle,
+      letterSpacing: 0.4,
+    },
 
-  // ── Card ──────────────────────────────────────────────────────────────────
-  card: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingTop: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xxl,
-    marginTop: -spacing.lg,
-    shadowColor: colors.navyDark,
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.14,
-    shadowRadius: 20,
-    elevation: 14,
-  },
-  cardTitle: {
-    fontSize: typography.sizes.xl,
-    fontWeight: '700',
-    color: colors.navy,
-    marginBottom: spacing.xs,
-  },
-  cardSubtitle: {
-    fontSize: typography.sizes.sm,
-    color: colors.textSecondary,
-    marginBottom: spacing.lg,
-  },
+    // ── Card ──────────────────────────────────────────────────────────────
+    card: {
+      flex: 1,
+      backgroundColor: t.colors.surface.card,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      paddingTop: spacing.xl,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.xxl,
+      marginTop: -spacing.lg,
+      shadowColor: t.colors.surface.nav,
+      shadowOffset: { width: 0, height: -6 },
+      shadowOpacity: 0.14,
+      shadowRadius: 20,
+      elevation: 14,
+    },
+    cardTitle: {
+      fontSize: typography.sizes.xl,
+      fontWeight: '700',
+      color: t.colors.text.primary,
+      marginBottom: spacing.xs,
+    },
+    cardSubtitle: {
+      fontSize: typography.sizes.sm,
+      color: t.colors.text.secondary,
+      marginBottom: spacing.lg,
+    },
 
-  // ── Formulário ────────────────────────────────────────────────────────────
-  form: {
-    gap: spacing.md,
-  },
-  apiError: {
-    color: colors.error,
-    fontSize: typography.sizes.sm,
-    textAlign: 'center',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    color: colors.textSecondary,
-    fontSize: typography.sizes.sm,
-  },
-});
+    // ── Formulário ──────────────────────────────────────────────────────────
+    form: {
+      gap: spacing.md,
+    },
+    apiError: {
+      color: t.colors.error.base,
+      fontSize: typography.sizes.sm,
+      textAlign: 'center',
+    },
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: t.colors.border,
+    },
+    dividerText: {
+      color: t.colors.text.secondary,
+      fontSize: typography.sizes.sm,
+    },
+  });
+}
