@@ -70,10 +70,13 @@ apps/mobile/
 ### Fluxo Magic Link
 
 1. Usuário digita email → `AuthService.sendMagicLink(email)`
-2. Backend envia email com link `medcontrol://verify?token=xxx`
-3. Usuário toca no link → app abre via deep link → `app/(auth)/verify.tsx`
-4. `MagicLinkVerifyScreen` chama `AuthService.verifyMagicLink(token)`
-5. Backend valida token, seta cookies HttpOnly → app navega para `/(app)`
+2. Backend envia email com link web: `https://dominio.com/auth/verify?token=xxx`
+3. Usuário toca no link → browser abre a página web Angular
+4. `MagicLinkCallbackComponent` (web) tenta `window.location.href = 'medcontrol://verify?token=xxx'` imediatamente
+5. **Se app instalado**: `visibilitychange` dispara (browser fica hidden) → app abre → `app/(auth)/verify.tsx` → `MagicLinkVerifyScreen` chama `AuthService.verifyMagicLink(token)` → navega para `/(app)`
+6. **Fallback web** (app não instalado ou usuário em desktop): após 2500ms sem `visibilitychange`, a página web autentica diretamente
+
+> **Produção (Phase 2)**: Universal Links (`associatedDomains` iOS + `intentFilters` Android) permitem que `https://dominio.com/auth/verify` abra o app diretamente sem passar pelo browser.
 
 ### Fluxo Google OAuth (Mobile — authorization code + PKCE)
 

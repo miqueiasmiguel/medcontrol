@@ -34,7 +34,7 @@ src/app/
 │   │   └── auth.interceptor.ts ← withCredentials: true em /api/*
 │   ├── login/                ← LoginComponent (magic link form + Google button)
 │   ├── magic-link-sent/      ← MagicLinkSentComponent (confirmação)
-│   ├── magic-link-callback/  ← MagicLinkCallbackComponent (lê ?token, chama verifyMagicLink → cookie)
+│   ├── magic-link-callback/  ← MagicLinkCallbackComponent: trampoline (tenta medcontrol://verify primeiro, 2500ms fallback web)
 │   └── google-callback/      ← GoogleCallbackComponent (troca code → cookie)
 ├── doctors/
 │   ├── doctors.routes.ts     ← { path: '' → DoctorsListComponent }
@@ -157,6 +157,13 @@ pnpm nx serve web                 # http://localhost:4200
 ### Cloudflare Pages _redirects não suporta POST (usar Pages Function)
 - **Problema**: a regra de proxy `status 200` no `_redirects` só encaminha GET. Qualquer `POST` (como `/api/auth/google/callback`) retorna 405, o error handler do Angular redireciona para `/auth/login` — sintoma: tela pisca e volta para o login.
 - **Correto**: usar Cloudflare Pages Function em `functions/api/[[path]].js` (raiz do repo). A Function suporta todos os métodos HTTP e encaminha body, headers e cookies corretamente. O `_redirects` não deve ter regra `/api/*`.
+
+### Magic Link Trampoline — token é de uso único
+
+- **Comportamento**: `MagicLinkCallbackComponent` tenta abrir `medcontrol://verify?token=xxx` via `window.location.href` e escuta `visibilitychange`. Se o app abrir, o browser fica oculto (`hidden`) e o componente para sem chamar o backend.
+- **Fallback**: após 2500ms sem `visibilitychange`, chama `verifyMagicLink(token)` normalmente (fluxo web).
+- **Armadilha**: nunca chamar `verifyMagicLink` e tentar o deep link ao mesmo tempo — o token Redis é destruído na primeira chamada a `/auth/magic-link/verify`.
+- **Testes**: usar `Proxy` sobre o `document` real para interceptar `visibilityState`/`addEventListener`/`removeEventListener` sem quebrar os internals do Angular (que também usam `DOCUMENT`).
 
 ### fileReplacements obrigatório na configuração production do project.json
 - **Problema**: sem `fileReplacements`, o build com `--configuration=production` ainda usa `environment.ts` (dev). Variáveis como `googleRedirectUri` ficam `null` e comportamentos dependem de fallbacks incorretos (ex: `window.location.origin` retorna URL de preview do Cloudflare).
