@@ -1,0 +1,35 @@
+name: Deploy Mobile (APK)
+
+on:
+  workflow_call:
+
+jobs:
+  build-apk:
+    name: Build APK (EAS preview)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Build APK with EAS
+        working-directory: apps/mobile
+        run: |
+          eas build \
+            --platform android \
+            --profile preview \
+            --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

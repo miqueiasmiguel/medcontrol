@@ -34,7 +34,7 @@ src/app/
 │   │   └── auth.interceptor.ts ← withCredentials: true em /api/*
 │   ├── login/                ← LoginComponent (magic link form + Google button)
 │   ├── magic-link-sent/      ← MagicLinkSentComponent (confirmação)
-│   ├── magic-link-callback/  ← MagicLinkCallbackComponent (lê ?token, chama verifyMagicLink → cookie)
+│   ├── magic-link-callback/  ← MagicLinkCallbackComponent: trampoline (tenta medcontrol://verify primeiro, 2500ms fallback web)
 │   └── google-callback/      ← GoogleCallbackComponent (troca code → cookie)
 ├── doctors/
 │   ├── doctors.routes.ts     ← { path: '' → DoctorsListComponent }
@@ -151,3 +151,30 @@ pnpm nx lint web
 pnpm nx run web:type-check
 pnpm nx serve web                 # http://localhost:4200
 ```
+
+## Armadilhas Conhecidas
+
+### Cloudflare Pages _redirects não suporta POST (usar Pages Function)
+- **Problema**: a regra de proxy `status 200` no `_redirects` só encaminha GET. Qualquer `POST` (como `/api/auth/google/callback`) retorna 405, o error handler do Angular redireciona para `/auth/login` — sintoma: tela pisca e volta para o login.
+- **Correto**: usar Cloudflare Pages Function em `functions/api/[[path]].js` (raiz do repo). A Function suporta todos os métodos HTTP e encaminha body, headers e cookies corretamente. O `_redirects` não deve ter regra `/api/*`.
+
+### Magic Link Trampoline — token é de uso único
+
+- **Comportamento**: `MagicLinkCallbackComponent` tenta abrir `medcontrol://verify?token=xxx` via `window.location.href` e escuta `visibilitychange`. Se o app abrir, o browser fica oculto (`hidden`) e o componente para sem chamar o backend.
+- **Fallback**: após 2500ms sem `visibilitychange`, chama `verifyMagicLink(token)` normalmente (fluxo web).
+- **Armadilha**: nunca chamar `verifyMagicLink` e tentar o deep link ao mesmo tempo — o token Redis é destruído na primeira chamada a `/auth/magic-link/verify`.
+- **Testes**: usar `Proxy` sobre o `document` real para interceptar `visibilityState`/`addEventListener`/`removeEventListener` sem quebrar os internals do Angular (que também usam `DOCUMENT`).
+
+### Token expirado (401) deve redirecionar para /auth/login, não para /tenants/new
+- **Problema**: o `tenantGuard` chamava `GET /api/tenants/me`; se recebia 401 (token expirado), o `catchError` genérico redirecionava para `/tenants/new` ("criar organização") em vez de para o login. Além disso, não havia tratamento centralizado para 401 em requisições feitas enquanto o usuário já estava na página.
+- **Correto**: (1) o `tenantGuard` distingue `HttpErrorResponse` com `status === 401` → `/auth/login` de outros erros → `/tenants/new`; (2) o `authInterceptor` captura `router = inject(Router)` no corpo da função (não dentro do `catchError`) e navega para `/auth/login` em qualquer 401 de endpoints `/api/` que não sejam `/api/auth/**`.
+
+### fileReplacements obrigatório na configuração production do project.json
+- **Problema**: sem `fileReplacements`, o build com `--configuration=production` ainda usa `environment.ts` (dev). Variáveis como `googleRedirectUri` ficam `null` e comportamentos dependem de fallbacks incorretos (ex: `window.location.origin` retorna URL de preview do Cloudflare).
+- **Correto**: a configuração `production` em `project.json` deve sempre incluir:
+  ```json
+  "fileReplacements": [
+    { "replace": "apps/web/src/environments/environment.ts",
+      "with": "apps/web/src/environments/environment.production.ts" }
+  ]
+  ```

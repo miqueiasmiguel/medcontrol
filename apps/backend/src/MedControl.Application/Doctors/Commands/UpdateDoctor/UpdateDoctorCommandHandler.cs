@@ -9,7 +9,8 @@ namespace MedControl.Application.Doctors.Commands.UpdateDoctor;
 public sealed class UpdateDoctorCommandHandler(
     IDoctorRepository doctorRepository,
     IUnitOfWork unitOfWork,
-    ICurrentTenantService currentTenant)
+    ICurrentTenantService currentTenant,
+    ICurrentUserService currentUser)
     : IRequestHandler<UpdateDoctorCommand, Result<DoctorDto>>
 {
     private static readonly Error Unauthorized =
@@ -34,6 +35,11 @@ public sealed class UpdateDoctorCommandHandler(
         if (doctor is null)
         {
             return Result.Failure<DoctorDto>(NotFound);
+        }
+
+        if (doctor.UserId.HasValue && doctor.UserId != currentUser.UserId)
+        {
+            return Result.Failure<DoctorDto>(DoctorProfile.Errors.OnlyLinkedDoctorCanUpdate);
         }
 
         var crmChanged = doctor.Crm != request.Crm.Trim() || doctor.CouncilState != request.CouncilState.Trim();

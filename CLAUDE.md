@@ -23,6 +23,11 @@ Payments     ← aggregate root Payment (core domain) — backend implementado
              ← endpoints: GET/POST /payments, GET /payments/{id}, PATCH /payments/{id}
              ←            PATCH /payments/{id}/items/{itemId}, POST /payments/{id}/items
              ←            DELETE /payments/{id}/items/{itemId}
+             ← mobile: lista (app/(app)/index.tsx) + detalhe (app/(app)/payments/[id].tsx)
+             ← PaymentService.getPayment(id) → GET /payments/{id}
+             ← usePayment(id): { payment, loading, error, refetch }
+             ← PaymentCard.onPress → router.push(`/payments/${id}`)
+             ← convênio resolvido client-side via HealthPlanService.listHealthPlans()
 Users        ← User.UpdateProfile() — backend + web implementados
              ← endpoints: GET /users/me, PATCH /users/me/profile
              ← web: /settings (ThemeService: light/dark/system via data-theme attr; SettingsService: getMe/updateProfile)
@@ -35,6 +40,18 @@ Members      ← gerenciamento de membros do tenant — backend + web implementa
              ← TestAuthHandler: X-Test-Roles header (comma-separated) → claims "roles"
              ← CreateAuthenticatedClient: parâmetro opcional roles string[]
 Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
+             ← DoctorProfile.Errors.OnlyLinkedDoctorCanUpdate (Forbidden) — apenas o user vinculado pode editar
+             ← PATCH /doctors/{id} bloqueia edição quando outro user está vinculado (403 Forbidden)
+             ← GET /users/me/doctor-profile → DoctorDto? (200 empty body se não vinculado)
+             ← PATCH /users/me/doctor-profile → IReadOnlyList<DoctorDto> (atualiza todos os perfis cross-tenant)
+             ← mobile: app/(app)/settings.tsx → SettingsScreen (perfil + tema + logout)
+             ← SettingsScreen: edita perfil + seleção de tema (sistema/claro/escuro) + botão sair
+             ← ThemePreferenceProvider (src/contexts/ThemeContext.tsx): persiste preferência em AsyncStorage (mmc_theme)
+             ← useAppTheme(): retorna tema correto baseado na preferência; substitui useTheme() de @medcontrol/design-system/native
+             ← useThemePreference(): { preference, setPreference } — usado em SettingsScreen
+             ← UserService.getDoctorProfile() + updateMyDoctorProfile() + updateProfile()
+             ← useDoctorProfile(): { doctorProfile, loading, error, refetch }
+             ← submit paralelo: Promise.all([updateProfile, updateMyDoctorProfile])
 HealthPlans  ← Convênio (nome, código TISS)
 Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor, vigências) — UI pronta, backend implementado
              ← ProcedureImport (histórico de importações CSV TUSS/CBHPM por tenant)
@@ -94,7 +111,11 @@ medcontrol/
 │   ├── MedControl.Infrastructure/
 │   └── MedControl.Api/Controllers/
 ├── apps/web/src/app/[feature]/
-├── apps/mobile/src/screens/[feature]/
+├── apps/mobile/
+│   ├── app.config.ts        # config dinâmica (lê API_URL do env — substitui app.json em builds eas)
+│   ├── app.json             # config estática (dev local; app.config.ts tem precedência quando presente)
+│   ├── eas.json             # perfis eas: development (apk), preview (apk + API_URL prod), production (aab)
+│   └── src/screens/[feature]/
 └── packages/contracts/src/[domain]/
 ```
 
@@ -114,7 +135,8 @@ Domain (sem dependências)
 ## Autenticação
 
 - **Magic Link**: token one-time em `IDistributedCache`, TTL 15 min
-- **Google OAuth**: troca de code, busca user info, cria/atualiza User
+- **Google OAuth (web)**: `POST /auth/google/callback` — troca authorization code via `webClientId + clientSecret`, cria/atualiza User
+- **Google OAuth (mobile)**: `POST /auth/google/verify` — verifica `id_token` via `GET https://oauth2.googleapis.com/tokeninfo` sem `client_secret`, cria/atualiza User
 - **JWT**: claims `sub`, `email`, `tenant_id`, `roles`, `global_roles`
 - Troca de tenant: `POST /auth/switch-tenant` re-emite JWT
 
@@ -228,4 +250,14 @@ R2_ACCOUNT_ID=...
 R2_ACCESS_KEY_ID=...
 R2_SECRET_ACCESS_KEY=...
 R2_BUCKET_NAME=medcontrol-uploads
+EXPO_TOKEN=...                    # deploy mobile — gerado em expo.dev/settings/access-tokens
 ```
+
+## Deploy Mobile — EAS Build
+
+- **Workflow**: `.github/workflows/deploy-mobile.yml` (chamado por `ci.yml` em push no `main`)
+- **Perfil**: `preview` → APK para distribuição interna (sem publicar na Play Store)
+- **URL da API**: injetada via `eas.json > preview > env.API_URL` → `https://163.176.217.87.sslip.io`
+- **Config dinâmica**: `app.config.ts` lê `process.env.API_URL`; em dev local usa `app.json` como fallback
+- **APK**: disponível no dashboard expo.dev/builds após ~5–10 min; link exibido no log do GitHub Actions
+- **Secret obrigatório no GitHub**: `EXPO_TOKEN`

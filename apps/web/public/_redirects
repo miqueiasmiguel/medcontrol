@@ -1,0 +1,2 @@
+# /api/* is handled by functions/api/[[path]].js (supports POST/PATCH/DELETE)
+# Cloudflare Pages serves index.html automatically for unmatched SPA routes

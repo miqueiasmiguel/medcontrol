@@ -42,7 +42,7 @@ public sealed class PaymentEndpointsTests : IClassFixture<TestWebApplicationFact
         var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
 
         _factory.PaymentRepository
-            .ListAsync(Arg.Any<CancellationToken>())
+            .ListAsync(Arg.Any<PaymentFilters>(), Arg.Any<CancellationToken>())
             .Returns(new List<Payment>());
 
         var response = await client.GetAsync("/payments");
@@ -50,6 +50,71 @@ public sealed class PaymentEndpointsTests : IClassFixture<TestWebApplicationFact
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await response.Content.ReadFromJsonAsync<List<PaymentDto>>();
         body.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GET_payments_ComFiltroStatus_PassaFiltroParaRepositorio()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
+
+        _factory.PaymentRepository
+            .ListAsync(Arg.Any<PaymentFilters>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Payment>());
+
+        var response = await client.GetAsync("/payments?status=Paid");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        await _factory.PaymentRepository.Received(1).ListAsync(
+            Arg.Is<PaymentFilters>(f => f.Status == PaymentStatus.Paid),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GET_payments_QuandoRoleDoctor_ForcaFiltroPorDoctorIdDoUsuario()
+    {
+        var doctorUserId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var client = _factory.CreateAuthenticatedClient(doctorUserId, "doctor@example.com", tenantId, ["doctor"]);
+
+        _factory.PaymentRepository
+            .ListAsync(Arg.Any<PaymentFilters>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Payment>());
+
+        var response = await client.GetAsync("/payments");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        await _factory.PaymentRepository.Received(1).ListAsync(
+            Arg.Is<PaymentFilters>(f => f.DoctorId == doctorUserId),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GET_payments_ComMultiplosFiltros_PassaTodosParaRepositorio()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var healthPlanId = Guid.NewGuid();
+        var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId);
+
+        _factory.PaymentRepository
+            .ListAsync(Arg.Any<PaymentFilters>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Payment>());
+
+        var response = await client.GetAsync(
+            $"/payments?healthPlanId={healthPlanId}&dateFrom=2026-01-01&dateTo=2026-03-31&search=João&sortBy=TotalValue&sortDescending=false");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        await _factory.PaymentRepository.Received(1).ListAsync(
+            Arg.Is<PaymentFilters>(f =>
+                f.HealthPlanId == healthPlanId &&
+                f.DateFrom == new DateOnly(2026, 1, 1) &&
+                f.DateTo == new DateOnly(2026, 3, 31) &&
+                f.Search == "João" &&
+                f.SortBy == PaymentSortBy.TotalValue &&
+                f.SortDescending == false),
+            Arg.Any<CancellationToken>());
     }
 
     // GET /payments/{id}
@@ -108,6 +173,7 @@ public sealed class PaymentEndpointsTests : IClassFixture<TestWebApplicationFact
         var body = await response.Content.ReadFromJsonAsync<PaymentDto>();
         body.Should().NotBeNull();
         body!.AppointmentNumber.Should().Be("ATD-001");
+        body.TotalValue.Should().Be(150.00m);
     }
 
     // POST /payments
@@ -186,6 +252,7 @@ public sealed class PaymentEndpointsTests : IClassFixture<TestWebApplicationFact
         body!.AppointmentNumber.Should().Be("ATD-001");
         body.Items.Should().HaveCount(1);
         body.Items[0].Status.Should().Be("Pending");
+        body.TotalValue.Should().Be(150.00m);
     }
 
     // PATCH /payments/{paymentId}/items/{itemId}

@@ -244,4 +244,29 @@ public sealed class DoctorEndpointsTests : IClassFixture<TestWebApplicationFacto
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
+
+    [Fact]
+    public async Task PATCH_doctors_id_MedicoVinculadoAOutroUsuario_Retorna403()
+    {
+        var linkedUserId = Guid.NewGuid();
+        var currentUserId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var doctor = DoctorProfile.Create(tenantId, "Dr. João", "123456", "SP", "Cardiologia").Value;
+        doctor.LinkUser(linkedUserId);
+        var client = _factory.CreateAuthenticatedClient(currentUserId, "other@example.com", tenantId);
+
+        _factory.DoctorRepository
+            .GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>())
+            .Returns(doctor);
+
+        var response = await client.PatchAsJsonAsync($"/doctors/{doctor.Id}", new
+        {
+            name = "Dr. João",
+            crm = "123456",
+            councilState = "SP",
+            specialty = "Cardiologia",
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
 }

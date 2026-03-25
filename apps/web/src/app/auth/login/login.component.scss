@@ -1,95 +1,191 @@
+// Force light-theme tokens for form section (card bottom).
+// Palette tokens (--mmc-orange-*, --mmc-neutral-*, --mmc-navy-*) are never
+// overridden in dark mode, so we pin to them directly.
+:host {
+  color-scheme: light;
+  --mmc-bg:            var(--mmc-navy-950);
+  --mmc-bg-card:       var(--mmc-neutral-0);
+  --mmc-bg-card-hover: var(--mmc-neutral-100);
+  --mmc-border:        var(--mmc-neutral-200);
+  --mmc-border-strong: var(--mmc-neutral-300);
+  --mmc-text-primary:  var(--mmc-neutral-900);
+  --mmc-text-secondary: var(--mmc-neutral-600);
+  --mmc-text-tertiary:  var(--mmc-neutral-500);
+  --mmc-text-link:      var(--mmc-orange-600);
+  --mmc-action-primary:       var(--mmc-orange-500);
+  --mmc-action-primary-hover: var(--mmc-orange-600);
+  --mmc-action-primary-active: var(--mmc-orange-700);
+  --mmc-action-primary-text:  var(--mmc-neutral-0);
+  --mmc-error:       #EF4444;
+  --mmc-error-light: #FEF2F2;
+  --mmc-shadow-md:    0px 4px 6px -1px rgba(15, 26, 64, 0.08), 0px 2px 4px -1px rgba(15, 26, 64, 0.04);
+  --mmc-shadow-focus: 0px 0px 0px 3px rgba(249, 115, 22, 0.25);
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 .login-page {
   min-height: 100vh;
-  background: var(--mmc-neutral-50, #f5f5f5);
+  background: var(--mmc-navy-950);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--mmc-space-4, 1rem);
+  padding: var(--mmc-space-4);
 }
+
+// ── Card (wraps hero + form section) ─────────────────────────────────────────
 
 .login-card {
-  background: #fff;
-  border-radius: var(--mmc-radius-lg, 12px);
-  padding: var(--mmc-space-8, 2rem);
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: var(--mmc-radius-2xl);
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(15, 26, 64, 0.5);
 }
 
-.login-logo {
-  margin-bottom: var(--mmc-space-6, 1.5rem);
+// ── Hero ─────────────────────────────────────────────────────────────────────
+
+.login-hero {
+  background: var(--mmc-navy-950);
+  padding: var(--mmc-space-10) var(--mmc-space-8) var(--mmc-space-10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--mmc-space-2);
+}
+
+.login-logo-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--mmc-orange-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--mmc-space-2);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45);
+
+  &__letter {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--mmc-neutral-0);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
 }
 
 .login-wordmark {
-  font-size: 1.5rem;
+  font-size: var(--mmc-text-xl);
   font-weight: 700;
-  color: var(--mmc-navy-900, #1a2744);
+  color: var(--mmc-neutral-0);
+  letter-spacing: 0.3px;
+  margin: 0;
+
+  &__accent {
+    color: var(--mmc-orange-500);
+  }
+}
+
+.login-tagline {
+  font-size: var(--mmc-text-sm);
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.4px;
+  margin: 0;
+}
+
+// ── Form section ─────────────────────────────────────────────────────────────
+
+.login-form-section {
+  background: var(--mmc-bg-card);
+  border-top-left-radius: var(--mmc-radius-2xl);
+  border-top-right-radius: var(--mmc-radius-2xl);
+  padding: var(--mmc-space-8);
+  margin-top: calc(var(--mmc-space-4) * -1);
+  box-shadow: 0 -6px 24px rgba(15, 26, 64, 0.14);
 }
 
 .login-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--mmc-navy-900, #1a2744);
-  margin: 0 0 var(--mmc-space-2, 0.5rem);
+  font-size: var(--mmc-text-xl);
+  font-weight: 700;
+  color: var(--mmc-text-primary);
+  margin: 0 0 var(--mmc-space-1);
 }
 
 .login-subtitle {
-  color: var(--mmc-text-secondary, #6b7280);
-  margin: 0 0 var(--mmc-space-6, 1.5rem);
+  font-size: var(--mmc-text-sm);
+  color: var(--mmc-text-secondary);
+  margin: 0 0 var(--mmc-space-6);
 }
+
+// ── Form fields ──────────────────────────────────────────────────────────────
 
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: var(--mmc-space-1, 0.25rem);
-  margin-bottom: var(--mmc-space-4, 1rem);
+  gap: var(--mmc-space-1);
+  margin-bottom: var(--mmc-space-4);
 
   label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--mmc-navy-900, #1a2744);
+    font-size: var(--mmc-text-sm);
+    font-weight: var(--mmc-font-weight-medium);
+    color: var(--mmc-text-primary);
   }
 
   input[type='email'] {
     width: 100%;
-    padding: var(--mmc-space-3, 0.75rem) var(--mmc-space-4, 1rem);
-    border: 1px solid var(--mmc-neutral-300, #d1d5db);
-    border-radius: var(--mmc-radius-md, 8px);
-    font-size: 1rem;
+    padding: var(--mmc-space-3) var(--mmc-space-4);
+    border: 1px solid var(--mmc-border);
+    border-radius: var(--mmc-radius-md);
+    font-size: var(--mmc-text-md);
+    background: var(--mmc-bg-card);
+    color: var(--mmc-text-primary);
+    color-scheme: light;
     box-sizing: border-box;
+
+    &::placeholder {
+      color: var(--mmc-text-tertiary);
+    }
 
     &:focus {
       outline: none;
-      border-color: var(--mmc-orange-500, #f97316);
-      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.2);
+      border-color: var(--mmc-action-primary);
+      box-shadow: var(--mmc-shadow-focus);
     }
   }
 }
 
 .field-error {
-  font-size: 0.75rem;
-  color: var(--mmc-error, #ef4444);
+  font-size: var(--mmc-text-xs);
+  color: var(--mmc-error);
 }
 
 .form-error {
-  font-size: 0.875rem;
-  color: var(--mmc-error, #ef4444);
-  margin: 0 0 var(--mmc-space-4, 1rem);
+  font-size: var(--mmc-text-sm);
+  color: var(--mmc-error);
+  margin: 0 0 var(--mmc-space-4);
+  text-align: center;
 }
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
 
 .btn-primary {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--mmc-space-2, 0.5rem);
-  background: var(--mmc-orange-500, #f97316);
-  color: #fff;
+  gap: var(--mmc-space-2);
+  background: var(--mmc-action-primary);
+  color: var(--mmc-action-primary-text);
   border: none;
-  border-radius: var(--mmc-radius-md, 8px);
-  padding: var(--mmc-space-3, 0.75rem) var(--mmc-space-4, 1rem);
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: var(--mmc-radius-md);
+  padding: var(--mmc-space-3) var(--mmc-space-4);
+  font-size: var(--mmc-text-md);
+  font-weight: var(--mmc-font-weight-medium);
   cursor: pointer;
+  transition: background 150ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--mmc-action-primary-hover);
+  }
 
   &:disabled {
     opacity: 0.6;
@@ -101,18 +197,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--mmc-space-2, 0.5rem);
+  gap: var(--mmc-space-2);
   background: transparent;
-  color: var(--mmc-navy-900, #1a2744);
-  border: 1px solid var(--mmc-neutral-300, #d1d5db);
-  border-radius: var(--mmc-radius-md, 8px);
-  padding: var(--mmc-space-3, 0.75rem) var(--mmc-space-4, 1rem);
-  font-size: 1rem;
-  font-weight: 500;
+  color: var(--mmc-text-primary);
+  border: 1px solid var(--mmc-border-strong);
+  border-radius: var(--mmc-radius-md);
+  padding: var(--mmc-space-3) var(--mmc-space-4);
+  font-size: var(--mmc-text-md);
+  font-weight: var(--mmc-font-weight-medium);
   cursor: pointer;
+  transition: background 150ms ease;
 
   &:hover {
-    background: var(--mmc-neutral-50, #f5f5f5);
+    background: var(--mmc-bg-card-hover);
   }
 }
 
@@ -120,22 +217,43 @@
   width: 100%;
 }
 
+// ── Divider ───────────────────────────────────────────────────────────────────
+
 .divider {
   display: flex;
   align-items: center;
-  margin: var(--mmc-space-5, 1.25rem) 0;
+  margin: var(--mmc-space-5) 0;
 
   &::before,
   &::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--mmc-neutral-200, #e5e7eb);
+    background: var(--mmc-border);
   }
 
   span {
-    padding: 0 var(--mmc-space-3, 0.75rem);
-    font-size: 0.875rem;
-    color: var(--mmc-text-secondary, #6b7280);
+    padding: 0 var(--mmc-space-3);
+    font-size: var(--mmc-text-sm);
+    color: var(--mmc-text-tertiary);
+  }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+.login-footer {
+  margin: var(--mmc-space-5) 0 0;
+  text-align: center;
+  font-size: var(--mmc-text-xs);
+  color: var(--mmc-text-tertiary);
+
+  &__link {
+    color: var(--mmc-text-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: var(--mmc-orange-700);
+    }
   }
 }

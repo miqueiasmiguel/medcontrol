@@ -2,6 +2,7 @@ name: Deploy Web
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -29,11 +30,7 @@ jobs:
           NODE_ENV: production
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: >
-            pages deploy dist/apps/web/browser
-            --project-name=medcontrol-web
-            --commit-dirty=true
+        run: npx wrangler pages deploy dist/apps/web/browser --project-name=medcontrol-web --commit-dirty=true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

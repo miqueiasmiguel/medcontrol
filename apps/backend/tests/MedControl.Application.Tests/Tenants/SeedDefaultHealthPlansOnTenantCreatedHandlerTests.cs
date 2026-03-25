@@ -19,14 +19,14 @@ public sealed class SeedDefaultHealthPlansOnTenantCreatedHandlerTests
     }
 
     [Fact]
-    public async Task Handle_QuandoTenantCriado_DeveCadastrar8ConveniosPadrao()
+    public async Task Handle_QuandoTenantCriado_DeveCadastrar16ConveniosPadrao()
     {
         var tenantId = Guid.NewGuid();
         var domainEvent = new TenantCreatedEvent(tenantId, "Clínica Teste", DateTimeOffset.UtcNow);
 
         await _sut.Handle(domainEvent, CancellationToken.None);
 
-        await _healthPlanRepository.Received(8).AddAsync(
+        await _healthPlanRepository.Received(16).AddAsync(
             Arg.Any<HealthPlan>(),
             Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());

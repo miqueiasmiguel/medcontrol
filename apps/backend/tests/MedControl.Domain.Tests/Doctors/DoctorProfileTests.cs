@@ -148,6 +148,16 @@ public class DoctorProfileUpdateTests
     }
 }
 
+public class DoctorProfileAuthorizationLockTests
+{
+    [Fact]
+    public void Errors_OnlyLinkedDoctorCanUpdate_DeveTerTipoForbidden()
+    {
+        DoctorProfile.Errors.OnlyLinkedDoctorCanUpdate.Type.Should().Be(ErrorType.Forbidden);
+        DoctorProfile.Errors.OnlyLinkedDoctorCanUpdate.Code.Should().Be("DoctorProfile.OnlyLinkedDoctorCanUpdate");
+    }
+}
+
 public class DoctorProfileLinkUserTests
 {
     [Fact]

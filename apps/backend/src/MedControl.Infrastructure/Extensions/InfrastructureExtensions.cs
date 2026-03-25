@@ -13,6 +13,7 @@ using MedControl.Infrastructure.Http;
 using MedControl.Infrastructure.Persistence;
 using MedControl.Infrastructure.Persistence.Interceptors;
 using MedControl.Infrastructure.Persistence.Repositories;
+using MedControl.Infrastructure.Persistence.Seeding;
 using MedControl.Infrastructure.Procedures.Parsers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -87,6 +88,15 @@ public static class InfrastructureExtensions
         services.AddScoped<IProcedureFileParser, TussCsvParser>();
         services.AddScoped<IProcedureFileParser, CbhpmCsvParser>();
 
+        services.AddHealthChecks()
+            .AddDbContextCheck<ApplicationDbContext>("database");
+
+        return services;
+    }
+
+    public static IServiceCollection AddDevSeed(this IServiceCollection services)
+    {
+        services.AddScoped<DevDataSeeder>();
         return services;
     }
 }

@@ -14,4 +14,5 @@ public sealed record PaymentDto(
     string PaymentLocation,
     string? Notes,
     string Status,
+    decimal TotalValue,
     IReadOnlyList<PaymentItemDto> Items);

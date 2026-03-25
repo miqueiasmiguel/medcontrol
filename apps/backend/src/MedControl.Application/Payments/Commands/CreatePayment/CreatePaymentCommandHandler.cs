@@ -64,6 +64,7 @@ public sealed class CreatePaymentCommandHandler(
         payment.PaymentLocation,
         payment.Notes,
         payment.Status.ToString(),
+        payment.Items.Sum(i => i.Value),
         payment.Items.Select(i => new PaymentItemDto(
             i.Id,
             i.ProcedureId,

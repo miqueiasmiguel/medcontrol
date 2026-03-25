@@ -2,6 +2,31 @@
 
 Use este comando antes de criar ou refatorar **qualquer componente visual** no projeto web.
 
+## Git Workflow — Obrigatório
+
+**Antes de criar qualquer arquivo**, crie uma branch:
+
+```bash
+git checkout -b feat/<nome-do-componente>
+# Exemplos:
+# feat/payment-card-component
+# feat/member-form-redesign
+# fix/login-page-layout
+```
+
+**Durante a implementação**, faça commits granulares:
+
+```bash
+git commit -m "feat(web): add <component> template and styles"
+git commit -m "feat(web): add <component> interactions and state"
+git commit -m "test(web): add <component> unit tests"
+```
+
+**Ao final**, pergunte ao usuário:
+> "Componente implementado. Posso fazer o merge da branch `<nome>` na `main` e apagá-la?"
+
+---
+
 ## Passo 1 — Ler o design system
 
 Antes de escrever qualquer linha de CSS ou template, leia os seguintes arquivos:

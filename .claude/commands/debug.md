@@ -112,4 +112,26 @@ dotnet ef migrations remove --project src/MedControl.Infrastructure \
 1. Aplique a correção mínima
 2. Execute o teste que reproduz o problema → deve passar
 3. Execute toda a suite → nada deve quebrar
-4. Faça commit: `fix(scope): descrição do que foi corrigido`
+
+---
+
+## Git Workflow — Quando o debug resultar em código alterado
+
+Se o diagnóstico exigiu mudanças em código (não apenas leitura), crie uma branch antes de aplicar o fix:
+
+```bash
+git checkout -b fix/<descricao-do-problema>
+# Exemplos:
+# fix/testcontainers-timeout
+# fix/jwt-issuer-mismatch
+# fix/mediator-handler-not-registered
+```
+
+Após corrigir e verificar:
+
+```bash
+git commit -m "fix(<scope>): <descrição da correção>"
+```
+
+Ao final, pergunte ao usuário:
+> "Problema corrigido. Posso fazer o merge da branch `fix/<nome>` na `main` e apagá-la?"

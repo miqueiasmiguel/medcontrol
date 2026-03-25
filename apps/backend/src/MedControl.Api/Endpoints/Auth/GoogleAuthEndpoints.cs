@@ -1,4 +1,5 @@
 using MedControl.Application.Auth.Commands.GoogleLogin;
+using MedControl.Application.Auth.Commands.GoogleVerifyIdToken;
 using MedControl.Application.Auth.DTOs;
 using MedControl.Application.Mediator;
 using MedControl.Domain.Common;
@@ -11,6 +12,12 @@ public static class GoogleAuthEndpoints
     {
         group.MapPost("/callback", GoogleCallback)
              .WithName("GoogleCallback")
+             .Produces(StatusCodes.Status204NoContent)
+             .Produces(StatusCodes.Status400BadRequest)
+             .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/verify", GoogleVerify)
+             .WithName("GoogleVerify")
              .Produces(StatusCodes.Status204NoContent)
              .Produces(StatusCodes.Status400BadRequest)
              .Produces(StatusCodes.Status401Unauthorized);
@@ -36,6 +43,24 @@ public static class GoogleAuthEndpoints
         return Results.NoContent();
     }
 
+    private static async Task<IResult> GoogleVerify(
+        GoogleVerifyRequest request,
+        HttpContext ctx,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<AuthTokenDto>>(
+            new GoogleVerifyIdTokenCommand(request.IdToken), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        CookieHelper.SetAuthCookies(ctx, result.Value!);
+        return Results.NoContent();
+    }
+
     private static IResult ToErrorResult(Error error) => error.Type switch
     {
         ErrorType.Unauthorized => Results.Problem(error.Description, statusCode: 401),
@@ -46,3 +71,4 @@ public static class GoogleAuthEndpoints
 }
 
 public record GoogleCallbackRequest(string Code, string RedirectUri);
+public record GoogleVerifyRequest(string IdToken);
