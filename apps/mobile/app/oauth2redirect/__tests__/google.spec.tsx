@@ -8,11 +8,23 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 const mockReplace = jest.fn();
+const mockDispatch = jest.fn();
 let mockCode: string | undefined = 'auth-code-from-google-123';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ replace: mockReplace }),
   useLocalSearchParams: () => ({ code: mockCode }),
+  useRootNavigation: () => ({ dispatch: mockDispatch }),
+}));
+
+jest.mock('@react-navigation/native', () => ({
+  CommonActions: {
+    reset: jest.fn((state: unknown) => ({ type: 'RESET', state })),
+  },
+}));
+
+jest.mock('../../../src/hooks/useAuth', () => ({
+  useAuth: () => ({ setSession: jest.fn().mockResolvedValue(undefined) }),
 }));
 
 jest.mock('expo-constants', () => ({
@@ -41,6 +53,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 
 beforeEach(async () => {
   jest.clearAllMocks();
+  mockDispatch.mockClear();
   mockCode = 'auth-code-from-google-123';
   await AsyncStorage.setItem('oauth_code_verifier', 'test-code-verifier-xyz');
   await AsyncStorage.setItem(
@@ -84,7 +97,7 @@ describe('GoogleOAuthCallback', () => {
     render(<GoogleOAuthCallback />, { wrapper });
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith('/(app)');
+      expect(mockDispatch).toHaveBeenCalled();
     });
   });
 

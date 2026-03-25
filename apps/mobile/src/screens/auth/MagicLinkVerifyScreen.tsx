@@ -34,7 +34,7 @@ export function MagicLinkVerifyScreen() {
         setError(err.message ?? 'Erro ao verificar o link');
         setIsLoading(false);
       });
-  }, [token, router]);
+  }, [token, setSession, rootNavigation]);
 
   if (isLoading && !error) {
     return (
