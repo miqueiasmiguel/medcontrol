@@ -1,4 +1,5 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { tenantGuard } from './tenant.guard';
@@ -86,5 +87,22 @@ describe('tenantGuard', () => {
 
     expect(router.createUrlTree).toHaveBeenCalledWith(['/tenants/new']);
     expect(result).toEqual(['/tenants/new']);
+  }));
+
+  it('getMyTenants 401 → redirects to /auth/login', fakeAsync(() => {
+    tenantService.getMyTenants.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 401 })),
+    );
+    let result: unknown;
+
+    TestBed.runInInjectionContext(() => {
+      (tenantGuard({} as never, {} as never) as ReturnType<typeof of>).subscribe((r) => {
+        result = r;
+      });
+    });
+    tick();
+
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/auth/login']);
+    expect(result).toEqual(['/auth/login']);
   }));
 });

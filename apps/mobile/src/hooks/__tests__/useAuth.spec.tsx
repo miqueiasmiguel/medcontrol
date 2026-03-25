@@ -2,6 +2,7 @@ import { act, renderHook } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../useAuth';
 import { AuthService } from '../../services/auth.service';
+import { emitUnauthorized } from '../../lib/unauthorizedEmitter';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
@@ -44,6 +45,23 @@ describe('useAuth', () => {
 
     expect(result.current.isAuthenticated).toBe(true);
     expect(await AsyncStorage.getItem('mmc_session')).toBe('1');
+  });
+
+  it('limpa sessão quando evento unauthorized é emitido', async () => {
+    await AsyncStorage.setItem('mmc_session', '1');
+
+    const { result } = renderHook(() => useAuth());
+    await act(() => Promise.resolve());
+
+    expect(result.current.isAuthenticated).toBe(true);
+
+    await act(async () => {
+      emitUnauthorized();
+      await Promise.resolve();
+    });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(await AsyncStorage.getItem('mmc_session')).toBeNull();
   });
 
   it('logout chama AuthService.logout e limpa estado e AsyncStorage', async () => {

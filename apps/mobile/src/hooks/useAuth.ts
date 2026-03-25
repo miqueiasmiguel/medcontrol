@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthService } from '../services/auth.service';
+import { onUnauthorized } from '../lib/unauthorizedEmitter';
 
 const SESSION_KEY = 'mmc_session';
 
@@ -22,6 +23,12 @@ export function useAuth() {
     }
     setIsAuthenticated(authenticated);
   }, []);
+
+  useEffect(() => {
+    return onUnauthorized(() => {
+      void setSession(false);
+    });
+  }, [setSession]);
 
   const logout = useCallback(async () => {
     await AuthService.logout();

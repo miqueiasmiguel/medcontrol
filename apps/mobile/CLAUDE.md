@@ -198,6 +198,10 @@ Configurar em `app.json > expo > extra` ou via `app.config.ts` para produção.
 - **Problema**: `/(auth)/_layout.tsx` sem guard permitia que o back gesture retornasse à tela de login após autenticação, mesmo sem fazer logout.
 - **Correto**: `/(auth)/_layout.tsx` deve usar `useAuth()` e redirecionar para `/(app)` via `router.replace` quando `isAuthenticated=true`. O guard é simétrico ao de `/(app)/_layout.tsx`.
 
+### Token expirado (401) deve redirecionar para login automaticamente
+- **Problema**: quando o JWT expira, serviços retornavam 401 como erro genérico. `useAuth.isAuthenticated` permanecia `true` (flag no AsyncStorage não era limpa), então o layout não redirecionava — o usuário ficava na tela de pagamentos com dados vazios.
+- **Correto**: serviços data (`user.service.ts`, `payment.service.ts`, `health-plan.service.ts`) detectam `res.status === 401` e chamam `emitUnauthorized()` de `src/lib/unauthorizedEmitter.ts`. `useAuth` ouve esse evento e chama `setSession(false)`, o que limpa o AsyncStorage e atualiza `isAuthenticated` para `false`. O `(app)/_layout.tsx` reage e redireciona para login. **Não adicionar a lógica de 401 ao `AuthService`** — os endpoints de auth são chamados antes da sessão existir.
+
 ### IP do backend no app.json precisa refletir o IP real da máquina
 - O campo `extra.apiUrl` em `apps/mobile/app.json` deve usar o IP local da máquina de desenvolvimento (ex: `http://192.168.0.xxx:5113`). `localhost` não funciona em dispositivos físicos. Atualizar sempre que o IP mudar (DHCP).
 

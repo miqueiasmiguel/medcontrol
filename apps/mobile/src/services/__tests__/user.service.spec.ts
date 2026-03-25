@@ -1,4 +1,5 @@
 import { UserService } from '../user.service';
+import { onUnauthorized } from '../../lib/unauthorizedEmitter';
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
@@ -60,6 +61,38 @@ describe('UserService', () => {
       });
 
       await expect(UserService.getMe()).rejects.toThrow('Unauthorized');
+    });
+
+    it('emite evento unauthorized ao receber 401', async () => {
+      const listener = jest.fn();
+      const unsubscribe = onUnauthorized(listener);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: 'Unauthorized' }),
+      });
+
+      await expect(UserService.getMe()).rejects.toThrow();
+      expect(listener).toHaveBeenCalledTimes(1);
+
+      unsubscribe();
+    });
+
+    it('não emite evento unauthorized para outros erros http', async () => {
+      const listener = jest.fn();
+      const unsubscribe = onUnauthorized(listener);
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+        json: async () => ({}),
+      });
+
+      await expect(UserService.getMe()).rejects.toThrow();
+      expect(listener).not.toHaveBeenCalled();
+
+      unsubscribe();
     });
 
     it('lança erro HTTP genérico quando body não tem message', async () => {
