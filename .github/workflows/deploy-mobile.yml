@@ -21,10 +21,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
       - name: Build APK with EAS
         working-directory: apps/mobile
         run: |
-          pnpm exec eas build \
+          eas build \
             --platform android \
             --profile preview \
             --non-interactive
