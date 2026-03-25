@@ -1,0 +1,315 @@
+// Replica a lógica de ativação do dark mode do design system:
+// 1) toggle explícito via [data-theme="dark"] no <html>
+// 2) preferência do sistema via prefers-color-scheme (sem data-theme="light")
+@mixin when-dark {
+  [data-theme="dark"] & { @content; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) & { @content; }
+  }
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+.page {
+  min-height: 100vh;
+  background: var(--mmc-bg);
+  font-family: var(--mmc-font-sans);
+  color: var(--mmc-text-primary);
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+
+.page-header {
+  background: var(--mmc-bg-card);
+  border-bottom: 1px solid var(--mmc-border);
+  box-shadow: var(--mmc-shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.header-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 var(--mmc-space-6);
+  height: var(--mmc-topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--mmc-space-2-5);
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--mmc-action-primary);
+  border-radius: var(--mmc-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--mmc-text-md);
+  font-weight: var(--mmc-font-weight-bold);
+  color: var(--mmc-action-primary-text);
+  line-height: 1;
+}
+
+.brand-name {
+  font-size: var(--mmc-text-lg);
+  font-weight: var(--mmc-font-weight-semibold);
+  color: var(--mmc-text-primary);
+}
+
+.back-link {
+  font-size: var(--mmc-text-sm);
+  font-weight: var(--mmc-font-weight-medium);
+  color: var(--mmc-text-link);
+  text-decoration: none;
+  transition: color 150ms ease;
+
+  &:hover {
+    color: var(--mmc-text-link-hover);
+    text-decoration: underline;
+  }
+}
+
+// ─── Content ──────────────────────────────────────────────────────────────────
+
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--mmc-space-10) var(--mmc-space-6) var(--mmc-space-16);
+}
+
+// ─── Document ─────────────────────────────────────────────────────────────────
+
+.doc {
+  background: var(--mmc-bg-card);
+  border: 1px solid var(--mmc-border);
+  border-radius: var(--mmc-radius-xl);
+  box-shadow: var(--mmc-shadow-md);
+  padding: var(--mmc-space-10) var(--mmc-space-12);
+
+  @media (max-width: 640px) {
+    padding: var(--mmc-space-6);
+    border-radius: var(--mmc-radius-lg);
+  }
+}
+
+.doc-header {
+  margin-bottom: var(--mmc-space-10);
+  padding-bottom: var(--mmc-space-8);
+  border-bottom: 1px solid var(--mmc-border);
+}
+
+.doc-title {
+  font-size: var(--mmc-text-4xl);
+  font-weight: var(--mmc-font-weight-bold);
+  color: var(--mmc-text-primary);
+  margin: 0 0 var(--mmc-space-2);
+  line-height: 1.2;
+}
+
+.doc-meta {
+  font-size: var(--mmc-text-sm);
+  color: var(--mmc-text-tertiary);
+  margin: 0;
+}
+
+.doc-footer {
+  margin-top: var(--mmc-space-10);
+  padding-top: var(--mmc-space-8);
+  border-top: 1px solid var(--mmc-border);
+}
+
+// ─── Sections ─────────────────────────────────────────────────────────────────
+
+.section {
+  margin-bottom: var(--mmc-space-10);
+
+  p {
+    font-size: var(--mmc-text-md);
+    line-height: 1.7;
+    color: var(--mmc-text-primary);
+    margin: 0 0 var(--mmc-space-4);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.lead {
+  font-size: var(--mmc-text-md);
+  line-height: 1.75;
+  color: var(--mmc-text-secondary);
+  margin: 0;
+}
+
+.section-title {
+  font-size: var(--mmc-text-xl);
+  font-weight: var(--mmc-font-weight-semibold);
+  color: var(--mmc-text-primary);
+  margin: 0 0 var(--mmc-space-5);
+  padding-bottom: var(--mmc-space-3);
+  // --mmc-orange-100 é token de paleta (não semântico) — não muda automaticamente
+  border-bottom: 2px solid var(--mmc-orange-100);
+
+  @include when-dark {
+    border-bottom-color: rgba(249, 115, 22, 0.2);
+  }
+}
+
+.subsection-title {
+  font-size: var(--mmc-text-md);
+  font-weight: var(--mmc-font-weight-semibold);
+  color: var(--mmc-text-primary);
+  margin: var(--mmc-space-6) 0 var(--mmc-space-3);
+}
+
+// ─── Lists ────────────────────────────────────────────────────────────────────
+
+.list {
+  margin: 0 0 var(--mmc-space-4);
+  padding-left: var(--mmc-space-6);
+
+  li {
+    font-size: var(--mmc-text-md);
+    line-height: 1.7;
+    color: var(--mmc-text-primary);
+    margin-bottom: var(--mmc-space-2);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: var(--mmc-font-weight-semibold);
+      color: var(--mmc-text-primary);
+    }
+  }
+}
+
+// ─── Table ────────────────────────────────────────────────────────────────────
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--mmc-text-sm);
+  margin-bottom: var(--mmc-space-4);
+  // background no próprio <table> garante que <td> herdem o fundo correto no dark mode
+  background: var(--mmc-bg-card);
+  border: 1px solid var(--mmc-border);
+  border-radius: var(--mmc-radius-md);
+  overflow: hidden;
+
+  thead {
+    // --mmc-bg: #F8F9FA (light) → #0C1322 (dark) — semântico, adapta automaticamente
+    // Coincide visualmente com --mmc-neutral-50 no light mode
+    background: var(--mmc-bg);
+  }
+
+  th {
+    padding: var(--mmc-space-3) var(--mmc-space-4);
+    font-weight: var(--mmc-font-weight-semibold);
+    color: var(--mmc-text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--mmc-border);
+  }
+
+  td {
+    // Explícito em vez de transparent para evitar branco padrão do browser em tabelas
+    background: var(--mmc-bg-card);
+    padding: var(--mmc-space-3) var(--mmc-space-4);
+    color: var(--mmc-text-primary);
+    border-bottom: 1px solid var(--mmc-divider);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:nth-child(even) td {
+    // --mmc-bg separa visualmente das linhas ímpares e adapta no dark
+    background: var(--mmc-bg);
+  }
+}
+
+// ─── Info Box ─────────────────────────────────────────────────────────────────
+
+.info-box {
+  // Usa apenas tokens semânticos — adaptam automaticamente sem precisar de override
+  // --mmc-bg-card-hover: #F1F3F5 (light) → #172542 (dark, tom navy escuro)
+  // --mmc-border-strong: #DEE2E6 (light) → rgba(255,255,255,0.16) (dark)
+  // --mmc-action-secondary: navy-900 (light) → navy-700 (dark)
+  background: var(--mmc-bg-card-hover);
+  border: 1px solid var(--mmc-border-strong);
+  border-left: 4px solid var(--mmc-action-secondary);
+  border-radius: var(--mmc-radius-md);
+  padding: var(--mmc-space-4) var(--mmc-space-5);
+
+  p {
+    margin: 0 0 var(--mmc-space-2) !important;
+    font-size: var(--mmc-text-sm);
+    color: var(--mmc-text-primary);
+
+    &:last-child {
+      margin-bottom: 0 !important;
+    }
+  }
+}
+
+// ─── Alert ────────────────────────────────────────────────────────────────────
+
+.alert {
+  border-radius: var(--mmc-radius-md);
+  padding: var(--mmc-space-4) var(--mmc-space-5);
+  font-size: var(--mmc-text-sm);
+  line-height: 1.6;
+  margin-top: var(--mmc-space-5);
+
+  &--warning {
+    // Estes são tokens semânticos — já se adaptam automaticamente
+    background: var(--mmc-warning-light);
+    border: 1px solid var(--mmc-status-pending-border);
+    color: var(--mmc-warning-dark);
+
+    strong {
+      font-weight: var(--mmc-font-weight-semibold);
+    }
+  }
+}
+
+// ─── Inline code ──────────────────────────────────────────────────────────────
+
+code {
+  font-family: var(--mmc-font-mono);
+  font-size: 0.875em;
+  // --mmc-bg-card-hover: #F1F3F5 (light) → #172542 (dark) — mesmo valor visual que neutral-100
+  // --mmc-text-primary adapta automaticamente em ambos os modos
+  background: var(--mmc-bg-card-hover);
+  color: var(--mmc-text-primary);
+  padding: var(--mmc-space-0-5) var(--mmc-space-1-5);
+  border-radius: var(--mmc-radius-xs);
+}
+
+// ─── Links ────────────────────────────────────────────────────────────────────
+
+.link {
+  color: var(--mmc-text-link);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 2px;
+  transition: color 150ms ease, text-decoration-color 150ms ease;
+
+  &:hover {
+    color: var(--mmc-text-link-hover);
+    text-decoration-color: currentColor;
+  }
+}

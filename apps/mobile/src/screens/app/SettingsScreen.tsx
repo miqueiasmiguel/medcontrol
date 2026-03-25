@@ -249,6 +249,18 @@ export default function SettingsScreen() {
           ))}
         </View>
 
+        {/* ── Legal ── */}
+        <Text style={[s.sectionTitle, { marginTop: 32 }]}>Legal</Text>
+        <Pressable
+          testID="privacy-policy-button"
+          onPress={() => router.push('/privacy-policy')}
+          style={s.legalBtn}
+        >
+          <Ionicons name="shield-checkmark-outline" size={20} color={t.colors.text.secondary} />
+          <Text style={s.legalBtnText}>Política de Privacidade</Text>
+          <Ionicons name="chevron-forward" size={16} color={t.colors.text.tertiary} />
+        </Pressable>
+
         {/* ── Sair ── */}
         <Pressable
           testID="logout-button"
@@ -327,12 +339,29 @@ function makeStyles(t: ReturnType<typeof useAppTheme>) {
     themeOptionLabelActive: {
       color: t.colors.text.onDark,
     },
+    legalBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: t.borderRadius.md,
+      borderWidth: 1,
+      borderColor: t.colors.border,
+      backgroundColor: t.colors.surface.card,
+    },
+    legalBtnText: {
+      flex: 1,
+      fontSize: t.typography.fontSize.md,
+      fontWeight: t.typography.fontWeight.medium,
+      color: t.colors.text.primary,
+    },
     logoutBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 8,
-      marginTop: 32,
+      marginTop: 16,
       paddingVertical: 14,
       borderRadius: t.borderRadius.md,
       borderWidth: 1,

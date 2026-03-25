@@ -1,0 +1,273 @@
+<div class="page">
+  <header class="page-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon">M</span>
+        <span class="brand-name">MedControl</span>
+      </div>
+      <a routerLink="/auth/login" class="back-link">← Voltar ao login</a>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="doc">
+      <div class="doc-header">
+        <h1 class="doc-title">Política de Privacidade</h1>
+        <p class="doc-meta">Última atualização: {{ lastUpdated }}</p>
+      </div>
+
+      <section class="section">
+        <p class="lead">
+          A MedControl ("nós", "nosso" ou "Controlador") leva a privacidade dos dados pessoais a sério.
+          Esta Política descreve como coletamos, usamos, armazenamos e protegemos os dados pessoais
+          tratados na plataforma MedControl, em conformidade com a
+          <strong>Lei Geral de Proteção de Dados (LGPD — Lei n.º 13.709/2018)</strong>.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">1. Controlador dos Dados</h2>
+        <p>O controlador responsável pelo tratamento dos dados pessoais é:</p>
+        <div class="info-box">
+          <p><strong>MedControl Tecnologia Ltda.</strong></p>
+          <p>E-mail de contato: <a href="mailto:privacidade@medcontrol.app" class="link">privacidade&#64;medcontrol.app</a></p>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">2. Dados Coletados</h2>
+        <p>Coletamos os seguintes dados pessoais, conforme o contexto de uso:</p>
+
+        <h3 class="subsection-title">Dados de identificação e acesso</h3>
+        <ul class="list">
+          <li>Nome completo e endereço de e-mail (fornecidos no cadastro ou via Google OAuth)</li>
+          <li>Foto de perfil (quando o login é feito via Google)</li>
+          <li>Identificadores de sessão (cookies HttpOnly)</li>
+        </ul>
+
+        <h3 class="subsection-title">Dados profissionais (médicos)</h3>
+        <ul class="list">
+          <li>Número de CRM e estado do conselho regional</li>
+          <li>Especialidade médica</li>
+        </ul>
+
+        <h3 class="subsection-title">Dados operacionais (pagamentos)</h3>
+        <ul class="list">
+          <li>Nome e carteira do beneficiário (paciente)</li>
+          <li>Número de atendimento, código de autorização do convênio</li>
+          <li>Data de execução, local de execução e local de pagamento</li>
+          <li>Procedimentos realizados e valores associados</li>
+        </ul>
+
+        <div class="alert alert--warning">
+          <strong>Atenção — Dados Sensíveis:</strong> informações de saúde (procedimentos médicos,
+          convênios) são classificadas como dados sensíveis pela LGPD (art. 11) e recebem
+          tratamento diferenciado com controles de acesso restritos.
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">3. Finalidade do Tratamento</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Finalidade</th>
+              <th>Dados utilizados</th>
+              <th>Base legal (LGPD)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Autenticação e controle de acesso</td>
+              <td>E-mail, cookies de sessão</td>
+              <td>Execução de contrato (art. 7º, V)</td>
+            </tr>
+            <tr>
+              <td>Prestação do serviço de controle de pagamentos</td>
+              <td>Dados profissionais e operacionais</td>
+              <td>Execução de contrato (art. 7º, V)</td>
+            </tr>
+            <tr>
+              <td>Gerenciamento de membros do tenant</td>
+              <td>Nome, e-mail, role</td>
+              <td>Execução de contrato (art. 7º, V)</td>
+            </tr>
+            <tr>
+              <td>Comunicações transacionais (magic link)</td>
+              <td>E-mail</td>
+              <td>Legítimo interesse (art. 7º, IX)</td>
+            </tr>
+            <tr>
+              <td>Cumprimento de obrigações legais</td>
+              <td>Conforme exigido por lei</td>
+              <td>Obrigação legal (art. 7º, II)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">4. Compartilhamento de Dados</h2>
+        <p>
+          Não vendemos nem cedemos dados pessoais a terceiros para fins comerciais.
+          Compartilhamos dados apenas com os seguintes fornecedores de infraestrutura,
+          na qualidade de operadores, e somente na medida necessária para a prestação do serviço:
+        </p>
+        <ul class="list">
+          <li><strong>Google LLC</strong> — autenticação OAuth (nome, e-mail, foto)</li>
+          <li><strong>Cloudflare, Inc.</strong> — CDN, armazenamento de arquivos (R2) e roteamento</li>
+          <li><strong>Upstash, Inc.</strong> — cache Redis (tokens temporários de magic link, TTL 15 min)</li>
+          <li><strong>Resend, Inc.</strong> — envio de e-mails transacionais</li>
+          <li><strong>Provedor de banco de dados PostgreSQL</strong> — armazenamento persistente</li>
+        </ul>
+        <p>
+          Todos os fornecedores estão sujeitos a acordos de processamento de dados compatíveis
+          com a LGPD e/ou o GDPR.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">5. Transferência Internacional</h2>
+        <p>
+          Alguns fornecedores (Google, Cloudflare, Upstash, Resend) possuem infraestrutura
+          fora do Brasil. As transferências internacionais são realizadas com base em cláusulas
+          contratuais padrão ou mecanismos equivalentes que garantem nível adequado de proteção
+          (LGPD art. 33).
+        </p>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">6. Retenção de Dados</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Tipo de dado</th>
+              <th>Período de retenção</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Tokens de magic link (cache)</td>
+              <td>15 minutos (TTL automático)</td>
+            </tr>
+            <tr>
+              <td>Cookies de sessão</td>
+              <td>Até logout ou expiração do JWT</td>
+            </tr>
+            <tr>
+              <td>Dados de perfil e conta</td>
+              <td>Enquanto a conta estiver ativa + 5 anos após encerramento</td>
+            </tr>
+            <tr>
+              <td>Dados de pagamentos e procedimentos</td>
+              <td>Enquanto a conta estiver ativa + 5 anos (prazo fiscal)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">7. Seus Direitos (LGPD, art. 18)</h2>
+        <p>Como titular dos dados, você tem os seguintes direitos:</p>
+        <ul class="list">
+          <li><strong>Confirmação e acesso</strong> — saber se tratamos seus dados e acessá-los</li>
+          <li><strong>Correção</strong> — corrigir dados incompletos, inexatos ou desatualizados</li>
+          <li><strong>Anonimização, bloqueio ou eliminação</strong> — de dados desnecessários ou excessivos</li>
+          <li><strong>Portabilidade</strong> — receber seus dados em formato estruturado</li>
+          <li><strong>Eliminação</strong> — dos dados tratados com seu consentimento</li>
+          <li><strong>Revogação do consentimento</strong> — quando o tratamento for baseado nele</li>
+          <li><strong>Oposição</strong> — ao tratamento com base em legítimo interesse</li>
+          <li><strong>Informação</strong> — sobre o compartilhamento com terceiros</li>
+        </ul>
+        <p>
+          Para exercer qualquer um desses direitos, entre em contato pelo e-mail
+          <a href="mailto:privacidade@medcontrol.app" class="link">privacidade&#64;medcontrol.app</a>.
+          Responderemos em até 15 dias úteis.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">8. Segurança</h2>
+        <p>Adotamos as seguintes medidas técnicas e organizacionais:</p>
+        <ul class="list">
+          <li>Transmissão de dados cifrada via HTTPS/TLS</li>
+          <li>Autenticação por JWT com chave mínima de 256 bits</li>
+          <li>Cookies de sessão com flags <code>HttpOnly</code> e <code>SameSite=Strict</code></li>
+          <li>Tokens de autenticação temporários (magic link) com TTL de 15 minutos e uso único</li>
+          <li>Isolamento de dados por tenant via multi-tenancy (row-level)</li>
+          <li>Controle de acesso baseado em roles (<code>operator</code>, <code>doctor</code>, <code>admin</code>, <code>owner</code>)</li>
+        </ul>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">9. Cookies</h2>
+        <p>Utilizamos os seguintes cookies:</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Cookie</th>
+              <th>Tipo</th>
+              <th>Finalidade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>mmc_access_token</code></td>
+              <td>HttpOnly, SameSite=Strict</td>
+              <td>JWT de autenticação — nunca acessível via JavaScript</td>
+            </tr>
+            <tr>
+              <td><code>mmc_refresh_token</code></td>
+              <td>HttpOnly, SameSite=Strict</td>
+              <td>Renovação silenciosa de sessão</td>
+            </tr>
+            <tr>
+              <td><code>mmc_session</code></td>
+              <td>Session</td>
+              <td>Indicador de sessão ativa para o frontend</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Não utilizamos cookies de rastreamento, publicidade ou analytics de terceiros.</p>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">10. Menores de Idade</h2>
+        <p>
+          A plataforma MedControl é destinada exclusivamente a profissionais de saúde e operadores
+          de clínicas. Não coletamos intencionalmente dados de menores de 18 anos. Caso identifique
+          tal situação, entre em contato para que os dados sejam eliminados.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">11. Alterações nesta Política</h2>
+        <p>
+          Podemos atualizar esta Política periodicamente. Alterações relevantes serão comunicadas
+          por e-mail ou aviso na plataforma com antecedência mínima de 15 dias.
+          A data de "última atualização" no topo deste documento sempre refletirá a versão vigente.
+        </p>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">12. Encarregado de Proteção de Dados (DPO)</h2>
+        <div class="info-box">
+          <p>Para dúvidas, solicitações ou reclamações relacionadas à privacidade:</p>
+          <p>
+            <strong>E-mail:</strong>
+            <a href="mailto:privacidade@medcontrol.app" class="link">privacidade&#64;medcontrol.app</a>
+          </p>
+          <p>
+            Você também pode registrar reclamações perante a
+            <strong>Autoridade Nacional de Proteção de Dados (ANPD)</strong>
+            em <a href="https://www.gov.br/anpd" class="link" target="_blank" rel="noopener noreferrer">gov.br/anpd</a>.
+          </p>
+        </div>
+      </section>
+
+      <div class="doc-footer">
+        <a routerLink="/auth/login" class="back-link">← Voltar ao login</a>
+      </div>
+    </div>
+  </main>
+</div>

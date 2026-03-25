@@ -158,6 +158,23 @@
   width: 100%;
 }
 
+.login-footer {
+  margin: var(--mmc-space-5) 0 0;
+  text-align: center;
+  font-size: var(--mmc-text-xs);
+  color: var(--mmc-text-tertiary);
+
+  &__link {
+    color: var(--mmc-text-link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+
+    &:hover {
+      color: var(--mmc-text-link-hover);
+    }
+  }
+}
+
 .divider {
   display: flex;
   align-items: center;
