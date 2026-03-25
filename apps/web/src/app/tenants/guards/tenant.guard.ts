@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
@@ -22,6 +23,11 @@ export const tenantGuard: CanActivateFn = () => {
 
       return of(router.createUrlTree(['/tenants/select']));
     }),
-    catchError(() => of(router.createUrlTree(['/tenants/new']))),
+    catchError((err: unknown) => {
+      if (err instanceof HttpErrorResponse && err.status === 401) {
+        return of(router.createUrlTree(['/auth/login']));
+      }
+      return of(router.createUrlTree(['/tenants/new']));
+    }),
   );
 };

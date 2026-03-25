@@ -165,6 +165,10 @@ pnpm nx serve web                 # http://localhost:4200
 - **Armadilha**: nunca chamar `verifyMagicLink` e tentar o deep link ao mesmo tempo — o token Redis é destruído na primeira chamada a `/auth/magic-link/verify`.
 - **Testes**: usar `Proxy` sobre o `document` real para interceptar `visibilityState`/`addEventListener`/`removeEventListener` sem quebrar os internals do Angular (que também usam `DOCUMENT`).
 
+### Token expirado (401) deve redirecionar para /auth/login, não para /tenants/new
+- **Problema**: o `tenantGuard` chamava `GET /api/tenants/me`; se recebia 401 (token expirado), o `catchError` genérico redirecionava para `/tenants/new` ("criar organização") em vez de para o login. Além disso, não havia tratamento centralizado para 401 em requisições feitas enquanto o usuário já estava na página.
+- **Correto**: (1) o `tenantGuard` distingue `HttpErrorResponse` com `status === 401` → `/auth/login` de outros erros → `/tenants/new`; (2) o `authInterceptor` captura `router = inject(Router)` no corpo da função (não dentro do `catchError`) e navega para `/auth/login` em qualquer 401 de endpoints `/api/` que não sejam `/api/auth/**`.
+
 ### fileReplacements obrigatório na configuração production do project.json
 - **Problema**: sem `fileReplacements`, o build com `--configuration=production` ainda usa `environment.ts` (dev). Variáveis como `googleRedirectUri` ficam `null` e comportamentos dependem de fallbacks incorretos (ex: `window.location.origin` retorna URL de preview do Cloudflare).
 - **Correto**: a configuração `production` em `project.json` deve sempre incluir:

@@ -15,12 +15,6 @@ export function useAuth() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  useEffect(() => {
-    return onUnauthorized(() => {
-      void setSession(false);
-    });
-  }, [setSession]);
-
   const setSession = useCallback(async (authenticated: boolean) => {
     if (authenticated) {
       await AsyncStorage.setItem(SESSION_KEY, '1');
@@ -29,6 +23,12 @@ export function useAuth() {
     }
     setIsAuthenticated(authenticated);
   }, []);
+
+  useEffect(() => {
+    return onUnauthorized(() => {
+      void setSession(false);
+    });
+  }, [setSession]);
 
   const logout = useCallback(async () => {
     await AuthService.logout();
