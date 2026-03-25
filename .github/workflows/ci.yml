@@ -90,3 +90,10 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.web.result == 'success'
     uses: ./.github/workflows/deploy-web.yml
     secrets: inherit
+
+  deploy-mobile:
+    name: Deploy Mobile
+    needs: mobile
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.mobile.result == 'success'
+    uses: ./.github/workflows/deploy-mobile.yml
+    secrets: inherit

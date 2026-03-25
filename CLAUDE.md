@@ -111,7 +111,11 @@ medcontrol/
 │   ├── MedControl.Infrastructure/
 │   └── MedControl.Api/Controllers/
 ├── apps/web/src/app/[feature]/
-├── apps/mobile/src/screens/[feature]/
+├── apps/mobile/
+│   ├── app.config.ts        # config dinâmica (lê API_URL do env — substitui app.json em builds eas)
+│   ├── app.json             # config estática (dev local; app.config.ts tem precedência quando presente)
+│   ├── eas.json             # perfis eas: development (apk), preview (apk + API_URL prod), production (aab)
+│   └── src/screens/[feature]/
 └── packages/contracts/src/[domain]/
 ```
 
@@ -246,4 +250,14 @@ R2_ACCOUNT_ID=...
 R2_ACCESS_KEY_ID=...
 R2_SECRET_ACCESS_KEY=...
 R2_BUCKET_NAME=medcontrol-uploads
+EXPO_TOKEN=...                    # deploy mobile — gerado em expo.dev/settings/access-tokens
 ```
+
+## Deploy Mobile — EAS Build
+
+- **Workflow**: `.github/workflows/deploy-mobile.yml` (chamado por `ci.yml` em push no `main`)
+- **Perfil**: `preview` → APK para distribuição interna (sem publicar na Play Store)
+- **URL da API**: injetada via `eas.json > preview > env.API_URL` → `https://163.176.217.87.sslip.io`
+- **Config dinâmica**: `app.config.ts` lê `process.env.API_URL`; em dev local usa `app.json` como fallback
+- **APK**: disponível no dashboard expo.dev/builds após ~5–10 min; link exibido no log do GitHub Actions
+- **Secret obrigatório no GitHub**: `EXPO_TOKEN`

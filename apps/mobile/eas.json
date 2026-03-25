@@ -14,6 +14,9 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "API_URL": "https://163.176.217.87.sslip.io"
       }
     },
     "production": {
