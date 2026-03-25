@@ -19,7 +19,7 @@ git commit -m "feat(infra): add ef core migration <nome-da-migration>"
 ```
 
 **Ao final**, pergunte ao usuário:
-> "Migration criada e revisada. Posso fazer o merge da branch `<nome>` na `main` e apagá-la?"
+> "Migration criada e revisada. Posso fazer o merge da branch `<nome>` na `main`, apagá-la e fazer push?"
 
 ---
 

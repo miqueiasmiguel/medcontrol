@@ -26,7 +26,7 @@ git commit -m "docs(<scope>): document <bug> pitfall in claude.md"
 ```
 
 **Ao final**, pergunte ao usuário:
-> "Bug corrigido. Posso fazer o merge da branch `fix/<nome>` na `main` e apagá-la?"
+> "Bug corrigido. Posso fazer o merge da branch `fix/<nome>` na `main`, apagá-la e fazer push?"
 
 ---
 

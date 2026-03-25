@@ -37,6 +37,7 @@ Após todos os commits:
 git log --oneline main..HEAD  # mostrar commits que serão mergeados
 git checkout main
 git merge <branch> --no-ff    # merge com commit de merge explícito
+git push origin main          # push para o remoto
 git log --oneline -5          # confirmar resultado
 ```
 

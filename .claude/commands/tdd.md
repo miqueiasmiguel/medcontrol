@@ -25,7 +25,7 @@ git commit -m "feat(<scope>): implement <behavior>"
 ```
 
 **Ao final de todos os ciclos**, pergunte ao usuário:
-> "Todos os ciclos estão completos. Posso fazer o merge da branch `<nome>` na `main` e apagá-la?"
+> "Todos os ciclos estão completos. Posso fazer o merge da branch `<nome>` na `main`, apagá-la e fazer push?"
 
 ---
 

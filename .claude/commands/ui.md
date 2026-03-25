@@ -23,7 +23,7 @@ git commit -m "test(web): add <component> unit tests"
 ```
 
 **Ao final**, pergunte ao usuário:
-> "Componente implementado. Posso fazer o merge da branch `<nome>` na `main` e apagá-la?"
+> "Componente implementado. Posso fazer o merge da branch `<nome>` na `main`, apagá-la e fazer push?"
 
 ---
 

@@ -134,4 +134,4 @@ git commit -m "fix(<scope>): <descrição da correção>"
 ```
 
 Ao final, pergunte ao usuário:
-> "Problema corrigido. Posso fazer o merge da branch `fix/<nome>` na `main` e apagá-la?"
+> "Problema corrigido. Posso fazer o merge da branch `fix/<nome>` na `main`, apagá-la e fazer push?"

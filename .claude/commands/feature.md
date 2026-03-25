@@ -24,7 +24,7 @@ git commit -m "feat(<scope>): add <entity> api endpoints"
 ```
 
 **Ao final**, pergunte ao usuário:
-> "Feature completa. Posso fazer o merge da branch `feat/<nome>` na `main` e apagá-la?"
+> "Feature completa. Posso fazer o merge da branch `feat/<nome>` na `main`, apagá-la e fazer push?"
 
 ---
 
