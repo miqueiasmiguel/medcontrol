@@ -30,8 +30,9 @@ apps/mobile/
 │   └── (app)/                   # Grupo protegido (requer autenticação)
 │       ├── _layout.tsx          # Redireciona para /login se não auth
 │       ├── __tests__/
-│       │   └── index.spec.tsx   # Testes do HomeScreen (logout, saudação, navegação)
-│       ├── index.tsx            # HomeScreen (lista de pagamentos)
+│       │   └── index.spec.tsx   # Testes do HomeScreen (logout, saudação, settings, navegação)
+│       ├── index.tsx            # HomeScreen (lista de pagamentos + botão settings)
+│       ├── settings.tsx         # → EditProfileScreen
 │       └── payments/
 │           ├── __tests__/
 │           │   └── [id].spec.tsx  # Testes da tela de detalhe
@@ -49,14 +50,19 @@ apps/mobile/
 │   ├── hooks/
 │   │   ├── useAuth.ts           # Estado de sessão (AsyncStorage key: mmc_session)
 │   │   ├── usePayments.ts       # Carrega pagamentos do backend; retorna { payments, loading, error, refetch }
-│   │   └── useCurrentUser.ts    # Carrega dados do usuário autenticado; retorna { user, loading, error }
+│   │   ├── useCurrentUser.ts    # Carrega dados do usuário autenticado; retorna { user, loading, error }
+│   │   └── useDoctorProfile.ts  # Carrega perfil médico do usuário; retorna { doctorProfile, loading, error, refetch }
+│   ├── services/
+│   │   └── user.service.ts      # GET /users/me, PATCH /users/me/profile, GET /users/me/doctor-profile, PATCH /users/me/doctor-profile
 │   └── components/ui/
-│       ├── AppButton.tsx        # Botão com variante filled/outline + loading
-│       └── AppTextInput.tsx     # Input com label Paper + mensagem de erro
-└── src/screens/auth/
-    ├── LoginScreen.tsx          # Email + Google OAuth (expo-auth-session)
-    ├── MagicLinkSentScreen.tsx  # Confirmação de envio (recebe email via params)
-    └── MagicLinkVerifyScreen.tsx # Verificação do token (deep link: medcontrol://verify?token=xxx)
+│       ├── AppButton.tsx        # Botão com variante filled/outline + loading; aceita label ou children; suporta testID e style
+│       └── AppTextInput.tsx     # Input com label Paper + mensagem de erro; suporta testID
+├── src/screens/auth/
+│   ├── LoginScreen.tsx          # Email + Google OAuth (expo-auth-session)
+│   ├── MagicLinkSentScreen.tsx  # Confirmação de envio (recebe email via params)
+│   └── MagicLinkVerifyScreen.tsx # Verificação do token (deep link: medcontrol://verify?token=xxx)
+└── src/screens/app/
+    └── EditProfileScreen.tsx    # Edição de perfil: displayName (User) + dados profissionais (DoctorProfile)
 ```
 
 ## Autenticação Mobile
@@ -196,7 +202,7 @@ Além do `AuthService`, existem:
 |---|---|---|
 | `PaymentService` | `src/services/payment.service.ts` | `GET /payments` (listPayments) + `GET /payments/{id}` (getPayment) |
 | `HealthPlanService` | `src/services/health-plan.service.ts` | `GET /health-plans` |
-| `UserService` | `src/services/user.service.ts` | `GET /users/me` — retorna `UserDto` |
+| `UserService` | `src/services/user.service.ts` | `GET /users/me` (getMe), `PATCH /users/me/profile` (updateProfile), `GET /users/me/doctor-profile` (getDoctorProfile), `PATCH /users/me/doctor-profile` (updateMyDoctorProfile) |
 
 ### Tipos compartilhados
 
@@ -209,6 +215,10 @@ Além do `AuthService`, existem:
 
 - `src/hooks/usePayments.ts` — carrega lista de pagamentos via `PaymentService.listPayments()`. Retorna `{ payments, loading, error, refetch }`.
 - `src/hooks/usePayment.ts` — carrega um pagamento por id via `PaymentService.getPayment(id)`. Retorna `{ payment, loading, error, refetch }`. Loading inicial é `false` quando `id` é `undefined`.
+
+### Hooks de perfil
+
+- `src/hooks/useDoctorProfile.ts` — carrega perfil médico via `UserService.getDoctorProfile()`. Retorna `{ doctorProfile, loading, error, refetch }`. Retorna `null` quando o usuário não tem perfil vinculado.
 
 ## O que ainda não foi implementado
 

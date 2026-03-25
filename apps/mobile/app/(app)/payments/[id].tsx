@@ -4,7 +4,7 @@ import { Text } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@medcontrol/design-system/native';
+import { useAppTheme as useTheme } from '../../../src/contexts/ThemeContext';
 import { usePayment } from '../../../src/hooks/usePayment';
 import {
   HealthPlanService,

@@ -20,6 +20,7 @@ public sealed class DoctorProfile : BaseAuditableEntity, IAggregateRoot, IHasTen
         public static readonly Error CouncilStateRequired = Error.Validation("DoctorProfile.CouncilStateRequired", "Council state is required.");
         public static readonly Error SpecialtyRequired = Error.Validation("DoctorProfile.SpecialtyRequired", "Specialty is required.");
         public static readonly Error UserAlreadyLinked = Error.Conflict("DoctorProfile.UserAlreadyLinked", "A user is already linked to this doctor profile.");
+        public static readonly Error OnlyLinkedDoctorCanUpdate = Error.Forbidden("DoctorProfile.OnlyLinkedDoctorCanUpdate", "Only the linked doctor user can update this profile.");
     }
 
     public static Result<DoctorProfile> Create(Guid tenantId, string name, string crm, string councilState, string specialty)

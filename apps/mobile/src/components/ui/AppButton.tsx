@@ -1,21 +1,26 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleProp, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { colors } from '../../theme/colors';
 
 interface AppButtonProps {
-  label: string;
+  label?: string;
+  children?: React.ReactNode;
   onPress: () => void;
   disabled?: boolean;
   loading?: boolean;
   variant?: 'filled' | 'outline';
   leftIcon?: React.ReactNode;
+  testID?: string;
+  style?: StyleProp<ViewStyle>;
 }
 
-export function AppButton({ label, onPress, disabled = false, loading = false, variant = 'filled', leftIcon }: AppButtonProps) {
+export function AppButton({ label, children, onPress, disabled = false, loading = false, variant = 'filled', leftIcon, testID, style }: AppButtonProps) {
+  const content = children ?? label ?? '';
+
   if (loading) {
     return (
-      <View style={[styles.container, styles.filled]}>
+      <View testID={testID} style={[styles.container, styles.filled, style]}>
         <ActivityIndicator testID="app-button-loading" color={colors.white} />
       </View>
     );
@@ -24,27 +29,29 @@ export function AppButton({ label, onPress, disabled = false, loading = false, v
   if (variant === 'outline') {
     return (
       <TouchableOpacity
-        style={[styles.container, styles.outline]}
+        testID={testID}
+        style={[styles.container, styles.outline, style]}
         onPress={disabled ? undefined : onPress}
         disabled={disabled}
         accessibilityRole="button"
       >
         {leftIcon ? <View style={styles.iconSlot}>{leftIcon}</View> : null}
-        <Text style={[styles.outlineText, disabled && styles.disabledText]}>{label}</Text>
+        <Text style={[styles.outlineText, disabled && styles.disabledText]}>{content}</Text>
       </TouchableOpacity>
     );
   }
 
   return (
     <Button
+      testID={testID}
       mode="contained"
       onPress={onPress}
       disabled={disabled}
       buttonColor={colors.primary}
       textColor={colors.white}
-      style={styles.container}
+      style={[styles.container, style]}
     >
-      {label}
+      {content}
     </Button>
   );
 }

@@ -87,6 +87,7 @@ public static class DoctorEndpoints
     private static IResult ToErrorResult(Error error) => error.Type switch
     {
         ErrorType.Unauthorized => Results.Problem(error.Description, statusCode: 401),
+        ErrorType.Forbidden => Results.Problem(error.Description, statusCode: 403),
         ErrorType.NotFound => Results.Problem(error.Description, statusCode: 404),
         ErrorType.Conflict => Results.Problem(error.Description, statusCode: 409),
         _ => Results.Problem(error.Description, statusCode: 400),

@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   Platform,
@@ -11,11 +10,10 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/hooks/useAuth';
 import { Text } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@medcontrol/design-system/native';
+import { useAppTheme as useTheme } from '../../src/contexts/ThemeContext';
 import { usePayments } from '../../src/hooks/usePayments';
 import { useCurrentUser } from '../../src/hooks/useCurrentUser';
 import {
@@ -649,8 +647,6 @@ export default function HomeScreen() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { logout } = useAuth();
-
   const { payments, loading, error, refetch } = usePayments();
   const { user } = useCurrentUser();
   const [healthPlans, setHealthPlans] = useState<HealthPlanDto[]>([]);
@@ -673,20 +669,6 @@ export default function HomeScreen() {
     ],
     [healthPlans],
   );
-
-  function handleLogoutPress() {
-    Alert.alert('Sair', 'Deseja realmente sair da sua conta?', [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Sair',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/(auth)/login');
-        },
-      },
-    ]);
-  }
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<DisplayStatusFilter>('All');
@@ -791,13 +773,13 @@ export default function HomeScreen() {
             <View style={s.notificationDot} />
           </Pressable>
           <Pressable
-            testID="logout-button"
-            accessibilityLabel="Sair"
-            onPress={handleLogoutPress}
+            testID="settings-button"
+            accessibilityLabel="Configurações"
+            onPress={() => router.push('/settings')}
             style={s.notificationBtn}
           >
             <Ionicons
-              name="log-out-outline"
+              name="settings-outline"
               size={22}
               color={t.colors.text.onDark}
             />

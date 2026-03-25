@@ -72,4 +72,91 @@ describe('UserService', () => {
       await expect(UserService.getMe()).rejects.toThrow('HTTP 500');
     });
   });
+
+  describe('getDoctorProfile', () => {
+    it('faz GET para /users/me/doctor-profile', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          id: 'd1',
+          tenantId: 't1',
+          userId: 'u1',
+          name: 'Dr. João',
+          crm: '123456',
+          councilState: 'SP',
+          specialty: 'Cardiologia',
+        }),
+      });
+
+      const result = await UserService.getDoctorProfile();
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/users/me/doctor-profile'),
+        expect.objectContaining({ credentials: 'include' }),
+      );
+      expect(result?.name).toBe('Dr. João');
+      expect(result?.crm).toBe('123456');
+    });
+
+    it('lança erro quando resposta não é 2xx', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: async () => ({ message: 'Unauthorized' }),
+      });
+
+      await expect(UserService.getDoctorProfile()).rejects.toThrow('Unauthorized');
+    });
+  });
+
+  describe('updateMyDoctorProfile', () => {
+    it('faz PATCH para /users/me/doctor-profile com os dados', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => [
+          { id: 'd1', tenantId: 't1', name: 'Dr. João Atualizado', crm: '654321', councilState: 'RJ', specialty: 'Neurologia' },
+        ],
+      });
+
+      const result = await UserService.updateMyDoctorProfile({
+        name: 'Dr. João Atualizado',
+        crm: '654321',
+        councilState: 'RJ',
+        specialty: 'Neurologia',
+      });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/users/me/doctor-profile'),
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ name: 'Dr. João Atualizado', crm: '654321', councilState: 'RJ', specialty: 'Neurologia' }),
+        }),
+      );
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('Dr. João Atualizado');
+    });
+  });
+
+  describe('updateProfile', () => {
+    it('faz PATCH para /users/me/profile com displayName', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({ id: 'u1', email: 'joao@clinica.com', displayName: 'Novo Nome', isEmailVerified: true, globalRole: 'user' }),
+      });
+
+      const result = await UserService.updateProfile({ displayName: 'Novo Nome' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/users/me/profile'),
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ displayName: 'Novo Nome' }),
+        }),
+      );
+      expect(result.displayName).toBe('Novo Nome');
+    });
+  });
 });
