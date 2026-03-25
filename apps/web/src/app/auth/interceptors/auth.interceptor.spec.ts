@@ -40,7 +40,7 @@ describe('authInterceptor', () => {
   });
 
   it('should navigate to /auth/login on 401 from /api resource', () => {
-    http.get('/api/doctors').subscribe({ error: () => {} });
+    http.get('/api/doctors').subscribe({ error: jest.fn() });
     const req = httpTesting.expectOne('/api/doctors');
     req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
 
@@ -48,7 +48,7 @@ describe('authInterceptor', () => {
   });
 
   it('should not navigate to /auth/login on 401 from /api/auth endpoint', () => {
-    http.post('/api/auth/magic-link/verify', {}).subscribe({ error: () => {} });
+    http.post('/api/auth/magic-link/verify', {}).subscribe({ error: jest.fn() });
     const req = httpTesting.expectOne('/api/auth/magic-link/verify');
     req.flush({ message: 'Unauthorized' }, { status: 401, statusText: 'Unauthorized' });
 
@@ -56,7 +56,7 @@ describe('authInterceptor', () => {
   });
 
   it('should not navigate to /auth/login on other errors', () => {
-    http.get('/api/doctors').subscribe({ error: () => {} });
+    http.get('/api/doctors').subscribe({ error: jest.fn() });
     const req = httpTesting.expectOne('/api/doctors');
     req.flush({ message: 'Server Error' }, { status: 500, statusText: 'Internal Server Error' });
 
