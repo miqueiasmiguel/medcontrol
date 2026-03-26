@@ -85,6 +85,38 @@
       }
     </div>
 
+    @if (!isEditing) {
+      <div class="form-invite">
+        <label class="form-invite__label">
+          <input type="checkbox" formControlName="inviteCheckbox" class="form-invite__checkbox" />
+          <span>Convidar para acessar como membro da organização</span>
+          <span
+            class="form-invite__tooltip"
+            title="O médico receberá um e-mail com link de acesso. Ao entrar, poderá preencher o próprio perfil e consultar seus pagamentos."
+            aria-label="Saiba mais sobre o convite"
+          >?</span>
+        </label>
+
+        @if (form.controls.inviteCheckbox.value) {
+          <div class="form-field">
+            <label class="form-label" for="inviteEmail">E-mail do médico</label>
+            <input
+              id="inviteEmail"
+              class="form-input"
+              [class.form-input--error]="form.controls.inviteEmail.invalid && form.controls.inviteEmail.touched"
+              type="email"
+              formControlName="inviteEmail"
+              placeholder="medico@clinica.com"
+              autocomplete="email"
+            />
+            @if (form.controls.inviteEmail.invalid && form.controls.inviteEmail.touched) {
+              <span class="form-field-error">Informe um e-mail válido.</span>
+            }
+          </div>
+        }
+      </div>
+    }
+
     <div class="doctor-form-panel__footer">
       <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
       <button class="btn btn--primary" type="submit" [disabled]="loading()">

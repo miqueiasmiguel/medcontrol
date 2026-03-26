@@ -16,6 +16,7 @@ export interface CreateDoctorCommand {
   crm: string;
   councilState: string;
   specialty: string;
+  inviteEmail?: string;
 }
 
 export interface UpdateDoctorCommand {
@@ -43,5 +44,13 @@ export class DoctorService {
 
   linkDoctorToUser(doctorId: string, userId: string) {
     return this.http.post<DoctorDto>(`/api/doctors/${doctorId}/link-user`, { userId }, { withCredentials: true });
+  }
+
+  inviteAndLinkMember(doctorId: string, email: string) {
+    return this.http.post<DoctorDto>(`/api/doctors/${doctorId}/invite-and-link`, { email }, { withCredentials: true });
+  }
+
+  createMyDoctorProfile(command: { name: string; crm: string; councilState: string; specialty: string }) {
+    return this.http.post<DoctorDto>('/api/users/me/doctor-profile', command, { withCredentials: true });
   }
 }

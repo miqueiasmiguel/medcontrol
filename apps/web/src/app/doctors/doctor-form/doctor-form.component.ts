@@ -6,6 +6,7 @@ import {
   Input,
   OnChanges,
   Output,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -26,6 +27,7 @@ export class DoctorFormComponent implements OnChanges {
   @Input() doctor: DoctorDto | null = null;
   @Output() readonly saved = new EventEmitter<DoctorDto>();
   @Output() readonly closed = new EventEmitter<void>();
+  @Output() readonly createdWithoutInvite = new EventEmitter<DoctorDto>();
 
   private readonly fb = inject(FormBuilder);
   private readonly doctorService = inject(DoctorService);
@@ -39,7 +41,22 @@ export class DoctorFormComponent implements OnChanges {
     crm: ['', [Validators.required, Validators.pattern(/^\d+$/)]],
     councilState: ['', [Validators.required, Validators.pattern(/^[A-Z]{2}$/)]],
     specialty: ['', [Validators.required]],
+    inviteCheckbox: [false],
+    inviteEmail: ['', [Validators.email]],
   });
+
+  constructor() {
+    effect(() => {
+      const checked = this.form.controls.inviteCheckbox.value;
+      const emailCtrl = this.form.controls.inviteEmail;
+      if (checked) {
+        emailCtrl.setValidators([Validators.required, Validators.email]);
+      } else {
+        emailCtrl.setValidators([Validators.email]);
+      }
+      emailCtrl.updateValueAndValidity();
+    });
+  }
 
   get isEditing(): boolean {
     return this.doctor !== null;
@@ -68,17 +85,25 @@ export class DoctorFormComponent implements OnChanges {
     this.loading.set(true);
     this.errorMessage.set('');
 
-    const value = this.form.getRawValue();
+    const { name, crm, councilState, specialty, inviteCheckbox, inviteEmail } =
+      this.form.getRawValue();
 
-    const request$ =
-      this.isEditing && this.doctor
-        ? this.doctorService.updateDoctor(this.doctor.id, value)
-        : this.doctorService.createDoctor(value);
+    let request$;
+    if (this.isEditing && this.doctor) {
+      request$ = this.doctorService.updateDoctor(this.doctor.id, { name, crm, councilState, specialty });
+    } else if (inviteCheckbox && inviteEmail) {
+      request$ = this.doctorService.createDoctor({ name, crm, councilState, specialty, inviteEmail });
+    } else {
+      request$ = this.doctorService.createDoctor({ name, crm, councilState, specialty });
+    }
 
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (doctor) => {
         this.loading.set(false);
         this.saved.emit(doctor);
+        if (!this.isEditing && !(inviteCheckbox && inviteEmail)) {
+          this.createdWithoutInvite.emit(doctor);
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
