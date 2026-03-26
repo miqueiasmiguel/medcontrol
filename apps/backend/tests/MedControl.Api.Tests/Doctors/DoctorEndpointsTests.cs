@@ -4,6 +4,7 @@ using FluentAssertions;
 using MedControl.Api.Tests.Helpers;
 using MedControl.Application.Doctors.DTOs;
 using MedControl.Domain.Doctors;
+using MedControl.Domain.Tenants;
 using NSubstitute;
 using NSubstitute.ReturnsExtensions;
 
@@ -268,5 +269,105 @@ public sealed class DoctorEndpointsTests : IClassFixture<TestWebApplicationFacto
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    // POST /doctors/{id}/link-user
+
+    [Fact]
+    public async Task POST_doctors_id_link_user_SemAutenticacao_Retorna401()
+    {
+        var client = _factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            HandleCookies = false,
+            AllowAutoRedirect = false,
+        });
+
+        var response = await client.PostAsJsonAsync($"/doctors/{Guid.NewGuid()}/link-user", new
+        {
+            userId = Guid.NewGuid(),
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task POST_doctors_id_link_user_DoctorNaoEncontrado_Retorna404()
+    {
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var doctorId = Guid.NewGuid();
+        var client = _factory.CreateAuthenticatedClient(userId, "admin@example.com", tenantId, roles: ["admin"]);
+
+        _factory.DoctorRepository
+            .GetByIdAsync(doctorId, Arg.Any<CancellationToken>())
+            .ReturnsNull();
+
+        var response = await client.PostAsJsonAsync($"/doctors/{doctorId}/link-user", new
+        {
+            userId = Guid.NewGuid(),
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task POST_doctors_id_link_user_JaVinculado_Retorna409()
+    {
+        var adminId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var existingUserId = Guid.NewGuid();
+        var newUserId = Guid.NewGuid();
+        var doctor = DoctorProfile.Create(tenantId, "Dr. João", "123456", "SP", "Cardiologia").Value;
+        doctor.LinkUser(existingUserId); // already linked
+
+        var tenant = Tenant.Create("Clínica").Value;
+        tenant.AddMember(newUserId, TenantRole.Doctor);
+
+        var client = _factory.CreateAuthenticatedClient(adminId, "admin@example.com", tenantId, roles: ["admin"]);
+
+        _factory.DoctorRepository
+            .GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>())
+            .Returns(doctor);
+        _factory.TenantRepository
+            .GetByIdAsync(tenantId, Arg.Any<CancellationToken>())
+            .Returns(tenant);
+
+        var response = await client.PostAsJsonAsync($"/doctors/{doctor.Id}/link-user", new
+        {
+            userId = newUserId,
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task POST_doctors_id_link_user_DadosValidos_Retorna200ComDoctorDto()
+    {
+        var adminId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var doctorUserId = Guid.NewGuid();
+        var doctor = DoctorProfile.Create(tenantId, "Dr. João", "123456", "SP", "Cardiologia").Value;
+        var tenant = Tenant.Create("Clínica").Value;
+        tenant.AddMember(doctorUserId, TenantRole.Doctor);
+
+        var client = _factory.CreateAuthenticatedClient(adminId, "admin@example.com", tenantId, roles: ["admin"]);
+
+        _factory.DoctorRepository
+            .GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>())
+            .Returns(doctor);
+        _factory.TenantRepository
+            .GetByIdAsync(tenantId, Arg.Any<CancellationToken>())
+            .Returns(tenant);
+
+        var response = await client.PostAsJsonAsync($"/doctors/{doctor.Id}/link-user", new
+        {
+            userId = doctorUserId,
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<DoctorDto>();
+        body.Should().NotBeNull();
+        body!.UserId.Should().Be(doctorUserId);
+        body.Name.Should().Be("Dr. João");
     }
 }

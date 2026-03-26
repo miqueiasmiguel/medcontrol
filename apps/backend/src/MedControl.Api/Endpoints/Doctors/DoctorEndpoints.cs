@@ -1,4 +1,5 @@
 using MedControl.Application.Doctors.Commands.CreateDoctor;
+using MedControl.Application.Doctors.Commands.LinkDoctorProfileToUser;
 using MedControl.Application.Doctors.Commands.UpdateDoctor;
 using MedControl.Application.Doctors.DTOs;
 using MedControl.Application.Doctors.Queries.GetDoctors;
@@ -27,6 +28,15 @@ public static class DoctorEndpoints
 
         group.MapPatch("/{id:guid}", UpdateDoctor)
              .WithName("UpdateDoctor")
+             .RequireAuthorization()
+             .Produces<DoctorDto>(StatusCodes.Status200OK)
+             .Produces(StatusCodes.Status400BadRequest)
+             .Produces(StatusCodes.Status401Unauthorized)
+             .Produces(StatusCodes.Status404NotFound)
+             .Produces(StatusCodes.Status409Conflict);
+
+        group.MapPost("/{id:guid}/link-user", LinkDoctorToUser)
+             .WithName("LinkDoctorToUser")
              .RequireAuthorization()
              .Produces<DoctorDto>(StatusCodes.Status200OK)
              .Produces(StatusCodes.Status400BadRequest)
@@ -84,6 +94,23 @@ public static class DoctorEndpoints
         return Results.Ok(result.Value);
     }
 
+    private static async Task<IResult> LinkDoctorToUser(
+        Guid id,
+        LinkDoctorRequest request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<DoctorDto>>(
+            new LinkDoctorProfileToUserCommand(id, request.UserId), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        return Results.Ok(result.Value);
+    }
+
     private static IResult ToErrorResult(Error error) => error.Type switch
     {
         ErrorType.Unauthorized => Results.Problem(error.Description, statusCode: 401),
@@ -96,3 +123,4 @@ public static class DoctorEndpoints
 
 internal sealed record CreateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty);
 internal sealed record UpdateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty);
+internal sealed record LinkDoctorRequest(Guid UserId);
