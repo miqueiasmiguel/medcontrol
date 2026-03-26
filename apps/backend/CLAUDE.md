@@ -27,7 +27,8 @@ src/
 │   │   ├── DTOs/         ← AuthTokenDto
 │   │   └── Settings/     ← MagicLinkSettings
 │   ├── Doctors/
-│   │   ├── Commands/     ← CreateDoctorCommand(Handler+Validator), UpdateDoctorCommand(Handler+Validator)
+│   │   ├── Commands/     ← CreateDoctorCommand(Handler+Validator), UpdateDoctorCommand(Handler+Validator),
+│   │   │                    LinkDoctorProfileToUserCommand(Handler+Validator)
 │   │   ├── Queries/      ← GetDoctorsQuery(Handler)
 │   │   └── DTOs/         ← DoctorDto
 │   ├── HealthPlans/
@@ -568,6 +569,7 @@ doctors.MapDoctors();
 | `GET` | `/doctors` | ✅ | Lista médicos do tenant; retorna `DoctorDto[]` → 200 |
 | `POST` | `/doctors` | ✅ | Cria médico; verifica CRM duplicado → 201 / 409 |
 | `PATCH` | `/doctors/{id}` | ✅ | Atualiza médico; verifica CRM duplicado → 200 / 404 / 409 |
+| `POST` | `/doctors/{id}/link-user` | ✅ | Vincula DoctorProfile a um User membro com role doctor; requer admin/owner → 200 / 400 / 401 / 404 / 409 |
 | `GET` | `/health-plans` | ✅ | Lista convênios do tenant; retorna `HealthPlanDto[]` → 200 |
 | `POST` | `/health-plans` | ✅ | Cria convênio; verifica TissCode duplicado → 201 / 409 |
 | `PATCH` | `/health-plans/{id}` | ✅ | Atualiza convênio; verifica TissCode duplicado → 200 / 404 / 409 |

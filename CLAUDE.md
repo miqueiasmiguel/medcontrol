@@ -42,6 +42,9 @@ Members      ← gerenciamento de membros do tenant — backend + web implementa
 Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
              ← DoctorProfile.Errors.OnlyLinkedDoctorCanUpdate (Forbidden) — apenas o user vinculado pode editar
              ← PATCH /doctors/{id} bloqueia edição quando outro user está vinculado (403 Forbidden)
+             ← POST /doctors/{id}/link-user → vincula DoctorProfile a User membro com role doctor; requer admin/owner
+             ←   body: { userId: Guid } — userId deve ser membro do tenant com TenantRole.Doctor
+             ←   409 se já vinculado (UserAlreadyLinked), 400 se userId não é membro doctor
              ← GET /users/me/doctor-profile → DoctorDto? (200 empty body se não vinculado)
              ← PATCH /users/me/doctor-profile → IReadOnlyList<DoctorDto> (atualiza todos os perfis cross-tenant)
              ← mobile: app/(app)/settings.tsx → SettingsScreen (perfil + tema + logout)
