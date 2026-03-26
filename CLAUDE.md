@@ -115,7 +115,22 @@ medcontrol/
 │   ├── app.config.ts        # config dinâmica (lê API_URL do env — substitui app.json em builds eas)
 │   ├── app.json             # config estática (dev local; app.config.ts tem precedência quando presente)
 │   ├── eas.json             # perfis eas: development (apk), preview (apk + API_URL prod), production (aab)
+│   ├── assets/              # ícones e splash screen (gerados por scripts/generate-assets.mjs)
+│   │   ├── icon.png         # 1024×1024 — ícone principal
+│   │   ├── splash-icon.png  # 1024×1024 — splash (fundo #F97316 aplicado pelo app.json)
+│   │   ├── android-icon-foreground.png  # 512×512 — adaptive icon foreground
+│   │   ├── android-icon-monochrome.png  # 432×432 — adaptive icon monocromático
+│   │   └── favicon.png      # 48×48
 │   └── src/screens/[feature]/
+├── apps/web/public/
+│   ├── icon.svg             # SVG master — fonte canônica de todos os assets de ícone
+│   ├── favicon.ico          # fallback legado
+│   ├── apple-touch-icon.png # 180×180 — iOS homescreen
+│   ├── icon-192.png         # 192×192 — PWA
+│   ├── icon-512.png         # 512×512 — PWA
+│   └── manifest.webmanifest # PWA manifest
+├── scripts/
+│   └── generate-assets.mjs  # regenera todos os PNGs: node scripts/generate-assets.mjs
 └── packages/contracts/src/[domain]/
 ```
 
