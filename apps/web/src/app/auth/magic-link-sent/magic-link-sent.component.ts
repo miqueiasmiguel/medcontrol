@@ -13,5 +13,5 @@ export class MagicLinkSentComponent {
   private readonly router = inject(Router);
 
   readonly email: string =
-    (this.router.getCurrentNavigation()?.extras?.state?.['email'] as string) ?? '';
+    (this.router.currentNavigation()?.extras?.state?.['email'] as string) ?? '';
 }
