@@ -14,16 +14,9 @@ git checkout -b feat/<nome-do-componente>
 # fix/login-page-layout
 ```
 
-**Durante a implementação**, faça commits granulares:
+**Durante a implementação**, execute `/commit` a cada etapa significativa concluída (template, interações, testes) para criar os commits granulares.
 
-```bash
-git commit -m "feat(web): add <component> template and styles"
-git commit -m "feat(web): add <component> interactions and state"
-git commit -m "test(web): add <component> unit tests"
-```
-
-**Ao final**, pergunte ao usuário:
-> "Componente implementado. Posso fazer o merge da branch `<nome>` na `main`, apagá-la e fazer push?"
+**Ao final**, execute `/commit` para garantir que todos os commits estão criados, as verificações pré-merge passaram (build, testes, vulnerabilidades) e fazer o merge na main.
 
 ---
 

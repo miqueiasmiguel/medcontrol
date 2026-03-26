@@ -22,36 +22,7 @@ Se algum check falhar, corrija antes de continuar.
 
 ## 2. Commitar mudanças pendentes
 
-Antes de abrir o PR, verifique se há mudanças não commitadas e commite seguindo o fluxo `/commit`:
-
-```bash
-git status         # checar arquivos modificados/não staged
-git diff --staged  # checar o que está staged
-```
-
-Se houver mudanças pendentes:
-
-1. Stage os arquivos relevantes:
-   ```bash
-   git add <arquivos>
-   ```
-
-2. Analise as mudanças e gere a mensagem no formato Conventional Commit:
-   ```
-   <type>(<scope>): <descrição em minúsculas, imperativo, sem ponto final>
-   ```
-   - Scopes disponíveis: `domain` | `app` | `infra` | `api` | `web` | `mobile` | `contracts` | `ci` | `deps` | `auth` | `tenants` | `users` | `payments` | `doctors` | `health-plans` | `procedures`
-   - Descrição 100% minúscula, incluindo siglas
-
-3. Commite:
-   ```bash
-   git commit -m "$(cat <<'EOF'
-   <mensagem gerada>
-   EOF
-   )"
-   ```
-
-Repita para cada conjunto lógico de mudanças. Só avance quando `git status` não mostrar arquivos pendentes de commit.
+Se houver mudanças não commitadas, execute `/commit` antes de abrir o PR. O `/commit` cria os commits granulares, roda as verificações obrigatórias (build, testes, vulnerabilidades) e garante que o branch está pronto. **Não avance para o passo 3 enquanto `git status` mostrar arquivos pendentes.**
 
 ## 3. Coletar informações do branch
 

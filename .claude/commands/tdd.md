@@ -14,18 +14,9 @@ git checkout -b <type>/<nome-descritivo>
 # test/doctor-profile-update
 ```
 
-**Durante a implementação**, faça commits granulares a cada ciclo RED → GREEN → REFACTOR completo:
+**Durante a implementação**, a cada ciclo RED → GREEN → REFACTOR completo, execute `/commit` para criar o commit granular daquele ciclo.
 
-```bash
-# Após RED (teste falhando)
-git commit -m "test(<scope>): add failing test for <behavior>"
-
-# Após GREEN + REFACTOR
-git commit -m "feat(<scope>): implement <behavior>"
-```
-
-**Ao final de todos os ciclos**, pergunte ao usuário:
-> "Todos os ciclos estão completos. Posso fazer o merge da branch `<nome>` na `main`, apagá-la e fazer push?"
+**Ao final de todos os ciclos**, execute `/commit` para garantir que todos os commits estão criados, as verificações pré-merge passaram (build, testes, vulnerabilidades) e fazer o merge na main.
 
 ---
 

@@ -12,14 +12,7 @@ git checkout -b chore/<descricao-da-migration>
 # chore/add-procedure-effective-dates
 ```
 
-**Após criar e revisar a migration**, faça um commit:
-
-```bash
-git commit -m "feat(infra): add ef core migration <nome-da-migration>"
-```
-
-**Ao final**, pergunte ao usuário:
-> "Migration criada e revisada. Posso fazer o merge da branch `<nome>` na `main`, apagá-la e fazer push?"
+**Após criar e revisar a migration**, execute `/commit` para criar o commit e, se esta for a única mudança da branch, para verificar vulnerabilidades e fazer o merge na main.
 
 ---
 

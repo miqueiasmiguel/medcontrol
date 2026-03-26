@@ -16,17 +16,9 @@ git checkout -b fix/<descricao-curta-do-bug>
 # fix/doctor-profile-forbidden
 ```
 
-**Após cada passo relevante**, faça um commit granular:
+**Após cada passo relevante** (teste reproduzindo o bug, correção aplicada, CLAUDE.md atualizado), execute `/commit` para criar o commit granular daquele passo.
 
-```bash
-git commit -m "test(<scope>): add failing test reproducing <bug>"
-git commit -m "fix(<scope>): <descrição da correção>"
-# Se CLAUDE.md foi atualizado:
-git commit -m "docs(<scope>): document <bug> pitfall in claude.md"
-```
-
-**Ao final**, pergunte ao usuário:
-> "Bug corrigido. Posso fazer o merge da branch `fix/<nome>` na `main`, apagá-la e fazer push?"
+**Ao final**, execute `/commit` para garantir que todos os commits estão criados, as verificações pré-merge passaram (build, testes, vulnerabilidades) e fazer o merge na main.
 
 ---
 

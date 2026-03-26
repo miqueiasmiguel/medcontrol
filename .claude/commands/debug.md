@@ -127,11 +127,4 @@ git checkout -b fix/<descricao-do-problema>
 # fix/mediator-handler-not-registered
 ```
 
-Após corrigir e verificar:
-
-```bash
-git commit -m "fix(<scope>): <descrição da correção>"
-```
-
-Ao final, pergunte ao usuário:
-> "Problema corrigido. Posso fazer o merge da branch `fix/<nome>` na `main`, apagá-la e fazer push?"
+Após corrigir e verificar, execute `/commit` para criar os commits, rodar as verificações pré-merge (build, testes, vulnerabilidades) e fazer o merge na main.

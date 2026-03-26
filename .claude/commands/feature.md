@@ -14,17 +14,9 @@ git checkout -b feat/<nome-da-feature>
 # feat/notifications
 ```
 
-**Durante a implementação**, faça commits granulares por camada (use `/tdd` internamente):
+**Durante a implementação**, use `/tdd` internamente e execute `/commit` a cada camada concluída para criar os commits granulares.
 
-```bash
-git commit -m "feat(<scope>): add <entity> domain aggregate"
-git commit -m "feat(<scope>): add create <entity> command handler"
-git commit -m "feat(<scope>): add <entity> repository and ef configuration"
-git commit -m "feat(<scope>): add <entity> api endpoints"
-```
-
-**Ao final**, pergunte ao usuário:
-> "Feature completa. Posso fazer o merge da branch `feat/<nome>` na `main`, apagá-la e fazer push?"
+**Ao final**, execute `/commit` para garantir que todos os commits estão criados, as verificações pré-merge passaram (build, testes, vulnerabilidades) e fazer o merge na main.
 
 ---
 
