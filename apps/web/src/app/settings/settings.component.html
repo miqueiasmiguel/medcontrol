@@ -69,6 +69,90 @@
     }
   </div>
 
+  <!-- Card: Perfil Médico -->
+  @if (isDoctor()) {
+    <div class="settings__card">
+      <div class="settings__card-header">
+        <h2 class="settings__card-title">Perfil médico</h2>
+        <p class="settings__card-desc">Informações do seu cadastro médico (CRM, especialidade)</p>
+      </div>
+
+      @if (loading()) {
+        <div class="settings__loading">
+          <mat-spinner diameter="20" />
+          <span>Carregando perfil...</span>
+        </div>
+      } @else {
+        <form [formGroup]="doctorProfileForm" (ngSubmit)="saveDoctorProfile()" class="settings__form" novalidate>
+          <div class="settings__field">
+            <label class="settings__label" for="doctorName">Nome</label>
+            <input
+              id="doctorName"
+              class="settings__input"
+              type="text"
+              formControlName="name"
+              placeholder="Nome completo"
+              maxlength="256"
+              autocomplete="name"
+            />
+          </div>
+
+          <div class="settings__field">
+            <label class="settings__label" for="crm">CRM</label>
+            <input
+              id="crm"
+              class="settings__input"
+              type="text"
+              formControlName="crm"
+              placeholder="Ex: 123456"
+              maxlength="20"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="settings__field">
+            <label class="settings__label" for="councilState">Estado do conselho</label>
+            <input
+              id="councilState"
+              class="settings__input"
+              type="text"
+              formControlName="councilState"
+              placeholder="Ex: SP"
+              maxlength="2"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="settings__field">
+            <label class="settings__label" for="specialty">Especialidade</label>
+            <input
+              id="specialty"
+              class="settings__input"
+              type="text"
+              formControlName="specialty"
+              placeholder="Ex: Cardiologia"
+              maxlength="256"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="settings__actions">
+            <button
+              class="btn btn--primary"
+              type="submit"
+              [disabled]="doctorProfileForm.invalid || savingDoctorProfile()"
+            >
+              @if (savingDoctorProfile()) {
+                <mat-spinner diameter="14" />
+              }
+              {{ savingDoctorProfile() ? 'Salvando...' : 'Salvar perfil médico' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+
   <!-- Card: Legal -->
   <div class="settings__card">
     <div class="settings__card-header">

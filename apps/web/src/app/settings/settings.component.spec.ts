@@ -7,6 +7,8 @@ import { of, throwError } from 'rxjs';
 import { SettingsComponent } from './settings.component';
 import { SettingsService, UserDto } from './data-access/settings.service';
 import { ThemeService } from './data-access/theme.service';
+import { CurrentUserService } from '../core/data-access/current-user.service';
+import { DoctorService, DoctorDto } from '../doctors/data-access/doctor.service';
 
 const mockUser: UserDto = {
   id: 'u1',
@@ -16,16 +18,41 @@ const mockUser: UserDto = {
   isEmailVerified: true,
   globalRole: 'None',
   lastLoginAt: null,
+  tenantRole: 'operator',
+};
+
+const mockDoctorUser: UserDto = { ...mockUser, tenantRole: 'doctor' };
+
+const mockDoctorProfile: DoctorDto = {
+  id: 'd1',
+  tenantId: 't1',
+  userId: 'u1',
+  name: 'Dr. João',
+  crm: '123456',
+  councilState: 'SP',
+  specialty: 'Cardiologia',
 };
 
 describe('SettingsComponent', () => {
-  let settingsService: jest.Mocked<Pick<SettingsService, 'getMe' | 'updateProfile'>>;
+  let settingsService: jest.Mocked<Pick<SettingsService, 'updateProfile' | 'updateMyDoctorProfile'>>;
+  let currentUserService: jest.Mocked<Pick<CurrentUserService, 'getMe'>>;
+  let doctorService: jest.Mocked<Pick<DoctorService, 'getMyDoctorProfile'>>;
   let themeService: Pick<ThemeService, 'apply' | 'theme'>;
 
-  function setup() {
+  function setup(isDoctor = false) {
+    const user = isDoctor ? mockDoctorUser : mockUser;
+
     settingsService = {
-      getMe: jest.fn(),
       updateProfile: jest.fn(),
+      updateMyDoctorProfile: jest.fn(),
+    };
+
+    currentUserService = {
+      getMe: jest.fn().mockReturnValue(of(user)),
+    };
+
+    doctorService = {
+      getMyDoctorProfile: jest.fn().mockReturnValue(of(mockDoctorProfile)),
     };
 
     themeService = {
@@ -39,6 +66,8 @@ describe('SettingsComponent', () => {
         provideRouter([]),
         provideNoopAnimations(),
         { provide: SettingsService, useValue: settingsService },
+        { provide: CurrentUserService, useValue: { ...currentUserService, isDoctor: signal(isDoctor) } },
+        { provide: DoctorService, useValue: doctorService },
         { provide: ThemeService, useValue: themeService },
       ],
     });
@@ -46,20 +75,19 @@ describe('SettingsComponent', () => {
 
   it('loads profile on init and populates form', fakeAsync(() => {
     setup();
-    settingsService.getMe.mockReturnValue(of(mockUser));
     const fixture = TestBed.createComponent(SettingsComponent);
     fixture.detectChanges();
     tick();
     fixture.detectChanges();
 
-    expect(settingsService.getMe).toHaveBeenCalled();
+    expect(currentUserService.getMe).toHaveBeenCalled();
     expect(fixture.componentInstance.profileForm.value.displayName).toBe('João Silva');
     expect(fixture.componentInstance.loading()).toBe(false);
   }));
 
   it('shows error message when profile load fails', fakeAsync(() => {
     setup();
-    settingsService.getMe.mockReturnValue(throwError(() => new Error('fail')));
+    currentUserService.getMe.mockReturnValue(throwError(() => new Error('fail')));
     const fixture = TestBed.createComponent(SettingsComponent);
     fixture.detectChanges();
     tick();
@@ -70,7 +98,6 @@ describe('SettingsComponent', () => {
 
   it('calls updateProfile and shows success on save', fakeAsync(() => {
     setup();
-    settingsService.getMe.mockReturnValue(of(mockUser));
     settingsService.updateProfile.mockReturnValue(of({ ...mockUser, displayName: 'Novo Nome' }));
     const fixture = TestBed.createComponent(SettingsComponent);
     fixture.detectChanges();
@@ -88,7 +115,6 @@ describe('SettingsComponent', () => {
 
   it('shows error message when save fails', fakeAsync(() => {
     setup();
-    settingsService.getMe.mockReturnValue(of(mockUser));
     settingsService.updateProfile.mockReturnValue(throwError(() => new Error('fail')));
     const fixture = TestBed.createComponent(SettingsComponent);
     fixture.detectChanges();
@@ -106,7 +132,6 @@ describe('SettingsComponent', () => {
 
   it('calls themeService.apply when applyTheme is called', fakeAsync(() => {
     setup();
-    settingsService.getMe.mockReturnValue(of(mockUser));
     const fixture = TestBed.createComponent(SettingsComponent);
     fixture.detectChanges();
     tick();
@@ -119,7 +144,6 @@ describe('SettingsComponent', () => {
 
   it('does not call updateProfile when form is invalid', fakeAsync(() => {
     setup();
-    settingsService.getMe.mockReturnValue(of(mockUser));
     const fixture = TestBed.createComponent(SettingsComponent);
     fixture.detectChanges();
     tick();
@@ -130,5 +154,58 @@ describe('SettingsComponent', () => {
     tick();
 
     expect(settingsService.updateProfile).not.toHaveBeenCalled();
+  }));
+
+  it('does not render doctor profile card when user is not doctor', fakeAsync(() => {
+    setup(false);
+    const fixture = TestBed.createComponent(SettingsComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).not.toContain('Perfil médico');
+    expect(doctorService.getMyDoctorProfile).not.toHaveBeenCalled();
+  }));
+
+  it('renders doctor profile card and loads data when user is doctor', fakeAsync(() => {
+    setup(true);
+    const fixture = TestBed.createComponent(SettingsComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    expect(doctorService.getMyDoctorProfile).toHaveBeenCalled();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.textContent).toContain('Perfil médico');
+    expect(fixture.componentInstance.doctorProfileForm.value.crm).toBe('123456');
+    expect(fixture.componentInstance.doctorProfileForm.value.specialty).toBe('Cardiologia');
+  }));
+
+  it('calls updateMyDoctorProfile with correct values on saveDoctorProfile', fakeAsync(() => {
+    setup(true);
+    settingsService.updateMyDoctorProfile.mockReturnValue(of(null));
+    const fixture = TestBed.createComponent(SettingsComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    fixture.componentInstance.doctorProfileForm.setValue({
+      name: 'Dr. Carlos',
+      crm: '654321',
+      councilState: 'RJ',
+      specialty: 'Neurologia',
+    });
+    fixture.componentInstance.saveDoctorProfile();
+    tick();
+    fixture.detectChanges();
+
+    expect(settingsService.updateMyDoctorProfile).toHaveBeenCalledWith({
+      name: 'Dr. Carlos',
+      crm: '654321',
+      councilState: 'RJ',
+      specialty: 'Neurologia',
+    });
+    expect(fixture.componentInstance.successMessage()).toBeTruthy();
   }));
 });

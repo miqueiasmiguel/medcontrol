@@ -18,6 +18,7 @@ import {
   PaymentStatus,
 } from '../data-access/payment.service';
 import { ProcedureDto } from '../../procedures/data-access/procedure.service';
+import { CurrentUserService } from '../../core/data-access/current-user.service';
 
 @Component({
   selector: 'app-payment-detail',
@@ -36,8 +37,11 @@ export class PaymentDetailComponent {
   @Output() readonly closed = new EventEmitter<void>();
 
   private readonly paymentService = inject(PaymentService);
+  private readonly currentUserService = inject(CurrentUserService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+
+  readonly isDoctor = this.currentUserService.isDoctor;
 
   // Item status editing
   readonly editingItemId = signal<string | null>(null);

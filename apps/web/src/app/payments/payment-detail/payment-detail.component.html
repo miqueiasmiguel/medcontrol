@@ -38,7 +38,7 @@
     }
 
     <!-- ── Header info / edit form ───────────────────────────────────────── -->
-    @if (editingHeader()) {
+    @if (!isDoctor() && editingHeader()) {
       <form class="header-edit-form" [formGroup]="headerForm" (ngSubmit)="submitHeaderUpdate()">
         <div class="header-edit-form__title-row">
           <h3 class="section-title">Editar informações</h3>
@@ -147,9 +147,11 @@
       <div class="detail-section">
         <div class="detail-section__title-row">
           <h3 class="section-title">Informações</h3>
-          <button class="btn btn--ghost btn--xs" type="button" (click)="startEditHeader()">
-            Editar
-          </button>
+          @if (!isDoctor()) {
+            <button class="btn btn--ghost btn--xs" type="button" (click)="startEditHeader()">
+              Editar
+            </button>
+          }
         </div>
         <div class="detail-grid">
           <div class="detail-item">
@@ -204,7 +206,7 @@
           <span class="items-section__total">
             Total: <strong class="mono">{{ totalValue() | currency:'BRL':'symbol':'1.2-2' }}</strong>
           </span>
-          @if (!addingItem()) {
+          @if (!addingItem() && !isDoctor()) {
             <button class="btn btn--ghost btn--xs" type="button" (click)="startAddItem()">
               + Adicionar
             </button>
@@ -318,7 +320,7 @@
                   </button>
                 </div>
               </form>
-            } @else {
+            } @else if (!isDoctor()) {
               <div class="item-row__action">
                 <button
                   class="btn btn--ghost btn--xs"
