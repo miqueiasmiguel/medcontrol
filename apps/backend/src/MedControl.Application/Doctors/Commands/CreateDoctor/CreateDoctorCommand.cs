@@ -8,4 +8,5 @@ public record CreateDoctorCommand(
     string Name,
     string Crm,
     string CouncilState,
-    string Specialty) : ICommand<Result<DoctorDto>>;
+    string Specialty,
+    string? InviteEmail = null) : ICommand<Result<DoctorDto>>;

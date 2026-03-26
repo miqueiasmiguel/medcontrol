@@ -67,7 +67,7 @@ public static class DoctorEndpoints
         CancellationToken ct)
     {
         var result = await mediator.Send<Result<DoctorDto>>(
-            new CreateDoctorCommand(request.Name, request.Crm, request.CouncilState, request.Specialty), ct);
+            new CreateDoctorCommand(request.Name, request.Crm, request.CouncilState, request.Specialty, request.InviteEmail), ct);
 
         if (!result.IsSuccess)
         {
@@ -121,6 +121,6 @@ public static class DoctorEndpoints
     };
 }
 
-internal sealed record CreateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty);
+internal sealed record CreateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty, string? InviteEmail = null);
 internal sealed record UpdateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty);
 internal sealed record LinkDoctorRequest(Guid UserId);
