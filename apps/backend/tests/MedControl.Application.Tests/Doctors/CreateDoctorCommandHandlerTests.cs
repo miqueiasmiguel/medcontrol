@@ -121,9 +121,11 @@ public sealed class CreateDoctorCommandHandlerTests
         result.Value.UserId.Should().NotBeNull();
         await _userRepository.Received(1).AddAsync(Arg.Any<User>(), Arg.Any<CancellationToken>());
         await _tenantRepository.Received(1).UpdateAsync(tenant, Arg.Any<CancellationToken>());
-        await _doctorRepository.Received(1).UpdateAsync(
-            Arg.Is<DoctorProfile>(d => d.UserId != null),
-            Arg.Any<CancellationToken>());
+        // UpdateAsync must NOT be called on the doctor — the entity is in Added state after AddAsync;
+        // calling UpdateAsync changes EF Core state to Modified, causing DbUpdateConcurrencyException
+        var doctorUpdateCalls = _doctorRepository.ReceivedCalls()
+            .Count(c => c.GetMethodInfo().Name == nameof(IDoctorRepository.UpdateAsync));
+        doctorUpdateCalls.Should().Be(0, "UpdateAsync on a just-added entity changes EF Core state to Modified and causes DbUpdateConcurrencyException");
         await _emailService.Received(1).SendInvitationAsync(
             "medico@clinica.com",
             Arg.Is<string>(s => s.Contains("invite-token")),

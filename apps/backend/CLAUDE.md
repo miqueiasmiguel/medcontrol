@@ -810,6 +810,11 @@ options.Events = new JwtBearerEvents
 
 ## Armadilhas Conhecidas
 
+### UpdateAsync após AddAsync na mesma entidade causa DbUpdateConcurrencyException
+
+- **Problema**: Chamar `AddAsync(entity)` marca a entidade como `Added` no EF Core. Se em seguida `UpdateAsync(entity)` for chamado na mesma instância (ex: para setar um campo após vincular ao usuário), o estado muda de `Added` para `Modified`. O `SaveChangesAsync` então gera um `UPDATE` em vez de `INSERT`, encontra 0 linhas e lança `DbUpdateConcurrencyException`.
+- **Correto**: Após `AddAsync`, mute as propriedades diretamente no objeto (ex: `doctor.LinkUser(userId)`). O EF Core rastreia a entidade por referência e inclui todos os valores atuais no `INSERT`. Não chame `UpdateAsync` para a mesma entidade até que o primeiro `SaveChangesAsync` tenha sido executado.
+
 ### Global query filter com TenantId nulo lança InvalidOperationException
 
 - **Problema**: Os global query filters usavam `currentUser.TenantId!.Value`. O operador `!` só suprime o aviso do compilador — em runtime, chamar `.Value` em um `Guid?` nulo lança `InvalidOperationException: Nullable object must have a value`. Isso ocorre quando o JWT não tem `tenant_id` (ex: login mobile sem `switch-tenant`).

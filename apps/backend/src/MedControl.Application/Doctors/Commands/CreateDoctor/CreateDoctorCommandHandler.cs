@@ -100,7 +100,10 @@ public sealed class CreateDoctorCommandHandler(
                 return Result.Failure<DoctorDto>(linkResult.Error);
             }
 
-            await doctorRepository.UpdateAsync(doctor, ct);
+            // Do NOT call UpdateAsync here — the entity is already tracked as Added by AddAsync above.
+            // Calling UpdateAsync would change the EF Core state to Modified, causing a
+            // DbUpdateConcurrencyException when SaveChangesAsync tries to UPDATE a row that doesn't exist yet.
+            // The UserId mutation via LinkUser is included automatically in the INSERT.
         }
 
         await unitOfWork.SaveChangesAsync(ct);
