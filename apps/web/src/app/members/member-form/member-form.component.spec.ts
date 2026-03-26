@@ -15,6 +15,7 @@ describe('MemberFormComponent', () => {
     avatarUrl: null,
     role: 'operator',
     joinedAt: new Date().toISOString(),
+    invited: false,
   };
 
   function setup() {
@@ -136,25 +137,33 @@ describe('MemberFormComponent', () => {
     expect(fixture.componentInstance.loading()).toBe(false);
   }));
 
-  it('shows not found error on 404 response', fakeAsync(() => {
+  it('shows invite banner and delays saved emit when invited is true', fakeAsync(() => {
     setup();
-    const error = new HttpErrorResponse({ status: 404 });
-    membersService.addMember.mockReturnValue(throwError(() => error));
+    const invitedMember: MemberDto = { ...mockMember, invited: true };
+    membersService.addMember.mockReturnValue(of(invitedMember));
 
     const fixture = TestBed.createComponent(MemberFormComponent);
     fixture.componentRef.setInput('member', null);
     fixture.detectChanges();
 
-    fixture.componentInstance.form.setValue({ email: 'notfound@example.com', role: 'operator' });
+    fixture.componentInstance.form.setValue({ email: 'new@example.com', role: 'operator' });
+
+    const savedSpy = jest.spyOn(fixture.componentInstance.saved, 'emit');
     fixture.componentInstance.submit();
-    tick();
+    tick(0);
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.errorMessage()).toContain('não encontrado');
-    expect(fixture.componentInstance.loading()).toBe(false);
+    expect(fixture.componentInstance.invitedMessage()).toBeTruthy();
+    expect(savedSpy).not.toHaveBeenCalled();
+
+    tick(2500);
+    fixture.detectChanges();
+
+    expect(savedSpy).toHaveBeenCalledWith(invitedMember);
+    expect(fixture.componentInstance.invitedMessage()).toBe('');
   }));
 
-  it('shows generic error on non-409/404 failure', fakeAsync(() => {
+  it('shows generic error on non-409 failure', fakeAsync(() => {
     setup();
     const error = new HttpErrorResponse({ status: 500 });
     membersService.addMember.mockReturnValue(throwError(() => error));

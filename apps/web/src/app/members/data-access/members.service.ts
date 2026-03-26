@@ -8,6 +8,7 @@ export interface MemberDto {
   avatarUrl: string | null;
   role: string;
   joinedAt: string;
+  invited: boolean;
 }
 
 export interface AddMemberCommand {

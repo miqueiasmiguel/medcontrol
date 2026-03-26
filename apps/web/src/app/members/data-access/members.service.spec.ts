@@ -34,7 +34,7 @@ describe('MembersService', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.withCredentials).toBe(true);
     expect(req.request.body).toEqual(command);
-    req.flush({ userId: 'u-1', ...command, displayName: null, avatarUrl: null, joinedAt: new Date().toISOString() });
+    req.flush({ userId: 'u-1', ...command, displayName: null, avatarUrl: null, joinedAt: new Date().toISOString(), invited: false });
   });
 
   it('should PATCH /api/members/:userId with command and credentials', () => {
@@ -46,7 +46,7 @@ describe('MembersService', () => {
     expect(req.request.method).toBe('PATCH');
     expect(req.request.withCredentials).toBe(true);
     expect(req.request.body).toEqual(command);
-    req.flush({ userId: 'u-1', role: 'doctor', displayName: null, email: null, avatarUrl: null, joinedAt: new Date().toISOString() });
+    req.flush({ userId: 'u-1', role: 'doctor', displayName: null, email: null, avatarUrl: null, joinedAt: new Date().toISOString(), invited: false });
   });
 
   it('should DELETE /api/members/:userId with credentials', () => {

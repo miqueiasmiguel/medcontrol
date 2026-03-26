@@ -12,6 +12,7 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
+import { timer } from 'rxjs';
 import { MembersService, MemberDto } from '../data-access/members.service';
 
 export const ROLE_OPTIONS = [
@@ -39,6 +40,7 @@ export class MemberFormComponent implements OnChanges {
 
   readonly loading = signal(false);
   readonly errorMessage = signal('');
+  readonly invitedMessage = signal('');
   readonly roleOptions = ROLE_OPTIONS;
 
   readonly form = this.fb.nonNullable.group({
@@ -80,14 +82,22 @@ export class MemberFormComponent implements OnChanges {
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (member) => {
         this.loading.set(false);
-        this.saved.emit(member);
+        if (member.invited) {
+          this.invitedMessage.set('Convite enviado! O usuário receberá um e-mail para acessar o MedControl.');
+          timer(2500)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => {
+              this.invitedMessage.set('');
+              this.saved.emit(member);
+            });
+        } else {
+          this.saved.emit(member);
+        }
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
         if (err.status === 409) {
           this.errorMessage.set('Este usuário já é membro desta organização.');
-        } else if (err.status === 404) {
-          this.errorMessage.set('Usuário não encontrado. Verifique o e-mail informado.');
         } else {
           this.errorMessage.set('Erro ao salvar membro. Tente novamente.');
         }

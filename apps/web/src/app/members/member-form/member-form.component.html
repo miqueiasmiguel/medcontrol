@@ -19,6 +19,10 @@
       <div class="form-error-banner" role="alert">{{ errorMessage() }}</div>
     }
 
+    @if (invitedMessage()) {
+      <div class="form-success-banner" role="status">{{ invitedMessage() }}</div>
+    }
+
     @if (!isEditing) {
       <div class="form-field">
         <label class="form-label" for="email">E-mail</label>
