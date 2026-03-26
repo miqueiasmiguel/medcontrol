@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { DoctorsListComponent } from './doctors-list.component';
 import { DoctorService, DoctorDto } from '../data-access/doctor.service';
+import { MembersService } from '../../members/data-access/members.service';
 
 describe('DoctorsListComponent', () => {
   let doctorService: jest.Mocked<Pick<DoctorService, 'getDoctors'>>;
@@ -24,6 +25,8 @@ describe('DoctorsListComponent', () => {
     },
   ];
 
+  const membersService = { getMembers: jest.fn().mockReturnValue(of([])) };
+
   function setup() {
     doctorService = { getDoctors: jest.fn() };
 
@@ -32,6 +35,7 @@ describe('DoctorsListComponent', () => {
       providers: [
         provideRouter([]),
         { provide: DoctorService, useValue: doctorService },
+        { provide: MembersService, useValue: membersService },
       ],
     });
   }
@@ -156,5 +160,55 @@ describe('DoctorsListComponent', () => {
 
     expect(fixture.componentInstance.doctors()).toHaveLength(2);
     expect(fixture.componentInstance.doctors()[0].specialty).toBe('Neurologia');
+  }));
+
+  // UX education tests
+
+  it('shows link hint banner when onCreatedWithoutInvite is called', fakeAsync(() => {
+    setup();
+    doctorService.getDoctors.mockReturnValue(of([]));
+    const fixture = TestBed.createComponent(DoctorsListComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const newDoctor: DoctorDto = { id: 'doc-3', tenantId: 't1', userId: null, name: 'Dr. X', crm: '1', councilState: 'SP', specialty: 'S' };
+    fixture.componentInstance.onCreatedWithoutInvite(newDoctor);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.showLinkHint()).toBe(true);
+    expect(fixture.nativeElement.querySelector('[data-testid="link-hint-banner"]')).not.toBeNull();
+  }));
+
+  it('auto-hides link hint banner after 8 seconds', fakeAsync(() => {
+    setup();
+    doctorService.getDoctors.mockReturnValue(of([]));
+    const fixture = TestBed.createComponent(DoctorsListComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const newDoctor: DoctorDto = { id: 'doc-3', tenantId: 't1', userId: null, name: 'Dr. X', crm: '1', councilState: 'SP', specialty: 'S' };
+    fixture.componentInstance.onCreatedWithoutInvite(newDoctor);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.showLinkHint()).toBe(true);
+
+    tick(8000);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.showLinkHint()).toBe(false);
+  }));
+
+  it('shows two educational cards in empty state', fakeAsync(() => {
+    setup();
+    doctorService.getDoctors.mockReturnValue(of([]));
+    const fixture = TestBed.createComponent(DoctorsListComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    const cards = fixture.nativeElement.querySelectorAll('[data-testid="empty-state-card"]');
+    expect(cards.length).toBe(2);
   }));
 });

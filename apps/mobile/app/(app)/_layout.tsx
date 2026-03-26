@@ -25,12 +25,13 @@ export default function AppLayout() {
     if (user?.tenantRole !== 'doctor') return;
     if (doctorProfile !== null) return;
 
-    const currentSegment = segments[segments.length - 1];
+    const currentSegment = String(segments[segments.length - 1]);
     if (currentSegment === 'doctor-onboarding') return;
 
     void AsyncStorage.getItem('mmc_onboarding_skip').then((skip) => {
       if (!skip) {
-        router.replace('/(app)/doctor-onboarding');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        router.replace('/(app)/doctor-onboarding' as any);
       }
     });
   }, [isAuthenticated, isLoading, userLoading, profileLoading, user, doctorProfile, segments, router]);

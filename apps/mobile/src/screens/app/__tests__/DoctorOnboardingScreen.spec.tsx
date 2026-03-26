@@ -141,7 +141,6 @@ describe('DoctorOnboardingScreen', () => {
   });
 
   it('sets AsyncStorage skip flag and navigates to /(app) when skipping', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const AsyncStorage = require('@react-native-async-storage/async-storage');
     const { getByTestId } = render(<DoctorOnboardingScreen />);
 

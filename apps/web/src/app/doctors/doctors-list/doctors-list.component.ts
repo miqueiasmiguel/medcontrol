@@ -29,6 +29,7 @@ export class DoctorsListComponent implements OnInit {
   readonly linkFormOpen = signal(false);
   readonly doctorToLink = signal<DoctorDto | null>(null);
   readonly errorMessage = signal('');
+  readonly showLinkHint = signal(false);
 
   ngOnInit() {
     this.loadDoctors();
@@ -58,6 +59,17 @@ export class DoctorsListComponent implements OnInit {
       return [...list, doctor];
     });
     this.closeForm();
+  }
+
+  onCreatedWithoutInvite(doctor: DoctorDto) {
+    this.doctors.update((list) => {
+      if (!list.find((d) => d.id === doctor.id)) {
+        return [...list, doctor];
+      }
+      return list;
+    });
+    this.showLinkHint.set(true);
+    setTimeout(() => this.showLinkHint.set(false), 8000);
   }
 
   openLinkForm(doctor: DoctorDto) {

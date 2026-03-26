@@ -13,13 +13,43 @@
     <div class="doctors-list__error" role="alert">{{ errorMessage() }}</div>
   }
 
+  @if (showLinkHint()) {
+    <div class="doctors-list__hint" role="status" data-testid="link-hint-banner">
+      <span>
+        Médico cadastrado sem conta de acesso.
+        Clique em <strong>Vincular</strong> na linha do médico para conectar ou enviar convite.
+      </span>
+      <button class="btn btn--ghost btn--sm" type="button" (click)="showLinkHint.set(false)" aria-label="Fechar aviso">✕</button>
+    </div>
+  }
+
   <div class="doctors-list__card">
     @if (doctors().length === 0) {
       <div class="doctors-list__empty">
-        <p>Nenhum médico cadastrado.</p>
-        <button class="btn btn--secondary" (click)="openCreateForm()" type="button">
-          Cadastrar primeiro médico
-        </button>
+        <p class="doctors-list__empty-title">Nenhum médico cadastrado ainda</p>
+        <p class="doctors-list__empty-desc">Escolha como deseja começar:</p>
+        <div class="doctors-list__empty-cards">
+          <div class="doctors-list__empty-card" data-testid="empty-state-card">
+            <h3 class="doctors-list__empty-card-title">Cadastrar e convidar</h3>
+            <p class="doctors-list__empty-card-desc">
+              Preencha os dados do médico e envie o convite de acesso em um único passo.
+              O médico receberá um e-mail para definir sua conta.
+            </p>
+            <button class="btn btn--primary btn--sm" (click)="openCreateForm()" type="button">
+              Novo médico
+            </button>
+          </div>
+          <div class="doctors-list__empty-card" data-testid="empty-state-card">
+            <h3 class="doctors-list__empty-card-title">Cadastrar agora, vincular depois</h3>
+            <p class="doctors-list__empty-card-desc">
+              Crie o cadastro sem associar uma conta. Quando quiser, use o botão
+              <strong>Vincular</strong> para conectar o médico a um membro existente ou enviar convite.
+            </p>
+            <button class="btn btn--ghost btn--sm" (click)="openCreateForm()" type="button">
+              Novo médico
+            </button>
+          </div>
+        </div>
       </div>
     } @else {
       <table class="doctors-list__table">
@@ -78,6 +108,7 @@
     [doctor]="selectedDoctor()"
     (saved)="onSaved($event)"
     (closed)="closeForm()"
+    (createdWithoutInvite)="onCreatedWithoutInvite($event)"
   />
 }
 
