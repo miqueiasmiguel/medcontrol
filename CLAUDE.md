@@ -23,14 +23,20 @@ Payments     ← aggregate root Payment (core domain) — backend implementado
              ← endpoints: GET/POST /payments, GET /payments/{id}, PATCH /payments/{id}
              ←            PATCH /payments/{id}/items/{itemId}, POST /payments/{id}/items
              ←            DELETE /payments/{id}/items/{itemId}
+             ← doctor restrictions (backend): GET /payments/{id} → 401 se doctorId ≠ currentUser.UserId
+             ← doctor restrictions (backend): POST/PATCH/DELETE endpoints → 403 para role doctor
              ← mobile: lista (app/(app)/index.tsx) + detalhe (app/(app)/payments/[id].tsx)
              ← PaymentService.getPayment(id) → GET /payments/{id}
              ← usePayment(id): { payment, loading, error, refetch }
              ← PaymentCard.onPress → router.push(`/payments/${id}`)
              ← convênio resolvido client-side via HealthPlanService.listHealthPlans()
 Users        ← User.UpdateProfile() — backend + web implementados
-             ← endpoints: GET /users/me, PATCH /users/me/profile
-             ← web: /settings (ThemeService: light/dark/system via data-theme attr; SettingsService: getMe/updateProfile)
+             ← endpoints: GET /users/me, PATCH /users/me/profile, PATCH /users/me/doctor-profile
+             ← web: /settings (ThemeService: light/dark/system via data-theme attr; SettingsService: getMe/updateProfile/updateMyDoctorProfile)
+             ← web: /settings mostra card "Perfil médico" (nome/crm/councilState/specialty) apenas para role doctor
+             ← CurrentUserService: signal-based cache de UserDto + computed isDoctor (tenantRole === 'doctor')
+             ←   getMe() retorna cache se disponível; invalidate() força refetch
+             ← roleGuard: redireciona doctors tentando acessar /doctors, /health-plans, /procedures, /members → /payments
 Members      ← gerenciamento de membros do tenant — backend + web implementados
              ← Tenant.UpdateMemberRole(userId, currentUserId, role) + Tenant.Errors.CannotUpdateOwnRole
              ← IUserRepository.GetByIdsAsync — busca múltiplos usuários por IDs
@@ -82,7 +88,7 @@ Procedures   ← Procedimento (código TUSS/CBHPM, descrição, valor, vigência
 | Role | Quem | Permissões |
 |---|---|---|
 | `operator` | Operador/secretaria | CRUD completo de pagamentos, cadastros |
-| `doctor` | Médico | Leitura dos próprios pagamentos, relatórios |
+| `doctor` | Médico | Leitura apenas dos próprios pagamentos (ownership check no backend); sidebar restrita (sem Cadastros/Membros); payments read-only (sem criar/editar/adicionar itens); edita perfil médico em /settings |
 | `admin` | Administrador do tenant | Gerencia membros e configurações |
 | `owner` | Proprietário | Mesmas permissões de admin (role máximo) |
 
