@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
 import { authGuard } from './auth/guards/auth.guard';
 import { tenantGuard } from './tenants/guards/tenant.guard';
+import { doctorOnboardingGuard } from './core/guards/doctor-onboarding.guard';
 
 export const appRoutes: Route[] = [
   {
@@ -18,8 +19,15 @@ export const appRoutes: Route[] = [
     loadChildren: () => import('./tenants/tenants.routes').then((m) => m.tenantsRoutes),
   },
   {
+    path: 'onboarding',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./doctors/onboarding/onboarding.component').then((m) => m.DoctorOnboardingComponent),
+  },
+  {
     path: '',
     canActivate: [authGuard, tenantGuard],
+    canActivateChild: [doctorOnboardingGuard],
     loadComponent: () => import('./layout/shell/shell.component').then((m) => m.ShellComponent),
     children: [
       { path: '', redirectTo: 'doctors', pathMatch: 'full' },

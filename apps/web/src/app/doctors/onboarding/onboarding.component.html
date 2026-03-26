@@ -1,0 +1,95 @@
+<div class="onboarding">
+  <div class="onboarding__card">
+    <div class="onboarding__header">
+      <h1 class="onboarding__title">Complete seu perfil médico</h1>
+      <p class="onboarding__subtitle">
+        Preencha seus dados para acessar pagamentos e relatórios da organização.
+      </p>
+    </div>
+
+    <form class="onboarding__form" [formGroup]="form" (ngSubmit)="submit()">
+      @if (errorMessage()) {
+        <div class="form-error-banner" role="alert">{{ errorMessage() }}</div>
+      }
+
+      <div class="form-field">
+        <label class="form-label" for="name">Nome completo</label>
+        <input
+          id="name"
+          class="form-input"
+          [class.form-input--error]="form.controls.name.invalid && form.controls.name.touched"
+          type="text"
+          formControlName="name"
+          placeholder="Dr. João da Silva"
+          autocomplete="name"
+        />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <span class="form-field-error">Nome completo é obrigatório.</span>
+        }
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label" for="crm">CRM</label>
+          <input
+            id="crm"
+            class="form-input form-input--mono"
+            [class.form-input--error]="form.controls.crm.invalid && form.controls.crm.touched"
+            type="text"
+            formControlName="crm"
+            placeholder="123456"
+            inputmode="numeric"
+          />
+          @if (form.controls.crm.invalid && form.controls.crm.touched) {
+            <span class="form-field-error">CRM inválido (somente números).</span>
+          }
+        </div>
+
+        <div class="form-field form-field--sm">
+          <label class="form-label" for="councilState">Estado</label>
+          <input
+            id="councilState"
+            class="form-input form-input--mono"
+            [class.form-input--error]="form.controls.councilState.invalid && form.controls.councilState.touched"
+            type="text"
+            formControlName="councilState"
+            placeholder="SP"
+            maxlength="2"
+            style="text-transform: uppercase"
+          />
+          @if (form.controls.councilState.invalid && form.controls.councilState.touched) {
+            <span class="form-field-error">UF inválida (ex: SP).</span>
+          }
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label class="form-label" for="specialty">Especialidade</label>
+        <input
+          id="specialty"
+          class="form-input"
+          [class.form-input--error]="form.controls.specialty.invalid && form.controls.specialty.touched"
+          type="text"
+          formControlName="specialty"
+          placeholder="Cardiologia"
+        />
+        @if (form.controls.specialty.invalid && form.controls.specialty.touched) {
+          <span class="form-field-error">Especialidade é obrigatória.</span>
+        }
+      </div>
+
+      <div class="onboarding__actions">
+        <button class="btn btn--primary" type="submit" [disabled]="loading()">
+          @if (loading()) {
+            Salvando…
+          } @else {
+            Concluir cadastro
+          }
+        </button>
+        <button class="btn btn--ghost" type="button" (click)="skip()">
+          Fazer depois
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

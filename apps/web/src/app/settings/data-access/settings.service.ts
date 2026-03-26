@@ -10,6 +10,7 @@ export interface UserDto {
   isEmailVerified: boolean;
   globalRole: string;
   lastLoginAt: string | null;
+  tenantRole?: string | null;
 }
 
 export interface UpdateProfileRequest {
