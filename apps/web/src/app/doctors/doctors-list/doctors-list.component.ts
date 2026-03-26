@@ -9,11 +9,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DoctorService, DoctorDto } from '../data-access/doctor.service';
 import { DoctorFormComponent } from '../doctor-form/doctor-form.component';
+import { DoctorLinkFormComponent } from '../doctor-link-form/doctor-link-form.component';
 
 @Component({
   selector: 'app-doctors-list',
   standalone: true,
-  imports: [DoctorFormComponent],
+  imports: [DoctorFormComponent, DoctorLinkFormComponent],
   templateUrl: './doctors-list.component.html',
   styleUrl: './doctors-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +26,8 @@ export class DoctorsListComponent implements OnInit {
   readonly doctors = signal<DoctorDto[]>([]);
   readonly formOpen = signal(false);
   readonly selectedDoctor = signal<DoctorDto | null>(null);
+  readonly linkFormOpen = signal(false);
+  readonly doctorToLink = signal<DoctorDto | null>(null);
   readonly errorMessage = signal('');
 
   ngOnInit() {
@@ -55,6 +58,21 @@ export class DoctorsListComponent implements OnInit {
       return [...list, doctor];
     });
     this.closeForm();
+  }
+
+  openLinkForm(doctor: DoctorDto) {
+    this.doctorToLink.set(doctor);
+    this.linkFormOpen.set(true);
+  }
+
+  closeLinkForm() {
+    this.linkFormOpen.set(false);
+    this.doctorToLink.set(null);
+  }
+
+  onLinked(updated: DoctorDto) {
+    this.doctors.update((list) => list.map((d) => (d.id === updated.id ? updated : d)));
+    this.closeLinkForm();
   }
 
   private loadDoctors() {

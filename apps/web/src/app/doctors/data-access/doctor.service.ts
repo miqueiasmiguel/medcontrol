@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 
 export interface DoctorDto {
   id: string;
+  tenantId: string;
+  userId: string | null;
   name: string;
   crm: string;
   councilState: string;
@@ -37,5 +39,9 @@ export class DoctorService {
 
   updateDoctor(id: string, command: UpdateDoctorCommand) {
     return this.http.patch<DoctorDto>(`/api/doctors/${id}`, command, { withCredentials: true });
+  }
+
+  linkDoctorToUser(doctorId: string, userId: string) {
+    return this.http.post<DoctorDto>(`/api/doctors/${doctorId}/link-user`, { userId }, { withCredentials: true });
   }
 }

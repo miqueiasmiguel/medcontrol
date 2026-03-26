@@ -58,4 +58,15 @@ describe('DoctorService', () => {
     expect(req.request.body).toEqual(command);
     req.flush({ id: 'doc-1', ...command });
   });
+
+  it('should POST /api/doctors/:id/link-user with userId and credentials', () => {
+    const userId = 'user-123';
+    service.linkDoctorToUser('doc-1', userId).subscribe();
+
+    const req = httpTesting.expectOne('/api/doctors/doc-1/link-user');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.withCredentials).toBe(true);
+    expect(req.request.body).toEqual({ userId });
+    req.flush({ id: 'doc-1', userId, name: 'Dr. João', crm: '123456', councilState: 'SP', specialty: 'Cardiologia' });
+  });
 });

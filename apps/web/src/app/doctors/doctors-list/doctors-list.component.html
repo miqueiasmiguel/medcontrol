@@ -28,6 +28,7 @@
             <th>Nome</th>
             <th>CRM</th>
             <th>Especialidade</th>
+            <th>Usuário</th>
             <th><span class="sr-only">Ações</span></th>
           </tr>
         </thead>
@@ -39,6 +40,13 @@
                 <span class="doctors-list__crm">{{ doctor.crm }}/{{ doctor.councilState }}</span>
               </td>
               <td>{{ doctor.specialty }}</td>
+              <td>
+                @if (doctor.userId) {
+                  <span class="badge badge--success">Vinculado</span>
+                } @else {
+                  <span class="badge badge--warning">Sem usuário</span>
+                }
+              </td>
               <td class="doctors-list__actions">
                 <button
                   class="btn btn--ghost btn--sm"
@@ -47,6 +55,15 @@
                 >
                   Editar
                 </button>
+                @if (!doctor.userId) {
+                  <button
+                    class="btn btn--ghost btn--sm"
+                    (click)="openLinkForm(doctor); $event.stopPropagation()"
+                    type="button"
+                  >
+                    Vincular
+                  </button>
+                }
               </td>
             </tr>
           }
@@ -61,5 +78,13 @@
     [doctor]="selectedDoctor()"
     (saved)="onSaved($event)"
     (closed)="closeForm()"
+  />
+}
+
+@if (linkFormOpen() && doctorToLink()) {
+  <app-doctor-link-form
+    [doctor]="doctorToLink()!"
+    (saved)="onLinked($event)"
+    (closed)="closeLinkForm()"
   />
 }
