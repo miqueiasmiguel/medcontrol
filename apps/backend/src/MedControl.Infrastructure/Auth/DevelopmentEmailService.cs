@@ -20,4 +20,20 @@ internal sealed class DevelopmentEmailService(ILogger<DevelopmentEmailService> l
 
         return Task.CompletedTask;
     }
+
+    public Task SendInvitationAsync(string toEmail, string inviteLink, CancellationToken ct = default)
+    {
+        logger.LogWarning(
+            """
+
+            ==========================================
+            [DEV] Convite para {Email}
+            {InviteLink}
+            ==========================================
+            """,
+            toEmail,
+            inviteLink);
+
+        return Task.CompletedTask;
+    }
 }

@@ -6,4 +6,5 @@ public sealed record MemberDto(
     string? Email,
     string? AvatarUrl,
     string Role,
-    DateTimeOffset JoinedAt);
+    DateTimeOffset JoinedAt,
+    bool Invited = false);

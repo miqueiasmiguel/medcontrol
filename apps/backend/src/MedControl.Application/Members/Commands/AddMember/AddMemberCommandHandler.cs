@@ -1,9 +1,11 @@
+using MedControl.Application.Auth.Settings;
 using MedControl.Application.Common.Interfaces;
 using MedControl.Application.Members.DTOs;
 using MedControl.Application.Mediator;
 using MedControl.Domain.Common;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
+using Microsoft.Extensions.Options;
 
 namespace MedControl.Application.Members.Commands.AddMember;
 
@@ -12,14 +14,14 @@ public sealed class AddMemberCommandHandler(
     IUserRepository userRepository,
     IUnitOfWork unitOfWork,
     ICurrentTenantService currentTenant,
-    ICurrentUserService currentUser)
+    ICurrentUserService currentUser,
+    IEmailService emailService,
+    IMagicLinkService magicLinkService,
+    IOptions<MagicLinkSettings> magicLinkSettings)
     : IRequestHandler<AddMemberCommand, Result<MemberDto>>
 {
     private static readonly Error Unauthorized =
         Error.Unauthorized("Member.Unauthorized", "A tenant context is required or insufficient permissions.");
-
-    private static readonly Error UserNotFound =
-        Error.NotFound("Member.UserNotFound", "User with the specified email was not found.");
 
     private static readonly Error TenantNotFound =
         Error.NotFound("Member.TenantNotFound", "Tenant not found.");
@@ -42,9 +44,13 @@ public sealed class AddMemberCommandHandler(
         var tenantId = currentTenant.TenantId.Value;
 
         var user = await userRepository.GetByEmailAsync(request.Email, ct);
+        var invited = false;
+
         if (user is null)
         {
-            return Result.Failure<MemberDto>(UserNotFound);
+            user = User.Create(request.Email).Value;
+            await userRepository.AddAsync(user, ct);
+            invited = true;
         }
 
         var tenant = await tenantRepository.GetByIdAsync(tenantId, ct);
@@ -63,6 +69,13 @@ public sealed class AddMemberCommandHandler(
         await tenantRepository.UpdateAsync(tenant, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
+        if (invited)
+        {
+            var token = await magicLinkService.GenerateTokenAsync(user.Email, ct);
+            var url = $"{magicLinkSettings.Value.BaseUrl}?token={token}";
+            await emailService.SendInvitationAsync(user.Email, url, ct);
+        }
+
         var member = tenant.Members.Single(m => m.UserId == user.Id);
         return Result.Success(new MemberDto(
             user.Id,
@@ -70,6 +83,7 @@ public sealed class AddMemberCommandHandler(
             user.Email,
             user.AvatarUrl?.ToString(),
             member.Role.ToString().ToLowerInvariant(),
-            member.JoinedAt));
+            member.JoinedAt,
+            invited));
     }
 }

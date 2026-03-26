@@ -46,6 +46,8 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
                 ["ConnectionStrings:Database"] = "Host=localhost;Database=test",
                 ["ConnectionStrings:Redis"] = "localhost",
                 ["Cors:WebOrigin"] = "http://localhost:4200",
+                ["MagicLink:BaseUrl"] = "https://app.medcontrol.test/auth/verify",
+                ["MagicLink:TokenExpiryMinutes"] = "15",
             });
         });
 

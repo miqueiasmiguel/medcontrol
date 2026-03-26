@@ -41,4 +41,31 @@ public sealed class EmailServiceTests
 
         captured?.HtmlBody.Should().Contain(link);
     }
+
+    [Fact]
+    public async Task SendInvitationAsync_CallsResendWithCorrectRecipient()
+    {
+        var email = "invited@example.com";
+        var link = "https://app.example.com/auth/verify?token=invite123";
+
+        await _sut.SendInvitationAsync(email, link);
+
+        await _resend.Received(1).EmailSendAsync(
+            Arg.Is<EmailMessage>(m => m.To.Contains(email)),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SendInvitationAsync_MessageContainsInviteLink()
+    {
+        var link = "https://app.example.com?token=invite-xyz";
+        EmailMessage? captured = null;
+        await _resend.EmailSendAsync(
+            Arg.Do<EmailMessage>(m => captured = m),
+            Arg.Any<CancellationToken>());
+
+        await _sut.SendInvitationAsync("u@e.com", link);
+
+        captured?.HtmlBody.Should().Contain(link);
+    }
 }

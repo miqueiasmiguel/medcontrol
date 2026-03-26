@@ -108,23 +108,38 @@ public sealed class MemberEndpointsTests : IClassFixture<TestWebApplicationFacto
     }
 
     [Fact]
-    public async Task POST_members_UsuarioNaoEncontrado_Retorna404()
+    public async Task POST_members_UsuarioNaoExiste_Retorna201ComInvitedTrue()
     {
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        var client = _factory.CreateAuthenticatedClient(userId, "user@example.com", tenantId, roles: ["admin"]);
+        var tenant = Tenant.Create("Clinic").Value;
+        var client = _factory.CreateAuthenticatedClient(userId, "admin@example.com", tenantId, roles: ["admin"]);
 
         _factory.UserRepository
-            .GetByEmailAsync("notfound@example.com", Arg.Any<CancellationToken>())
+            .GetByEmailAsync("new-invited@example.com", Arg.Any<CancellationToken>())
             .ReturnsNull();
+        _factory.TenantRepository
+            .GetByIdAsync(tenantId, Arg.Any<CancellationToken>())
+            .Returns(tenant);
+        _factory.MagicLinkService
+            .GenerateTokenAsync("new-invited@example.com", Arg.Any<CancellationToken>())
+            .Returns("test-invitation-token");
 
         var response = await client.PostAsJsonAsync("/members", new
         {
-            email = "notfound@example.com",
+            email = "new-invited@example.com",
             role = "operator",
         });
 
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var body = await response.Content.ReadFromJsonAsync<MemberDto>();
+        body.Should().NotBeNull();
+        body!.Invited.Should().BeTrue();
+        body.Email.Should().Be("new-invited@example.com");
+        await _factory.EmailService.Received(1).SendInvitationAsync(
+            "new-invited@example.com",
+            Arg.Is<string>(url => url.Contains("test-invitation-token")),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -182,6 +197,7 @@ public sealed class MemberEndpointsTests : IClassFixture<TestWebApplicationFacto
         body.Should().NotBeNull();
         body!.Role.Should().Be("operator");
         body.Email.Should().Be("new@example.com");
+        body.Invited.Should().BeFalse();
     }
 
     // PATCH /members/{userId}
