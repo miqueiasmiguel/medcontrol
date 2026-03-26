@@ -15,8 +15,12 @@ src/app/
 ├── app.routes.ts             ← rotas lazy; rota raiz usa ShellComponent com children
 ├── app.config.ts             ← provideRouter, provideHttpClient, provideAnimationsAsync
 ├── core/
-│   └── tokens/
-│       └── window.token.ts  ← InjectionToken<Window> para mockabilidade em testes
+│   ├── tokens/
+│   │   └── window.token.ts  ← InjectionToken<Window> para mockabilidade em testes
+│   └── guards/
+│       └── doctor-onboarding.guard.ts ← CanActivateFn; skip se mmc_onboarding_skip no sessionStorage;
+│                                          getMe() → tenantRole=doctor → getDoctorProfile() → null → redirect /onboarding
+│                                          aplicado como canActivateChild no shell route (app.routes.ts)
 ├── layout/
 │   ├── shell/
 │   │   └── shell.component.ts   ← ShellComponent: sidebar + <router-outlet>; signal collapsed
@@ -39,9 +43,21 @@ src/app/
 ├── doctors/
 │   ├── doctors.routes.ts     ← { path: '' → DoctorsListComponent }
 │   ├── data-access/
-│   │   └── doctor.service.ts ← getDoctors, createDoctor, updateDoctor; DoctorDto, CreateDoctorCommand
-│   ├── doctors-list/         ← tabela de médicos + botão "Novo médico"; signals: doctors, formOpen, selectedDoctor
-│   └── doctor-form/          ← slide-over panel; @Input doctor (null=criar); @Output saved/closed
+│   │   └── doctor.service.ts ← getDoctors, createDoctor(inviteEmail?), updateDoctor, linkDoctorToUser,
+│   │                            inviteAndLinkMember, getMyDoctorProfile, createMyDoctorProfile
+│   ├── doctors-list/         ← tabela de médicos + botão "Novo médico"; signals: doctors, formOpen, selectedDoctor,
+│   │                            linkFormOpen, doctorToLink, showLinkHint
+│   │                            empty state: dois cards explicativos (fluxo 1A e 1B)
+│   │                            banner 8s pós-criação sem convite (showLinkHint); onCreatedWithoutInvite()
+│   ├── doctor-form/          ← slide-over panel; @Input doctor (null=criar); @Output saved/closed/createdWithoutInvite
+│   │                            inviteCheckbox + inviteEmail (create mode only); effect() ajusta validators
+│   ├── doctor-link-form/     ← slide-over para vincular doctor a membro; cards radio com avatar+initials
+│   │                            linkMode signal: 'existing'|'invite'; modo invite: inviteEmail field
+│   │                            empty state: botão "Convidar e vincular por e-mail" (switch-to-invite)
+│   │                            AvailableMember: { userId, label, email, initials }; imports RouterLink + MatProgressSpinnerModule
+│   └── onboarding/           ← DoctorOnboardingComponent: layout full-page (sem sidebar), form name/crm/councilState/specialty
+│                                submit → POST /users/me/doctor-profile → navega /doctors
+│                                "Fazer depois" → sessionStorage.setItem('mmc_onboarding_skip','1') → /doctors
 ├── health-plans/
 │   ├── health-plans.routes.ts ← { path: '' → HealthPlansListComponent }
 │   ├── data-access/

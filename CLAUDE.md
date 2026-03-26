@@ -36,7 +36,11 @@ Members      ← gerenciamento de membros do tenant — backend + web implementa
              ← IUserRepository.GetByIdsAsync — busca múltiplos usuários por IDs
              ← endpoints: GET/POST /members, PATCH /members/{userId}, DELETE /members/{userId}
              ← permissão: role "admin" ou "owner" para POST/PATCH/DELETE
+             ← POST /members: se email não existe → cria usuário (não verificado), adiciona como membro,
+             ←   envia convite por e-mail (magic link); retorna MemberDto com invited: true
+             ←   se email já existe → adiciona como membro direto; retorna MemberDto com invited: false
              ← web: /members (MembersComponent + MemberFormComponent + MembersService)
+             ← MemberFormComponent: banner "Convite enviado!" + delay 2.5s antes de fechar quando invited: true
              ← TestAuthHandler: X-Test-Roles header (comma-separated) → claims "roles"
              ← CreateAuthenticatedClient: parâmetro opcional roles string[]
 Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
@@ -45,14 +49,26 @@ Doctors      ← DoctorProfile vinculado a User (CRM, especialidade, conselho)
              ← POST /doctors/{id}/link-user → vincula DoctorProfile a User membro com role doctor; requer admin/owner
              ←   body: { userId: Guid } — userId deve ser membro do tenant com TenantRole.Doctor
              ←   409 se já vinculado (UserAlreadyLinked), 400 se userId não é membro doctor
+             ← POST /doctors: inviteEmail? opcional → cria médico e atomicamente cria membro doctor + vincula + envia convite
+             ← POST /doctors/{id}/invite-and-link: { email } → convida/vincula membro doctor ao perfil existente
+             ← POST /users/me/doctor-profile: cria DoctorProfile vinculado ao usuário autenticado (onboarding flow 2)
+             ← GET /users/me: campo tenantRole: string|null adicionado ao UserDto
              ← GET /users/me/doctor-profile → DoctorDto? (200 empty body se não vinculado)
              ← PATCH /users/me/doctor-profile → IReadOnlyList<DoctorDto> (atualiza todos os perfis cross-tenant)
+             ← Fluxo 1A: admin cria médico com inviteEmail → atômico (cria user + membro doctor + perfil vinculado + convite)
+             ← Fluxo 1B: admin clica Vincular → radio de membros existentes OU campo de convite direto (linkMode: existing|invite)
+             ← Fluxo 2 (onboarding): convite com role doctor → aceita convite → tela de onboarding → perfil criado e vinculado
+             ← web: /onboarding (DoctorOnboardingComponent, sem sidebar); doctorOnboardingGuard detecta role=doctor sem perfil
+             ← web: doctors-list empty state com dois cards explicativos + banner 8s pós-criação sem convite
+             ← mobile: app/(app)/doctor-onboarding.tsx → DoctorOnboardingScreen; _layout.tsx detecta role=doctor sem perfil
+             ← mobile: skip via AsyncStorage key mmc_onboarding_skip; web: skip via sessionStorage
+             ← mobile: UserService.createMyDoctorProfile() → POST /users/me/doctor-profile
              ← mobile: app/(app)/settings.tsx → SettingsScreen (perfil + tema + logout)
              ← SettingsScreen: edita perfil + seleção de tema (sistema/claro/escuro) + botão sair
              ← ThemePreferenceProvider (src/contexts/ThemeContext.tsx): persiste preferência em AsyncStorage (mmc_theme)
              ← useAppTheme(): retorna tema correto baseado na preferência; substitui useTheme() de @medcontrol/design-system/native
              ← useThemePreference(): { preference, setPreference } — usado em SettingsScreen
-             ← UserService.getDoctorProfile() + updateMyDoctorProfile() + updateProfile()
+             ← UserService.getDoctorProfile() + updateMyDoctorProfile() + updateProfile() + createMyDoctorProfile()
              ← useDoctorProfile(): { doctorProfile, loading, error, refetch }
              ← submit paralelo: Promise.all([updateProfile, updateMyDoctorProfile])
 HealthPlans  ← Convênio (nome, código TISS)

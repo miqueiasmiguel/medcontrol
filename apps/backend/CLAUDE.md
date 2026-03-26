@@ -27,9 +27,12 @@ src/
 │   │   ├── DTOs/         ← AuthTokenDto
 │   │   └── Settings/     ← MagicLinkSettings
 │   ├── Doctors/
-│   │   ├── Commands/     ← CreateDoctorCommand(Handler+Validator), UpdateDoctorCommand(Handler+Validator),
-│   │   │                    LinkDoctorProfileToUserCommand(Handler+Validator)
-│   │   ├── Queries/      ← GetDoctorsQuery(Handler)
+│   │   ├── Commands/     ← CreateDoctorCommand(Handler+Validator) [inviteEmail? opcional],
+│   │   │                    UpdateDoctorCommand(Handler+Validator),
+│   │   │                    LinkDoctorProfileToUserCommand(Handler+Validator),
+│   │   │                    InviteAndLinkMemberToDoctorCommand(Handler+Validator),
+│   │   │                    CreateMyDoctorProfileCommand(Handler+Validator)
+│   │   ├── Queries/      ← GetDoctorsQuery(Handler), GetMyDoctorProfileQuery(Handler)
 │   │   └── DTOs/         ← DoctorDto
 │   ├── HealthPlans/
 │   │   ├── Commands/     ← CreateHealthPlanCommand(Handler+Validator), UpdateHealthPlanCommand(Handler+Validator)
@@ -410,6 +413,7 @@ ICurrentTenantService   // TenantId?, HasTenant
 ITokenService           // GenerateTokenPair(...) → TokenPair(AccessToken, RefreshToken, ExpiresAt)
                         // ValidateRefreshTokenAsync, RevokeRefreshTokenAsync
 IEmailService           // SendMagicLinkAsync(email, link, ct)
+                        // SendInvitationAsync(email, inviteLink, ct) — convite para novo usuário adicionado como membro
 IMagicLinkService       // GenerateTokenAsync(email) → token | ValidateTokenAsync(token) → email?
 IGoogleAuthService      // ExchangeCodeAsync(code, redirectUri) → GoogleUserInfo? { Email, DisplayName, AvatarUrl }
 ```
@@ -570,6 +574,7 @@ doctors.MapDoctors();
 | `POST` | `/doctors` | ✅ | Cria médico; verifica CRM duplicado → 201 / 409 |
 | `PATCH` | `/doctors/{id}` | ✅ | Atualiza médico; verifica CRM duplicado → 200 / 404 / 409 |
 | `POST` | `/doctors/{id}/link-user` | ✅ | Vincula DoctorProfile a um User membro com role doctor; requer admin/owner → 200 / 400 / 401 / 404 / 409 |
+| `POST` | `/doctors/{id}/invite-and-link` | ✅ | Convida usuário por email e vincula ao DoctorProfile; cria membro doctor se não existir; requer admin/owner → 200 / 400 / 401 / 404 / 409 |
 | `GET` | `/health-plans` | ✅ | Lista convênios do tenant; retorna `HealthPlanDto[]` → 200 |
 | `POST` | `/health-plans` | ✅ | Cria convênio; verifica TissCode duplicado → 201 / 409 |
 | `PATCH` | `/health-plans/{id}` | ✅ | Atualiza convênio; verifica TissCode duplicado → 200 / 404 / 409 |
@@ -578,8 +583,9 @@ doctors.MapDoctors();
 | `PATCH` | `/procedures/{id}` | ✅ | Atualiza procedimento; verifica code duplicado → 200 / 404 / 409 |
 | `POST` | `/procedures/import` | ✅ | Importa CSV TUSS ou CBHPM; multipart/form-data: file, source, effectiveFrom → 200 / 400 |
 | `GET` | `/procedures/imports` | ✅ | Lista histórico de importações do tenant → 200 |
-| `GET` | `/users/me` | ✅ | Retorna dados do usuário logado → 200 / 401 / 404 |
+| `GET` | `/users/me` | ✅ | Retorna dados do usuário logado; inclui `tenantRole: string|null` → 200 / 401 / 404 |
 | `PATCH` | `/users/me/profile` | ✅ | Atualiza displayName do usuário logado → 200 / 400 / 401 / 404 |
+| `POST` | `/users/me/doctor-profile` | ✅ | Cria DoctorProfile vinculado ao usuário autenticado (flow 2 — onboarding); requer role doctor → 201 / 400 / 401 / 409 |
 | `GET` | `/payments` | ✅ | Lista pagamentos; query params opcionais: `doctorId`, `healthPlanId`, `status`, `dateFrom`, `dateTo`, `search`, `sortBy` (ExecutionDate\|TotalValue), `sortDescending`; médicos veem apenas seus próprios pagamentos (enforçado no handler) → 200 |
 | `POST` | `/payments` | ✅ | Cria pagamento com itens; mínimo 1 item → 201 / 400 |
 | `GET` | `/payments/{id}` | ✅ | Busca pagamento por id com itens → 200 / 404 |
@@ -588,7 +594,7 @@ doctors.MapDoctors();
 | `POST` | `/payments/{id}/items` | ✅ | Adiciona item ao pagamento → 201 / 400 / 404 |
 | `DELETE` | `/payments/{id}/items/{itemId}` | ✅ | Remove item do pagamento; mínimo 1 item deve restar → 200 / 400 / 404 |
 | `GET` | `/members` | ✅ | Lista membros do tenant; retorna `MemberDto[]` → 200 |
-| `POST` | `/members` | ✅ | Adiciona membro por email; requer role admin/owner → 201 / 401 / 404 / 409 |
+| `POST` | `/members` | ✅ | Adiciona membro por email; requer role admin/owner; se email não existe: cria usuário + envia convite (magic link), retorna 201 + `invited: true`; se existe: 201 + `invited: false`; → 201 / 400 / 401 / 409 |
 | `PATCH` | `/members/{userId}` | ✅ | Atualiza role do membro; requer role admin/owner → 200 / 401 / 404 |
 | `DELETE` | `/members/{userId}` | ✅ | Remove membro; requer role admin/owner → 204 / 401 / 404 |
 | `GET` | `/health` | ❌ | Verifica conectividade da api e do banco → 200 (healthy) / 503 (unhealthy) |

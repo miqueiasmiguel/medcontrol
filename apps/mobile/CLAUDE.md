@@ -29,6 +29,9 @@ apps/mobile/
 │   │   └── verify.tsx           # → MagicLinkVerifyScreen (deep link)
 │   └── (app)/                   # Grupo protegido (requer autenticação)
 │       ├── _layout.tsx          # Redireciona para /login se não auth
+│       │                        # + detecta role=doctor sem perfil → redirect /(app)/doctor-onboarding
+│       │                        # (skip via AsyncStorage mmc_onboarding_skip)
+│       ├── doctor-onboarding.tsx # → DoctorOnboardingScreen
 │       ├── __tests__/
 │       │   └── index.spec.tsx   # Testes do HomeScreen (logout, saudação, settings, navegação)
 │       ├── index.tsx            # HomeScreen (lista de pagamentos + botão settings)
@@ -62,7 +65,10 @@ apps/mobile/
 │   ├── MagicLinkSentScreen.tsx  # Confirmação de envio (recebe email via params)
 │   └── MagicLinkVerifyScreen.tsx # Verificação do token (deep link: medcontrol://verify?token=xxx)
 └── src/screens/app/
-    └── EditProfileScreen.tsx    # Edição de perfil: displayName (User) + dados profissionais (DoctorProfile)
+    ├── EditProfileScreen.tsx    # Edição de perfil: displayName (User) + dados profissionais (DoctorProfile)
+    └── DoctorOnboardingScreen.tsx # Onboarding: form name/crm/councilState/specialty
+                                      # submit → POST /users/me/doctor-profile → replace /(app)
+                                      # "Fazer depois" → AsyncStorage mmc_onboarding_skip=1 → replace /(app)
 ```
 
 ## Autenticação Mobile
@@ -213,7 +219,7 @@ Além do `AuthService`, existem:
 |---|---|---|
 | `PaymentService` | `src/services/payment.service.ts` | `GET /payments` (listPayments) + `GET /payments/{id}` (getPayment) |
 | `HealthPlanService` | `src/services/health-plan.service.ts` | `GET /health-plans` |
-| `UserService` | `src/services/user.service.ts` | `GET /users/me` (getMe), `PATCH /users/me/profile` (updateProfile), `GET /users/me/doctor-profile` (getDoctorProfile), `PATCH /users/me/doctor-profile` (updateMyDoctorProfile) |
+| `UserService` | `src/services/user.service.ts` | `GET /users/me` (getMe), `PATCH /users/me/profile` (updateProfile), `GET /users/me/doctor-profile` (getDoctorProfile), `PATCH /users/me/doctor-profile` (updateMyDoctorProfile), `POST /users/me/doctor-profile` (createMyDoctorProfile) |
 
 ### Tipos compartilhados
 
