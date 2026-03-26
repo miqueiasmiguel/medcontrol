@@ -12,7 +12,7 @@ describe('MagicLinkSentComponent', () => {
   });
 
   function createComponent(state: Record<string, unknown> = {}) {
-    jest.spyOn(TestBed.inject(Router), 'getCurrentNavigation').mockReturnValue({
+    jest.spyOn(TestBed.inject(Router) as any, 'currentNavigation').mockReturnValue({
       extras: { state },
     } as never);
     const fixture = TestBed.createComponent(MagicLinkSentComponent);
