@@ -30,15 +30,17 @@ public sealed class GetCurrentUserQueryHandler(
             return Result.Failure<UserDto>(NotFound);
         }
 
-        return Result.Success(ToDto(user));
+        var tenantRole = currentUser.Roles.Count > 0 ? currentUser.Roles[0] : null;
+        return Result.Success(ToDto(user, tenantRole));
     }
 
-    internal static UserDto ToDto(User user) => new(
+    internal static UserDto ToDto(User user, string? tenantRole = null) => new(
         user.Id,
         user.Email,
         user.DisplayName,
         user.AvatarUrl?.ToString(),
         user.IsEmailVerified,
         user.GlobalRole.ToString(),
-        user.LastLoginAt);
+        user.LastLoginAt,
+        tenantRole);
 }

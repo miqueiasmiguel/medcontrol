@@ -7,4 +7,5 @@ public sealed record UserDto(
     string? AvatarUrl,
     bool IsEmailVerified,
     string GlobalRole,
-    DateTimeOffset? LastLoginAt);
+    DateTimeOffset? LastLoginAt,
+    string? TenantRole = null);

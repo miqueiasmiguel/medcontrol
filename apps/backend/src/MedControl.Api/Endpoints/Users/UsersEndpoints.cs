@@ -1,3 +1,4 @@
+using MedControl.Application.Doctors.Commands.CreateMyDoctorProfile;
 using MedControl.Application.Doctors.Commands.UpdateMyDoctorProfile;
 using MedControl.Application.Doctors.DTOs;
 using MedControl.Application.Doctors.Queries.GetMyDoctorProfile;
@@ -33,6 +34,14 @@ public static class UsersEndpoints
              .RequireAuthorization()
              .Produces<DoctorDto?>(StatusCodes.Status200OK)
              .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapPost("/me/doctor-profile", CreateMyDoctorProfile)
+             .WithName("CreateMyDoctorProfile")
+             .RequireAuthorization()
+             .Produces<DoctorDto>(StatusCodes.Status201Created)
+             .Produces(StatusCodes.Status400BadRequest)
+             .Produces(StatusCodes.Status401Unauthorized)
+             .Produces(StatusCodes.Status409Conflict);
 
         group.MapPatch("/me/doctor-profile", UpdateMyDoctorProfile)
              .WithName("UpdateMyDoctorProfile")
@@ -90,6 +99,22 @@ public static class UsersEndpoints
         return Results.Ok(result.Value);
     }
 
+    private static async Task<IResult> CreateMyDoctorProfile(
+        CreateMyDoctorProfileRequest request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<DoctorDto>>(
+            new CreateMyDoctorProfileCommand(request.Name, request.Crm, request.CouncilState, request.Specialty), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        return Results.Created($"/users/me/doctor-profile", result.Value);
+    }
+
     private static async Task<IResult> UpdateMyDoctorProfile(
         UpdateMyDoctorProfileRequest request,
         IMediator mediator,
@@ -117,4 +142,5 @@ public static class UsersEndpoints
 }
 
 internal sealed record UpdateProfileRequest(string? DisplayName);
+internal sealed record CreateMyDoctorProfileRequest(string Name, string Crm, string CouncilState, string Specialty);
 internal sealed record UpdateMyDoctorProfileRequest(string Name, string Crm, string CouncilState, string Specialty);
