@@ -1,4 +1,5 @@
 using MedControl.Application.Doctors.Commands.CreateDoctor;
+using MedControl.Application.Doctors.Commands.InviteAndLinkMemberToDoctor;
 using MedControl.Application.Doctors.Commands.LinkDoctorProfileToUser;
 using MedControl.Application.Doctors.Commands.UpdateDoctor;
 using MedControl.Application.Doctors.DTOs;
@@ -37,6 +38,15 @@ public static class DoctorEndpoints
 
         group.MapPost("/{id:guid}/link-user", LinkDoctorToUser)
              .WithName("LinkDoctorToUser")
+             .RequireAuthorization()
+             .Produces<DoctorDto>(StatusCodes.Status200OK)
+             .Produces(StatusCodes.Status400BadRequest)
+             .Produces(StatusCodes.Status401Unauthorized)
+             .Produces(StatusCodes.Status404NotFound)
+             .Produces(StatusCodes.Status409Conflict);
+
+        group.MapPost("/{id:guid}/invite-and-link", InviteAndLinkDoctor)
+             .WithName("InviteAndLinkDoctor")
              .RequireAuthorization()
              .Produces<DoctorDto>(StatusCodes.Status200OK)
              .Produces(StatusCodes.Status400BadRequest)
@@ -111,6 +121,23 @@ public static class DoctorEndpoints
         return Results.Ok(result.Value);
     }
 
+    private static async Task<IResult> InviteAndLinkDoctor(
+        Guid id,
+        InviteAndLinkDoctorRequest request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<DoctorDto>>(
+            new InviteAndLinkMemberToDoctorCommand(id, request.Email), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        return Results.Ok(result.Value);
+    }
+
     private static IResult ToErrorResult(Error error) => error.Type switch
     {
         ErrorType.Unauthorized => Results.Problem(error.Description, statusCode: 401),
@@ -124,3 +151,4 @@ public static class DoctorEndpoints
 internal sealed record CreateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty, string? InviteEmail = null);
 internal sealed record UpdateDoctorRequest(string Name, string Crm, string CouncilState, string Specialty);
 internal sealed record LinkDoctorRequest(Guid UserId);
+internal sealed record InviteAndLinkDoctorRequest(string Email);
