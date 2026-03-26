@@ -75,3 +75,5 @@ yarn-error.log*
 pnpm-debug.log*
 
 .angular
+.claude/worktrees
+.claude/settings.local.json
