@@ -155,6 +155,29 @@ describe('DoctorFormComponent', () => {
     expect(fixture.componentInstance.loading()).toBe(false);
   }));
 
+  it('shows member-already-exists error on 409 when invite email was used', fakeAsync(() => {
+    setup();
+    const error = new HttpErrorResponse({ status: 409 });
+    doctorService.createDoctor.mockReturnValue(throwError(() => error));
+
+    const fixture = TestBed.createComponent(DoctorFormComponent);
+    fixture.componentRef.setInput('doctor', null);
+    fixture.detectChanges();
+
+    fixture.componentInstance.form.setValue({
+      ...validFormValue,
+      inviteCheckbox: true,
+      inviteEmail: 'medico@clinica.com',
+    });
+    fixture.componentInstance.submit();
+    tick();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.errorMessage()).toContain('membro');
+    expect(fixture.componentInstance.errorMessage()).not.toContain('CRM');
+    expect(fixture.componentInstance.loading()).toBe(false);
+  }));
+
   it('shows generic error on non-409 failure', fakeAsync(() => {
     setup();
     const error = new HttpErrorResponse({ status: 500 });
@@ -213,6 +236,36 @@ describe('DoctorFormComponent', () => {
     expect(ctrl.invalid).toBe(true);
 
     ctrl.setValue('SP'); // valid
+    expect(ctrl.valid).toBe(true);
+  });
+
+  it('converts lowercase councilState input to uppercase in the form control', () => {
+    setup();
+    const fixture = TestBed.createComponent(DoctorFormComponent);
+    fixture.componentRef.setInput('doctor', null);
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector('#councilState') as HTMLInputElement;
+    input.value = 'pe';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.form.controls.councilState.value).toBe('PE');
+  });
+
+  it('councilState is valid after typing lowercase — auto-uppercasing ensures validator passes', () => {
+    setup();
+    const fixture = TestBed.createComponent(DoctorFormComponent);
+    fixture.componentRef.setInput('doctor', null);
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector('#councilState') as HTMLInputElement;
+    input.value = 'pb';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const ctrl = fixture.componentInstance.form.controls.councilState;
+    expect(ctrl.value).toBe('PB');
     expect(ctrl.valid).toBe(true);
   });
 

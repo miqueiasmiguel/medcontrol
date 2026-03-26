@@ -62,7 +62,7 @@
           formControlName="councilState"
           placeholder="SP"
           maxlength="2"
-          style="text-transform: uppercase"
+          (input)="onCouncilStateInput($event)"
         />
         @if (form.controls.councilState.invalid && form.controls.councilState.touched) {
           <span class="form-field-error">UF inválida (ex: SP).</span>

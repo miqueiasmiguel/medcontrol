@@ -64,6 +64,11 @@ export class DoctorOnboardingComponent {
       });
   }
 
+  onCouncilStateInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.form.controls.councilState.setValue(input.value.toUpperCase(), { emitEvent: false });
+  }
+
   skip() {
     this.win.sessionStorage.setItem('mmc_onboarding_skip', '1');
     this.router.navigate(['/doctors']);

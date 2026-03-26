@@ -108,12 +108,21 @@ export class DoctorFormComponent implements OnChanges {
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
         if (err.status === 409) {
-          this.errorMessage.set('Já existe um médico com esse CRM nesta organização.');
+          if (inviteCheckbox && inviteEmail) {
+            this.errorMessage.set('Este e-mail já é membro da organização. Crie o médico sem o convite ou use outro e-mail.');
+          } else {
+            this.errorMessage.set('Já existe um médico com esse CRM nesta organização.');
+          }
         } else {
           this.errorMessage.set('Erro ao salvar médico. Tente novamente.');
         }
       },
     });
+  }
+
+  onCouncilStateInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.form.controls.councilState.setValue(input.value.toUpperCase(), { emitEvent: false });
   }
 
   close() {
