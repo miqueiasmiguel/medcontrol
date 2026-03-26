@@ -1,9 +1,9 @@
-<div class="doctor-form-overlay" (click)="close()" aria-hidden="true"></div>
+<div class="link-overlay" (click)="close()" aria-hidden="true"></div>
 
-<aside class="doctor-form-panel" role="dialog" aria-modal="true" aria-label="Vincular usuário ao médico">
-  <div class="doctor-form-panel__header">
-    <h2 class="doctor-form-panel__title">Vincular usuário</h2>
-    <button class="doctor-form-panel__close" (click)="close()" type="button" aria-label="Fechar">
+<aside class="link-panel" role="dialog" aria-modal="true" aria-label="Vincular usuário ao médico">
+  <div class="link-panel__header">
+    <h2 class="link-panel__title">Vincular usuário</h2>
+    <button class="link-panel__close" (click)="close()" type="button" aria-label="Fechar">
       <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
         <path
           fill-rule="evenodd"
@@ -14,54 +14,155 @@
     </button>
   </div>
 
-  <form class="doctor-form-panel__body" [formGroup]="form" (ngSubmit)="submit()">
+  <form class="link-panel__body" [formGroup]="form" (ngSubmit)="submit()">
     @if (errorMessage()) {
       <div class="form-error-banner" role="alert">{{ errorMessage() }}</div>
     }
 
-    <p class="doctor-form-panel__description">
-      Vincule o médico <strong>{{ doctor.name }}</strong> (CRM {{ doctor.crm }}/{{ doctor.councilState }}) a um
-      membro da organização com função de médico.
-    </p>
-
-    <div class="form-field">
-      <label class="form-label" for="userId">Membro médico</label>
-      @if (loadingMembers()) {
-        <p class="form-hint">Carregando membros…</p>
-      } @else if (availableMembers().length === 0) {
-        <p class="form-hint">
-          Nenhum membro com função médico disponível para vincular. Adicione um membro com função
-          "Médico" na tela de membros.
-        </p>
-      } @else {
-        <select
-          id="userId"
-          class="form-input"
-          [class.form-input--error]="form.controls.userId.invalid && form.controls.userId.touched"
-          formControlName="userId"
-        >
-          <option value="">Selecione um membro</option>
-          @for (member of availableMembers(); track member.userId) {
-            <option [value]="member.userId">{{ member.label }}</option>
-          }
-        </select>
-        @if (form.controls.userId.invalid && form.controls.userId.touched) {
-          <span class="form-field-error">Selecione um membro.</span>
-        }
-      }
+    <!-- Doctor context card -->
+    <div class="doctor-card">
+      <div class="doctor-card__avatar" aria-hidden="true">
+        {{ doctor.name.charAt(0).toUpperCase() }}
+      </div>
+      <div class="doctor-card__info">
+        <span class="doctor-card__name">{{ doctor.name }}</span>
+        <div class="doctor-card__meta">
+          <span class="doctor-card__crm">CRM {{ doctor.crm }}/{{ doctor.councilState }}</span>
+          <span class="doctor-card__sep" aria-hidden="true">·</span>
+          <span class="doctor-card__specialty">{{ doctor.specialty }}</span>
+        </div>
+      </div>
+      <span class="badge badge--warning">Sem usuário</span>
     </div>
 
-    <div class="doctor-form-panel__footer">
+    @if (linkMode() === 'existing') {
+      <!-- Member selector -->
+      <div class="form-field">
+        <span class="form-label">Selecione o membro</span>
+
+        @if (loadingMembers()) {
+          <div class="loading-state">
+            <mat-spinner diameter="20" />
+            <span>Carregando membros…</span>
+          </div>
+        } @else if (availableMembers().length === 0) {
+          <div class="empty-state">
+            <div class="empty-state__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
+                />
+              </svg>
+            </div>
+            <p class="empty-state__title">Nenhum membro disponível</p>
+            <p class="empty-state__description">
+              Nenhum membro com função <strong>Médico</strong> sem vínculo. Convide diretamente ou
+              <a routerLink="/members" (click)="close()">gerencie os membros</a> da organização.
+            </p>
+            <button
+              type="button"
+              class="btn btn--primary btn--sm"
+              data-testid="switch-to-invite"
+              (click)="linkMode.set('invite')"
+            >
+              Convidar e vincular por e-mail
+            </button>
+          </div>
+        } @else {
+          <div class="member-options" role="radiogroup">
+            @for (member of availableMembers(); track member.userId) {
+              <label
+                class="member-option"
+                [class.member-option--selected]="form.controls.userId.value === member.userId"
+              >
+                <input
+                  type="radio"
+                  formControlName="userId"
+                  [value]="member.userId"
+                  class="sr-only"
+                />
+                <div class="member-option__avatar" aria-hidden="true">{{ member.initials }}</div>
+                <div class="member-option__info">
+                  <span class="member-option__name">{{ member.label }}</span>
+                  @if (member.email) {
+                    <span class="member-option__email">{{ member.email }}</span>
+                  }
+                </div>
+                @if (form.controls.userId.value === member.userId) {
+                  <div class="member-option__check" aria-hidden="true">
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <path
+                        fill-rule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clip-rule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                }
+              </label>
+            }
+          </div>
+          @if (form.controls.userId.invalid && form.controls.userId.touched) {
+            <span class="form-field-error">Selecione um membro.</span>
+          }
+
+          <div class="link-panel__divider">
+            <span>ou</span>
+          </div>
+          <button
+            type="button"
+            class="btn btn--ghost btn--sm link-panel__invite-trigger"
+            data-testid="switch-to-invite"
+            (click)="linkMode.set('invite')"
+          >
+            Não encontrou? Convide e vincule diretamente por e-mail
+          </button>
+        }
+      </div>
+    }
+
+    @if (linkMode() === 'invite') {
+      <div class="form-field">
+        <label class="form-label" for="inviteEmail">E-mail do médico</label>
+        <p class="form-hint">
+          O médico receberá um convite por e-mail. Ao aceitar, poderá preencher o próprio perfil.
+        </p>
+        <input
+          id="inviteEmail"
+          class="form-input"
+          [class.form-input--error]="form.controls.inviteEmail.invalid && form.controls.inviteEmail.touched"
+          type="email"
+          formControlName="inviteEmail"
+          placeholder="medico@clinica.com"
+          autocomplete="email"
+        />
+        @if (form.controls.inviteEmail.invalid && form.controls.inviteEmail.touched) {
+          <span class="form-field-error">Informe um e-mail válido.</span>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="btn btn--ghost btn--sm"
+        (click)="linkMode.set('existing')"
+      >
+        ← Voltar para seleção de membros
+      </button>
+    }
+
+    <div class="link-panel__footer">
       <button class="btn btn--ghost" type="button" (click)="close()">Cancelar</button>
       <button
         class="btn btn--primary"
         type="submit"
-        [disabled]="loading() || loadingMembers() || availableMembers().length === 0"
+        [disabled]="loading() || loadingMembers() || (linkMode() === 'existing' && availableMembers().length === 0)"
       >
         @if (loading()) {
-          Vinculando…
+          {{ linkMode() === 'invite' ? 'Convidando…' : 'Vinculando…' }}
         } @else {
-          Vincular
+          {{ linkMode() === 'invite' ? 'Convidar e vincular' : 'Vincular médico' }}
         }
       </button>
     </div>
