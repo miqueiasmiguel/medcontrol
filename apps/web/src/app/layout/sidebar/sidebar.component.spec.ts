@@ -1,21 +1,26 @@
+import { signal } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { SidebarComponent } from './sidebar.component';
 import { AuthService } from '../../auth/data-access/auth.service';
+import { CurrentUserService } from '../../core/data-access/current-user.service';
 
 describe('SidebarComponent', () => {
   let authService: jest.Mocked<Pick<AuthService, 'logout'>>;
+  let currentUserService: jest.Mocked<Pick<CurrentUserService, 'getMe'>>;
   let navigateSpy: jest.SpyInstance;
 
   function setup(collapsed = false) {
     authService = { logout: jest.fn() };
+    currentUserService = { getMe: jest.fn().mockReturnValue(of({ tenantRole: 'operator' })) };
 
     TestBed.configureTestingModule({
       imports: [SidebarComponent],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: authService },
+        { provide: CurrentUserService, useValue: { ...currentUserService, isDoctor: signal(false) } },
       ],
     });
 

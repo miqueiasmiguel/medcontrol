@@ -17,6 +17,13 @@ export interface UpdateProfileRequest {
   displayName: string | null;
 }
 
+export interface UpdateMyDoctorProfileRequest {
+  name: string;
+  crm: string;
+  councilState: string;
+  specialty: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private readonly http = inject(HttpClient);
@@ -27,5 +34,9 @@ export class SettingsService {
 
   updateProfile(req: UpdateProfileRequest): Observable<UserDto> {
     return this.http.patch<UserDto>('/api/users/me/profile', req, { withCredentials: true });
+  }
+
+  updateMyDoctorProfile(req: UpdateMyDoctorProfileRequest): Observable<unknown> {
+    return this.http.patch('/api/users/me/doctor-profile', req, { withCredentials: true });
   }
 }

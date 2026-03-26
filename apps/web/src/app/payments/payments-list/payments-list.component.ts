@@ -15,6 +15,7 @@ import { PaymentDetailComponent } from '../payment-detail/payment-detail.compone
 import { DoctorService, DoctorDto } from '../../doctors/data-access/doctor.service';
 import { HealthPlanService, HealthPlanDto } from '../../health-plans/data-access/health-plan.service';
 import { ProcedureService, ProcedureDto } from '../../procedures/data-access/procedure.service';
+import { CurrentUserService } from '../../core/data-access/current-user.service';
 
 @Component({
   selector: 'app-payments-list',
@@ -29,7 +30,10 @@ export class PaymentsListComponent implements OnInit {
   private readonly doctorService = inject(DoctorService);
   private readonly healthPlanService = inject(HealthPlanService);
   private readonly procedureService = inject(ProcedureService);
+  private readonly currentUserService = inject(CurrentUserService);
   private readonly destroyRef = inject(DestroyRef);
+
+  readonly isDoctor = this.currentUserService.isDoctor;
 
   readonly payments = signal<PaymentDto[]>([]);
   readonly doctors = signal<DoctorDto[]>([]);

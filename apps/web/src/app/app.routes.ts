@@ -2,6 +2,7 @@ import { Route } from '@angular/router';
 import { authGuard } from './auth/guards/auth.guard';
 import { tenantGuard } from './tenants/guards/tenant.guard';
 import { doctorOnboardingGuard } from './core/guards/doctor-onboarding.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const appRoutes: Route[] = [
   {
@@ -30,18 +31,21 @@ export const appRoutes: Route[] = [
     canActivateChild: [doctorOnboardingGuard],
     loadComponent: () => import('./layout/shell/shell.component').then((m) => m.ShellComponent),
     children: [
-      { path: '', redirectTo: 'doctors', pathMatch: 'full' },
+      { path: '', redirectTo: 'payments', pathMatch: 'full' },
       {
         path: 'doctors',
+        canActivate: [roleGuard],
         loadChildren: () => import('./doctors/doctors.routes').then((m) => m.doctorsRoutes),
       },
       {
         path: 'health-plans',
+        canActivate: [roleGuard],
         loadChildren: () =>
           import('./health-plans/health-plans.routes').then((m) => m.healthPlansRoutes),
       },
       {
         path: 'procedures',
+        canActivate: [roleGuard],
         loadChildren: () =>
           import('./procedures/procedures.routes').then((m) => m.proceduresRoutes),
       },
@@ -52,6 +56,7 @@ export const appRoutes: Route[] = [
       },
       {
         path: 'members',
+        canActivate: [roleGuard],
         loadChildren: () => import('./members/members.routes').then((m) => m.membersRoutes),
       },
       {

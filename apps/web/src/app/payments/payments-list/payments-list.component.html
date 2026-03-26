@@ -4,9 +4,11 @@
       <h1 class="payments-list__title">Pagamentos</h1>
       <p class="payments-list__subtitle">Gerencie os pagamentos registrados no sistema</p>
     </div>
-    <button class="btn btn--primary" (click)="openCreateForm()" type="button">
-      Novo pagamento
-    </button>
+    @if (!isDoctor()) {
+      <button class="btn btn--primary" (click)="openCreateForm()" type="button">
+        Novo pagamento
+      </button>
+    }
   </div>
 
   @if (errorMessage()) {
@@ -69,9 +71,11 @@
     @if (filteredPayments().length === 0) {
       <div class="payments-list__empty">
         <p>Nenhum pagamento encontrado.</p>
-        <button class="btn btn--secondary" (click)="openCreateForm()" type="button">
-          Registrar primeiro pagamento
-        </button>
+        @if (!isDoctor()) {
+          <button class="btn btn--secondary" (click)="openCreateForm()" type="button">
+            Registrar primeiro pagamento
+          </button>
+        }
       </div>
     } @else {
       <table class="payments-list__table">

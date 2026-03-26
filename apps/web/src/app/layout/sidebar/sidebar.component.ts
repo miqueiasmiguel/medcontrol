@@ -4,6 +4,7 @@ import {
   DestroyRef,
   EventEmitter,
   Input,
+  OnInit,
   Output,
   inject,
 } from '@angular/core';
@@ -11,6 +12,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../auth/data-access/auth.service';
+import { CurrentUserService } from '../../core/data-access/current-user.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -33,6 +35,7 @@ import { AuthService } from '../../auth/data-access/auth.service';
       </div>
 
       <div class="sidebar__nav">
+        @if (!isDoctor()) {
         <div class="sidebar__group">
           @if (!collapsed) {
             <span class="sidebar__group-label">Cadastros</span>
@@ -85,6 +88,7 @@ import { AuthService } from '../../auth/data-access/auth.service';
             }
           </a>
         </div>
+        }
 
         <div class="sidebar__group">
           @if (!collapsed) {
@@ -131,6 +135,7 @@ import { AuthService } from '../../auth/data-access/auth.service';
               <span>Configurações</span>
             }
           </a>
+          @if (!isDoctor()) {
           <a
             routerLink="/members"
             routerLinkActive="active"
@@ -144,6 +149,7 @@ import { AuthService } from '../../auth/data-access/auth.service';
               <span>Membros</span>
             }
           </a>
+          }
         </div>
       </div>
 
@@ -166,13 +172,23 @@ import { AuthService } from '../../auth/data-access/auth.service';
   styleUrl: './sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   @Input() collapsed = false;
   @Output() readonly toggleCollapse = new EventEmitter<void>();
 
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly currentUserService = inject(CurrentUserService);
+
+  readonly isDoctor = this.currentUserService.isDoctor;
+
+  ngOnInit() {
+    this.currentUserService
+      .getMe()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe();
+  }
 
   logout() {
     this.authService
