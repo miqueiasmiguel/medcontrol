@@ -1,3 +1,4 @@
+using MedControl.Application.Common.Interfaces;
 using MedControl.Application.Mediator;
 using MedControl.Application.Payments.Commands.AddPaymentItem;
 using MedControl.Application.Payments.Commands.CreatePayment;
@@ -112,9 +113,15 @@ public static class PaymentEndpoints
 
     private static async Task<IResult> CreatePayment(
         [FromBody] CreatePaymentRequest request,
+        ICurrentUserService currentUser,
         IMediator mediator,
         CancellationToken ct)
     {
+        if (currentUser.Roles.Contains("doctor", StringComparer.OrdinalIgnoreCase))
+        {
+            return Results.Problem("Doctors cannot modify payments.", statusCode: StatusCodes.Status403Forbidden);
+        }
+
         var result = await mediator.Send<Result<PaymentDto>>(
             new CreatePaymentCommand(
                 request.DoctorId,
@@ -141,9 +148,15 @@ public static class PaymentEndpoints
         [FromRoute] Guid paymentId,
         [FromRoute] Guid itemId,
         [FromBody] UpdatePaymentItemStatusRequest request,
+        ICurrentUserService currentUser,
         IMediator mediator,
         CancellationToken ct)
     {
+        if (currentUser.Roles.Contains("doctor", StringComparer.OrdinalIgnoreCase))
+        {
+            return Results.Problem("Doctors cannot modify payments.", statusCode: StatusCodes.Status403Forbidden);
+        }
+
         var result = await mediator.Send<Result<PaymentDto>>(
             new UpdatePaymentItemStatusCommand(paymentId, itemId, request.Status, request.Notes), ct);
 
@@ -153,9 +166,15 @@ public static class PaymentEndpoints
     private static async Task<IResult> UpdatePayment(
         [FromRoute] Guid id,
         [FromBody] UpdatePaymentRequest request,
+        ICurrentUserService currentUser,
         IMediator mediator,
         CancellationToken ct)
     {
+        if (currentUser.Roles.Contains("doctor", StringComparer.OrdinalIgnoreCase))
+        {
+            return Results.Problem("Doctors cannot modify payments.", statusCode: StatusCodes.Status403Forbidden);
+        }
+
         var result = await mediator.Send<Result<PaymentDto>>(
             new UpdatePaymentCommand(
                 id,
@@ -174,9 +193,15 @@ public static class PaymentEndpoints
     private static async Task<IResult> AddPaymentItem(
         [FromRoute] Guid paymentId,
         [FromBody] AddPaymentItemRequest request,
+        ICurrentUserService currentUser,
         IMediator mediator,
         CancellationToken ct)
     {
+        if (currentUser.Roles.Contains("doctor", StringComparer.OrdinalIgnoreCase))
+        {
+            return Results.Problem("Doctors cannot modify payments.", statusCode: StatusCodes.Status403Forbidden);
+        }
+
         var result = await mediator.Send<Result<PaymentDto>>(
             new AddPaymentItemCommand(paymentId, request.ProcedureId, request.Value), ct);
 
@@ -191,9 +216,15 @@ public static class PaymentEndpoints
     private static async Task<IResult> RemovePaymentItem(
         [FromRoute] Guid paymentId,
         [FromRoute] Guid itemId,
+        ICurrentUserService currentUser,
         IMediator mediator,
         CancellationToken ct)
     {
+        if (currentUser.Roles.Contains("doctor", StringComparer.OrdinalIgnoreCase))
+        {
+            return Results.Problem("Doctors cannot modify payments.", statusCode: StatusCodes.Status403Forbidden);
+        }
+
         var result = await mediator.Send<Result<PaymentDto>>(
             new RemovePaymentItemCommand(paymentId, itemId), ct);
 
