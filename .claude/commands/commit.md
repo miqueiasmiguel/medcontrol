@@ -1,6 +1,6 @@
 # /commit — Commits Granulares + Merge na Main
 
-Analise **todos** os arquivos modificados (staged e não staged) e crie commits granulares e semânticos, depois tente merge na main.
+Analise **todos** os arquivos modificados (staged e não staged) e crie commits granulares e semânticos, depois execute as verificações obrigatórias e faça merge na main.
 
 ## Processo
 
@@ -30,18 +30,56 @@ Analise o diff completo e agrupe as mudanças por contexto semântico — **nunc
 3. **Crie o commit** com mensagem conventional commit
 4. Repita para o próximo grupo
 
-### 4. Merge na main
+### 4. Verificações pré-merge (obrigatórias)
 
-Após todos os commits:
+Execute **antes** do merge. Se qualquer etapa falhar, corrija antes de continuar.
+
+#### 4a. Build e testes
 ```bash
-git log --oneline main..HEAD  # mostrar commits que serão mergeados
-git checkout main
-git merge <branch> --no-ff    # merge com commit de merge explícito
-git push origin main          # push para o remoto
-git log --oneline -5          # confirmar resultado
+# Backend
+cd apps/backend && dotnet build --warnaserror && dotnet test
+
+# Frontend / Mobile (apenas o afetado)
+pnpm nx affected:lint
+pnpm nx affected:test
 ```
 
-> Se houver conflitos, resolva-os antes de finalizar o merge.
+#### 4b. Vulnerabilidades de pacotes
+```bash
+# Backend — lista pacotes com CVEs conhecidas
+cd apps/backend && dotnet list package --vulnerable --include-transitive 2>&1
+
+# JS (web + mobile) — auditoria de segurança
+pnpm audit --audit-level=high 2>&1
+```
+
+**Critérios de bloqueio:**
+- `dotnet list package --vulnerable` retorna qualquer pacote com severidade **High** ou **Critical** → bloqueio
+- `pnpm audit` retorna vulnerabilidades com severidade **high** ou **critical** → bloqueio
+
+> Para vulnerabilidades **moderate** ou **low**, informe o usuário mas não bloqueie o merge.
+> Para pacotes transitivos sem fix disponível, documente e prossiga com aprovação explícita do usuário.
+
+#### 4c. Formatação
+```bash
+cd apps/backend && dotnet format --verify-no-changes
+```
+
+### 5. Merge na main
+
+Após todas as verificações passarem, **pedir confirmação ao usuário** antes de executar:
+
+```bash
+git log --oneline main..HEAD          # mostrar commits que serão mergeados
+git checkout main
+git pull origin main --rebase=false   # atualizar main antes do merge
+git merge <branch> --no-ff            # merge com commit de merge explícito
+git push origin main
+git log --oneline -5                  # confirmar resultado
+```
+
+> Se houver conflitos no `pull` ou no `merge`, resolva-os antes de finalizar.
+> Após o merge, informe o usuário sobre o resultado e se há PRs ou deploys pendentes.
 
 ---
 
@@ -83,3 +121,4 @@ git log --oneline -5          # confirmar resultado
 5. Scope é obrigatório neste projeto
 6. **Nunca usar `git add .` ou `git add -A`** — sempre stage arquivos específicos
 7. **Sempre pedir confirmação antes do merge na main**
+8. **Nunca pular as verificações pré-merge** — vulnerabilidades high/critical bloqueiam o merge
