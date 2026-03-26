@@ -28,6 +28,7 @@ export interface UserDto {
   isEmailVerified: boolean;
   globalRole: string;
   lastLoginAt?: string;
+  tenantRole?: string | null;
 }
 
 export interface DoctorProfileDto {
@@ -56,6 +57,12 @@ export const UserService = {
   updateMyDoctorProfile: async (data: UpdateDoctorProfileRequest): Promise<DoctorProfileDto[]> =>
     request<DoctorProfileDto[]>('/users/me/doctor-profile', {
       method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  createMyDoctorProfile: async (data: UpdateDoctorProfileRequest): Promise<DoctorProfileDto> =>
+    request<DoctorProfileDto>('/users/me/doctor-profile', {
+      method: 'POST',
       body: JSON.stringify(data),
     }),
 
