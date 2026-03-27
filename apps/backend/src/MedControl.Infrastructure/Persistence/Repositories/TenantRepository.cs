@@ -27,6 +27,13 @@ internal sealed class TenantRepository(ApplicationDbContext db) : ITenantReposit
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Tenant>> ListAllAsync(CancellationToken ct = default) =>
+        await db.Tenants
+            .IgnoreQueryFilters()
+            .Include(t => t.Members)
+            .OrderBy(t => t.Name)
+            .ToListAsync(ct);
+
     public async Task AddAsync(Tenant tenant, CancellationToken ct = default) =>
         await db.Tenants.AddAsync(tenant, ct);
 

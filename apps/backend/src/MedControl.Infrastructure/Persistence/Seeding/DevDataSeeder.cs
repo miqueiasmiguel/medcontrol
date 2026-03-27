@@ -14,8 +14,9 @@ public sealed class DevDataSeeder(
     ILogger<DevDataSeeder> logger)
 {
     private static readonly Guid SeedTenantId = new("10000000-0000-0000-0000-000000000001");
-    private static readonly Guid SeedOwnerUserId = new("20000000-0000-0000-0000-000000000001");
-    private static readonly Guid SeedDoctorUserId = new("20000000-0000-0000-0000-000000000002");
+    private static readonly Guid SeedGlobalAdminUserId = new("20000000-0000-0000-0000-000000000001");
+    private static readonly Guid SeedTenantAdminUserId = new("20000000-0000-0000-0000-000000000002");
+    private static readonly Guid SeedDoctorUserId = new("20000000-0000-0000-0000-000000000003");
     private static readonly Guid SeedDoctorProfileId = new("30000000-0000-0000-0000-000000000001");
     private static readonly Guid SeedHealthPlanId = new("40000000-0000-0000-0000-000000000001");
     private static readonly Guid SeedProcedureId = new("50000000-0000-0000-0000-000000000001");
@@ -30,8 +31,9 @@ public sealed class DevDataSeeder(
         logger.LogInformation("Running development data seed...");
 
         await SeedTenantAsync(ct);
-        await SeedUserAsync("miqueias.s.filho@gmail.com", "Miquéias Filho", SeedOwnerUserId, ct);
-        await SeedUserAsync("miqueias.o.branco@gmail.com", "Miquéias Branco", SeedDoctorUserId, ct);
+        await SeedGlobalAdminUserAsync("miqueias.s.filho@gmail.com", "Miquéias Filho", SeedGlobalAdminUserId, ct);
+        await SeedUserAsync("miqueias.o.branco@gmail.com", "Miquéias Branco", SeedTenantAdminUserId, ct);
+        await SeedUserAsync("mariaclara.mr09@gmail.com", "Maria Clara", SeedDoctorUserId, ct);
         await SeedMembersAsync(ct);
         await SeedDoctorProfileAsync(ct);
         await SeedHealthPlanAsync(ct);
@@ -66,6 +68,42 @@ public sealed class DevDataSeeder(
         logger.LogInformation("Created seed tenant ({Id})", SeedTenantId);
     }
 
+    private async Task SeedGlobalAdminUserAsync(string email, string displayName, Guid fixedId, CancellationToken ct)
+    {
+        var existing = await context.Users
+            .FirstOrDefaultAsync(u => u.Email == email, ct);
+
+        if (existing is not null)
+        {
+            if (existing.GlobalRole != GlobalRole.Admin)
+            {
+                existing.SetGlobalRole(GlobalRole.Admin);
+                await context.SaveChangesAsync(ct);
+                logger.LogInformation("Updated user '{Email}' to GlobalRole.Admin", email);
+            }
+            else
+            {
+                logger.LogDebug("Global admin user '{Email}' already exists ({Id})", email, existing.Id);
+            }
+
+            return;
+        }
+
+        var result = User.Create(email, displayName);
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"Failed to create seed global admin '{email}': {result.Error.Description}");
+        }
+
+        var user = result.Value;
+        user.SetGlobalRole(GlobalRole.Admin);
+        context.Entry(user).Property(u => u.Id).CurrentValue = fixedId;
+
+        await context.Users.AddAsync(user, ct);
+        await context.SaveChangesAsync(ct);
+        logger.LogInformation("Created global admin user '{Email}' ({Id})", email, fixedId);
+    }
+
     private async Task SeedUserAsync(string email, string displayName, Guid fixedId, CancellationToken ct)
     {
         var existing = await context.Users
@@ -93,15 +131,15 @@ public sealed class DevDataSeeder(
 
     private async Task SeedMembersAsync(CancellationToken ct)
     {
-        var ownerExists = await context.TenantMembers
+        var adminExists = await context.TenantMembers
             .IgnoreQueryFilters()
-            .AnyAsync(m => m.TenantId == SeedTenantId && m.UserId == SeedOwnerUserId, ct);
+            .AnyAsync(m => m.TenantId == SeedTenantId && m.UserId == SeedTenantAdminUserId, ct);
 
         var doctorExists = await context.TenantMembers
             .IgnoreQueryFilters()
             .AnyAsync(m => m.TenantId == SeedTenantId && m.UserId == SeedDoctorUserId, ct);
 
-        if (ownerExists && doctorExists)
+        if (adminExists && doctorExists)
         {
             logger.LogDebug("Seed members already exist for tenant {TenantId}", SeedTenantId);
             return;
@@ -112,12 +150,12 @@ public sealed class DevDataSeeder(
             .FirstOrDefaultAsync(t => t.Id == SeedTenantId, ct)
             ?? throw new InvalidOperationException("Seed tenant not found.");
 
-        if (!ownerExists)
+        if (!adminExists)
         {
-            var addOwner = tenant.AddMember(SeedOwnerUserId, TenantRole.Owner);
-            if (addOwner.IsFailure)
+            var addAdmin = tenant.AddMember(SeedTenantAdminUserId, TenantRole.Admin);
+            if (addAdmin.IsFailure)
             {
-                throw new InvalidOperationException($"Failed to add owner member: {addOwner.Error.Description}");
+                throw new InvalidOperationException($"Failed to add admin member: {addAdmin.Error.Description}");
             }
         }
 
@@ -146,7 +184,7 @@ public sealed class DevDataSeeder(
             return;
         }
 
-        var result = DoctorProfile.Create(SeedTenantId, "Miquéias Branco", "123456", "SP", "Cardiologia");
+        var result = DoctorProfile.Create(SeedTenantId, "Maria Clara", "123456", "SP", "Cardiologia");
         if (result.IsFailure)
         {
             throw new InvalidOperationException($"Failed to create seed doctor profile: {result.Error.Description}");
