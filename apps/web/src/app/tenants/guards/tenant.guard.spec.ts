@@ -4,9 +4,25 @@ import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { tenantGuard } from './tenant.guard';
 import { TenantService, TenantDto } from '../data-access/tenant.service';
+import { CurrentUserService } from '../../core/data-access/current-user.service';
+import { UserDto } from '../../settings/data-access/settings.service';
+
+const regularUser: UserDto = {
+  id: 'user-1',
+  email: 'user@test.com',
+  displayName: 'User',
+  avatarUrl: null,
+  isEmailVerified: true,
+  globalRole: 'None',
+  lastLoginAt: null,
+  tenantRole: 'operator',
+};
+
+const adminUser: UserDto = { ...regularUser, globalRole: 'Admin', tenantRole: null };
 
 describe('tenantGuard', () => {
   let tenantService: jest.Mocked<Pick<TenantService, 'getMyTenants' | 'switchTenant'>>;
+  let currentUserService: { getMe: jest.Mock };
   let router: { createUrlTree: jest.Mock };
 
   function makeTenant(id: string): TenantDto {
@@ -18,11 +34,13 @@ describe('tenantGuard', () => {
       getMyTenants: jest.fn(),
       switchTenant: jest.fn(),
     };
+    currentUserService = { getMe: jest.fn().mockReturnValue(of(regularUser)) };
     router = { createUrlTree: jest.fn((path) => path) };
 
     TestBed.configureTestingModule({
       providers: [
         { provide: TenantService, useValue: tenantService },
+        { provide: CurrentUserService, useValue: currentUserService },
         { provide: Router, useValue: router },
       ],
     });
@@ -41,6 +59,22 @@ describe('tenantGuard', () => {
 
     expect(router.createUrlTree).toHaveBeenCalledWith(['/tenants/new']);
     expect(result).toEqual(['/tenants/new']);
+  }));
+
+  it('0 tenants + global admin → redirects to /admin', fakeAsync(() => {
+    currentUserService.getMe.mockReturnValue(of(adminUser));
+    tenantService.getMyTenants.mockReturnValue(of([]));
+    let result: unknown;
+
+    TestBed.runInInjectionContext(() => {
+      (tenantGuard({} as never, {} as never) as ReturnType<typeof of>).subscribe((r) => {
+        result = r;
+      });
+    });
+    tick();
+
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/admin']);
+    expect(result).toEqual(['/admin']);
   }));
 
   it('1 tenant → calls switchTenant and returns true', fakeAsync(() => {

@@ -16,6 +16,7 @@ const mockUser: UserDto = {
 };
 
 const doctorUser: UserDto = { ...mockUser, tenantRole: 'doctor' };
+const adminUser: UserDto = { ...mockUser, globalRole: 'Admin' };
 
 describe('CurrentUserService', () => {
   let service: CurrentUserService;
@@ -83,6 +84,24 @@ describe('CurrentUserService', () => {
   it('isDoctor is false when tenantRole is not doctor', (done) => {
     service.getMe().subscribe(() => {
       expect(service.isDoctor()).toBe(false);
+      done();
+    });
+
+    httpMock.expectOne('/api/users/me').flush(mockUser);
+  });
+
+  it('isGlobalAdmin is true when globalRole is Admin', (done) => {
+    service.getMe().subscribe(() => {
+      expect(service.isGlobalAdmin()).toBe(true);
+      done();
+    });
+
+    httpMock.expectOne('/api/users/me').flush(adminUser);
+  });
+
+  it('isGlobalAdmin is false when globalRole is not Admin', (done) => {
+    service.getMe().subscribe(() => {
+      expect(service.isGlobalAdmin()).toBe(false);
       done();
     });
 
