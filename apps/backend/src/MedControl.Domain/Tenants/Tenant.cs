@@ -104,6 +104,8 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
         return Result.Success();
     }
 
+    public void Activate() => IsActive = true;
+
     public void Deactivate() => IsActive = false;
 
     private static string GenerateSlug(string name) =>
