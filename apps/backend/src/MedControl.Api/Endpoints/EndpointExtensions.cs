@@ -1,3 +1,4 @@
+using MedControl.Api.Endpoints.Admin;
 using MedControl.Api.Endpoints.Auth;
 using MedControl.Api.Endpoints.Doctors;
 using MedControl.Api.Endpoints.HealthPlans;
@@ -13,6 +14,8 @@ public static class EndpointExtensions
 {
     public static WebApplication MapApiEndpoints(this WebApplication app)
     {
+        var admin = app.MapGroup("admin");
+        admin.MapGroup("tenants").MapAdminTenants();
         var auth = app.MapGroup("auth");
         auth.MapGroup("magic-link").MapMagicLink();
         auth.MapGroup("google").MapGoogleAuth();

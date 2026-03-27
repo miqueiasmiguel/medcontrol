@@ -109,7 +109,12 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
     /// <summary>
     /// Creates a client that authenticates as the given user via X-Test-* headers.
     /// </summary>
-    public HttpClient CreateAuthenticatedClient(Guid userId, string email, Guid? tenantId = null, string[]? roles = null)
+    public HttpClient CreateAuthenticatedClient(
+        Guid userId,
+        string email,
+        Guid? tenantId = null,
+        string[]? roles = null,
+        string[]? globalRoles = null)
     {
         var client = CreateClient(new WebApplicationFactoryClientOptions
         {
@@ -125,6 +130,10 @@ public sealed class TestWebApplicationFactory : WebApplicationFactory<Program>
         if (roles is { Length: > 0 })
         {
             client.DefaultRequestHeaders.Add(TestAuthHandler.RolesHeader, string.Join(",", roles));
+        }
+        if (globalRoles is { Length: > 0 })
+        {
+            client.DefaultRequestHeaders.Add(TestAuthHandler.GlobalRolesHeader, string.Join(",", globalRoles));
         }
         return client;
     }

@@ -18,6 +18,7 @@ public sealed class TestAuthHandler(
     public const string EmailHeader = "X-Test-Email";
     public const string TenantIdHeader = "X-Test-TenantId";
     public const string RolesHeader = "X-Test-Roles";
+    public const string GlobalRolesHeader = "X-Test-GlobalRoles";
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
@@ -43,6 +44,14 @@ public sealed class TestAuthHandler(
             foreach (var role in rolesValues.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             {
                 claims.Add(new Claim("roles", role));
+            }
+        }
+
+        if (Request.Headers.TryGetValue(GlobalRolesHeader, out var globalRolesValues))
+        {
+            foreach (var role in globalRolesValues.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                claims.Add(new Claim("global_roles", role));
             }
         }
 
