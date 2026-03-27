@@ -21,6 +21,9 @@ public sealed class VerifyMagicLinkCommandHandler(
     private static readonly Error UserNotFound =
         Error.NotFound("Auth.UserNotFound", "No account was found for this email address.");
 
+    private static readonly Error TenantDisabled =
+        Error.Unauthorized("Auth.TenantDisabled", "Your tenant has been disabled. Contact support.");
+
     public async Task<Result<AuthTokenDto>> Handle(VerifyMagicLinkCommand request, CancellationToken ct)
     {
         var email = await magicLinkService.ValidateTokenAsync(request.Token, ct);
@@ -52,15 +55,19 @@ public sealed class VerifyMagicLinkCommandHandler(
         await unitOfWork.SaveChangesAsync(ct);
 
         var tenants = await tenantRepository.ListByUserAsync(user.Id, ct);
+        var activeTenants = tenants.Where(t => t.IsActive).ToList();
 
-        Guid? tenantId = null;
+        if (tenants.Count > 0 && activeTenants.Count == 0)
+        {
+            return Result.Failure<AuthTokenDto>(TenantDisabled);
+        }
+
+        var primaryTenant = activeTenants.FirstOrDefault();
+        Guid? tenantId = primaryTenant?.Id;
         var roles = new List<string>();
 
-        if (tenants.Count > 0)
+        if (primaryTenant is not null)
         {
-            var primaryTenant = tenants[0];
-            tenantId = primaryTenant.Id;
-
             TenantMember? member = null;
             foreach (var m in primaryTenant.Members)
             {

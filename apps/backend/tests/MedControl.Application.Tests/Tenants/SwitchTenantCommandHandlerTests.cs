@@ -71,4 +71,23 @@ public sealed class SwitchTenantCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Unauthorized);
     }
+
+    [Fact]
+    public async Task Handle_WithInactiveTenant_ReturnsTenantDisabled()
+    {
+        var userId = Guid.NewGuid();
+        _currentUser.UserId.Returns(userId);
+        _currentUser.Email.Returns("user@example.com");
+        var tenant = Tenant.Create("Inactive Clinic").Value;
+        tenant.AddMember(userId, TenantRole.Operator);
+        tenant.Deactivate();
+        _tenantRepository.ListByUserAsync(userId, Arg.Any<CancellationToken>())
+            .Returns(new List<Tenant> { tenant });
+
+        var result = await _sut.Handle(new SwitchTenantCommand(tenant.Id), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.TenantDisabled");
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+    }
 }

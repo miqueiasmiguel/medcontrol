@@ -18,6 +18,9 @@ public sealed class SwitchTenantCommandHandler(
     private static readonly Error NotFound =
         Error.NotFound("Tenant.NotFound", "Tenant not found or user is not a member.");
 
+    private static readonly Error TenantDisabled =
+        Error.Unauthorized("Auth.TenantDisabled", "Your tenant has been disabled. Contact support.");
+
     public async Task<Result<AuthTokenDto>> Handle(SwitchTenantCommand request, CancellationToken ct)
     {
         if (currentUser.UserId is null || currentUser.Email is null)
@@ -32,6 +35,11 @@ public sealed class SwitchTenantCommandHandler(
         if (tenant is null)
         {
             return Result.Failure<AuthTokenDto>(NotFound);
+        }
+
+        if (!tenant.IsActive)
+        {
+            return Result.Failure<AuthTokenDto>(TenantDisabled);
         }
 
         var member = tenant.Members.FirstOrDefault(m => m.UserId == userId);

@@ -152,4 +152,79 @@ public sealed class VerifyMagicLinkCommandHandlerTests
             Arg.Any<IReadOnlyList<string>>(),
             Arg.Any<IReadOnlyList<string>>());
     }
+
+    [Fact]
+    public async Task Handle_UsuarioComTenantInativo_RetornaTenantDisabled()
+    {
+        var email = "user@example.com";
+        var user = User.Create(email).Value;
+        var tenant = Tenant.Create("Clinic").Value;
+        tenant.AddMember(user.Id, TenantRole.Operator);
+        tenant.Deactivate();
+
+        _magicLinkService.ValidateTokenAsync("tok").Returns(email);
+        _userRepository.GetByEmailAsync(email).Returns(user);
+        _tenantRepository.ListByUserAsync(user.Id).Returns([tenant]);
+
+        var result = await _sut.Handle(new VerifyMagicLinkCommand("tok"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.TenantDisabled");
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+        _tokenService.DidNotReceive().GenerateTokenPair(
+            Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<Guid?>(),
+            Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyList<string>>());
+    }
+
+    [Fact]
+    public async Task Handle_UsuarioComMultiplosTenants_UsaApenasAtivos()
+    {
+        var email = "user@example.com";
+        var user = User.Create(email).Value;
+        var inactiveTenant = Tenant.Create("Inactive Clinic").Value;
+        inactiveTenant.AddMember(user.Id, TenantRole.Operator);
+        inactiveTenant.Deactivate();
+        var activeTenant = Tenant.Create("Active Clinic").Value;
+        activeTenant.AddMember(user.Id, TenantRole.Admin);
+        var tokenPair = new TokenPair("access", "refresh", DateTimeOffset.UtcNow.AddHours(1));
+
+        _magicLinkService.ValidateTokenAsync("tok").Returns(email);
+        _userRepository.GetByEmailAsync(email).Returns(user);
+        _tenantRepository.ListByUserAsync(user.Id).Returns([inactiveTenant, activeTenant]);
+        _tokenService.GenerateTokenPair(
+            user.Id, email, activeTenant.Id,
+            Arg.Is<IReadOnlyList<string>>(r => r.Contains("admin")),
+            Arg.Any<IReadOnlyList<string>>())
+            .Returns(tokenPair);
+
+        var result = await _sut.Handle(new VerifyMagicLinkCommand("tok"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _tokenService.Received(1).GenerateTokenPair(
+            user.Id, email, activeTenant.Id,
+            Arg.Is<IReadOnlyList<string>>(r => r.Contains("admin")),
+            Arg.Any<IReadOnlyList<string>>());
+    }
+
+    [Fact]
+    public async Task Handle_TodosTenantInativos_RetornaTenantDisabled()
+    {
+        var email = "user@example.com";
+        var user = User.Create(email).Value;
+        var t1 = Tenant.Create("Clinic A").Value;
+        t1.AddMember(user.Id, TenantRole.Operator);
+        t1.Deactivate();
+        var t2 = Tenant.Create("Clinic B").Value;
+        t2.AddMember(user.Id, TenantRole.Doctor);
+        t2.Deactivate();
+
+        _magicLinkService.ValidateTokenAsync("tok").Returns(email);
+        _userRepository.GetByEmailAsync(email).Returns(user);
+        _tenantRepository.ListByUserAsync(user.Id).Returns([t1, t2]);
+
+        var result = await _sut.Handle(new VerifyMagicLinkCommand("tok"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.TenantDisabled");
+    }
 }

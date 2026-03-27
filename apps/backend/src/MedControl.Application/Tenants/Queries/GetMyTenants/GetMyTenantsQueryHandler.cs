@@ -25,6 +25,7 @@ public sealed class GetMyTenantsQueryHandler(
         var tenants = await tenantRepository.ListByUserAsync(userId, ct);
 
         var dtos = tenants
+            .Where(t => t.IsActive)
             .Select(t =>
             {
                 var member = t.Members.FirstOrDefault(m => m.UserId == userId);
