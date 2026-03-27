@@ -17,10 +17,20 @@ src/app/
 ├── core/
 │   ├── tokens/
 │   │   └── window.token.ts  ← InjectionToken<Window> para mockabilidade em testes
+│   ├── data-access/
+│   │   └── current-user.service.ts ← signals: #user, currentUser, isDoctor, isGlobalAdmin (computed: globalRole === 'Admin')
 │   └── guards/
-│       └── doctor-onboarding.guard.ts ← CanActivateFn; skip se mmc_onboarding_skip no sessionStorage;
-│                                          getMe() → tenantRole=doctor → getDoctorProfile() → null → redirect /onboarding
-│                                          aplicado como canActivateChild no shell route (app.routes.ts)
+│       ├── doctor-onboarding.guard.ts ← CanActivateFn; skip se mmc_onboarding_skip no sessionStorage;
+│       │                                  getMe() → tenantRole=doctor → getDoctorProfile() → null → redirect /onboarding
+│       │                                  aplicado como canActivateChild no shell route (app.routes.ts)
+│       └── global-admin.guard.ts ← CanActivateFn; getMe() → globalRole=Admin → true; outros → redirect /
+├── admin/
+│   ├── admin.routes.ts       ← AdminShellComponent + children: AdminTenantsComponent
+│   ├── admin-shell/          ← AdminShellComponent: layout simples (sem sidebar de tenant)
+│   ├── admin-tenants/        ← AdminTenantsComponent: tabela de tenants com toggle Ativar/Desativar
+│   └── data-access/
+│       └── admin-tenants.service.ts ← listTenants() → GET /api/admin/tenants
+│                                        setTenantStatus(id, isActive) → PATCH /api/admin/tenants/{id}/status
 ├── layout/
 │   ├── shell/
 │   │   └── shell.component.ts   ← ShellComponent: sidebar + <router-outlet>; signal collapsed
@@ -100,8 +110,10 @@ src/app/
 ## Roteamento
 
 ```
+/admin (AdminShellComponent)    ← authGuard + globalAdminGuard
+  └── ''  → AdminTenantsComponent
 / (ShellComponent)              ← authGuard + tenantGuard
-  ├── ''  → redirect /doctors
+  ├── ''  → redirect /payments
   ├── doctors/                  ← DoctorsListComponent (lazy)
   ├── health-plans/             ← HealthPlansListComponent (lazy)
   ├── procedures/               ← ProceduresListComponent (lazy)
@@ -111,6 +123,8 @@ src/app/
 /tenants/**                     ← authGuard
 /**                             → redirect /auth/login
 ```
+
+`tenantGuard`: 0 tenants + globalRole=Admin → redirect `/admin`; 0 tenants regular → redirect `/tenants/new`
 
 ## Autenticação com HttpOnly Cookies
 

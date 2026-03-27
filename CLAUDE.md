@@ -11,6 +11,7 @@ MedControl é um SaaS para médicos, clínicas, hospitais e empresas de faturame
 | Módulo | Status | Descrição |
 |---|---|---|
 | **Controle de Pagamento** | ✅ backend + web implementados | Operador registra pagamentos; médico consulta via mobile |
+| **Painel de Admin Global** | ✅ backend + web implementados | GlobalRole.Admin gerencia tenants (ativar/desativar); login bloqueado para membros de tenant inativo |
 | Faturamento | 🔜 futuro | Geração de lotes TISS, envio a convênios |
 | Recurso de Glosa | 🔜 futuro | Contestação de pagamentos recusados |
 
@@ -225,7 +226,7 @@ public record CreateTenantCommand(string Name) : ICommand<TenantDto>;
 
 O hook de commit valida a mensagem com `commitlint`. Regras obrigatórias:
 
-- **scope** deve ser um de: `domain`, `app`, `infra`, `api`, `web`, `mobile`, `contracts`, `ci`, `deps`, `auth`, `tenants`, `users`, `payments`, `doctors`, `health-plans`, `procedures`, `members`
+- **scope** deve ser um de: `domain`, `app`, `infra`, `api`, `web`, `mobile`, `contracts`, `ci`, `deps`, `auth`, `tenants`, `users`, `payments`, `doctors`, `health-plans`, `procedures`, `members`, `admin`
 - **subject** deve ser 100% minúsculo — sem exceções, incluindo siglas e nomes de arquivo
 
 ```bash
