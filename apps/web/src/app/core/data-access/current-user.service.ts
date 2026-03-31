@@ -12,6 +12,7 @@ export class CurrentUserService {
   readonly currentUser = this.#user.asReadonly();
   readonly isDoctor = computed(() => this.#user()?.tenantRole === 'doctor');
   readonly isGlobalAdmin = computed(() => this.#user()?.globalRole === 'Admin');
+  readonly tenantName = computed(() => this.#user()?.tenantName ?? null);
 
   getMe(): Observable<UserDto> {
     const cached = this.#user();

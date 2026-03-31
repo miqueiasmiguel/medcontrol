@@ -5,22 +5,45 @@ import { of } from 'rxjs';
 import { SidebarComponent } from './sidebar.component';
 import { AuthService } from '../../auth/data-access/auth.service';
 import { CurrentUserService } from '../../core/data-access/current-user.service';
+import { UserDto } from '../../settings/data-access/settings.service';
 
 describe('SidebarComponent', () => {
   let authService: jest.Mocked<Pick<AuthService, 'logout'>>;
-  let currentUserService: jest.Mocked<Pick<CurrentUserService, 'getMe'>>;
   let navigateSpy: jest.SpyInstance;
 
-  function setup(collapsed = false) {
+  function makeUser(partial: Partial<UserDto> = {}): UserDto {
+    return {
+      id: '1',
+      email: 'user@example.com',
+      displayName: 'João Silva',
+      avatarUrl: null,
+      isEmailVerified: true,
+      globalRole: 'None',
+      lastLoginAt: null,
+      tenantRole: 'operator',
+      tenantName: 'Clínica Teste',
+      ...partial,
+    };
+  }
+
+  function setup(collapsed = false, user: Partial<UserDto> = {}) {
     authService = { logout: jest.fn() };
-    currentUserService = { getMe: jest.fn().mockReturnValue(of({ tenantRole: 'operator' })) };
+    const userSignal = signal<UserDto | null>(makeUser(user));
 
     TestBed.configureTestingModule({
       imports: [SidebarComponent],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: authService },
-        { provide: CurrentUserService, useValue: { ...currentUserService, isDoctor: signal(false) } },
+        {
+          provide: CurrentUserService,
+          useValue: {
+            getMe: jest.fn().mockReturnValue(of(makeUser(user))),
+            isDoctor: signal(user.tenantRole === 'doctor'),
+            currentUser: userSignal.asReadonly(),
+            tenantName: signal(makeUser(user).tenantName ?? null),
+          },
+        },
       ],
     });
 
@@ -74,4 +97,40 @@ describe('SidebarComponent', () => {
     expect(authService.logout).toHaveBeenCalled();
     expect(navigateSpy).toHaveBeenCalledWith(['/auth/login']);
   }));
+
+  it('shows user display name in user card', () => {
+    const fixture = setup(false, { displayName: 'Maria Souza' });
+    const name = fixture.nativeElement.querySelector('.sidebar__user-name');
+    expect(name?.textContent?.trim()).toBe('Maria Souza');
+  });
+
+  it('shows email when displayName is null', () => {
+    const fixture = setup(false, { displayName: null, email: 'maria@example.com' });
+    const name = fixture.nativeElement.querySelector('.sidebar__user-name');
+    expect(name?.textContent?.trim()).toBe('maria@example.com');
+  });
+
+  it('shows tenant name in user card', () => {
+    const fixture = setup(false, { tenantName: 'Hospital Central' });
+    const tenant = fixture.nativeElement.querySelector('.sidebar__user-tenant');
+    expect(tenant?.textContent?.trim()).toBe('Hospital Central');
+  });
+
+  it('shows role label in user card', () => {
+    const fixture = setup(false, { tenantRole: 'doctor' });
+    const role = fixture.nativeElement.querySelector('.sidebar__user-role');
+    expect(role?.textContent?.trim()).toBe('Médico');
+  });
+
+  it('shows only avatar when collapsed', () => {
+    const fixture = setup(true);
+    expect(fixture.nativeElement.querySelector('.sidebar__user-info')).toBeFalsy();
+    expect(fixture.nativeElement.querySelector('.sidebar__user-avatar')).toBeTruthy();
+  });
+
+  it('computes correct initials from display name', () => {
+    const fixture = setup(false, { displayName: 'Ana Paula Costa' });
+    const avatar = fixture.nativeElement.querySelector('.sidebar__user-avatar');
+    expect(avatar?.textContent?.trim()).toBe('AC');
+  });
 });
