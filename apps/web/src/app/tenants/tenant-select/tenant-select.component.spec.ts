@@ -1,5 +1,6 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { TenantSelectComponent } from './tenant-select.component';
 import { TenantService, TenantDto } from '../data-access/tenant.service';
@@ -27,6 +28,7 @@ describe('TenantSelectComponent', () => {
       imports: [TenantSelectComponent],
       providers: [
         provideRouter([]),
+        provideNoopAnimations(),
         { provide: TenantService, useValue: tenantService },
         { provide: CurrentUserService, useValue: currentUserService },
       ],

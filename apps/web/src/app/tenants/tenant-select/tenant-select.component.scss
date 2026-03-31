@@ -1,0 +1,244 @@
+// Force light-mode tokens for the white card body (same technique as login).
+:host {
+  color-scheme: light;
+  --mmc-bg:             var(--mmc-navy-950);
+  --mmc-bg-card:        var(--mmc-neutral-0);
+  --mmc-bg-card-hover:  var(--mmc-neutral-100);
+  --mmc-border:         var(--mmc-neutral-200);
+  --mmc-border-strong:  var(--mmc-neutral-300);
+  --mmc-text-primary:   var(--mmc-neutral-900);
+  --mmc-text-secondary: var(--mmc-neutral-600);
+  --mmc-text-tertiary:  var(--mmc-neutral-500);
+  --mmc-error:          #EF4444;
+  --mmc-shadow-md:      0px 4px 6px -1px rgba(15, 26, 64, 0.08), 0px 2px 4px -1px rgba(15, 26, 64, 0.04);
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+.ts-page {
+  min-height: 100vh;
+  background: var(--mmc-navy-950);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mmc-space-4);
+}
+
+// ── Card ─────────────────────────────────────────────────────────────────────
+
+.ts-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: var(--mmc-radius-2xl);
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(15, 26, 64, 0.5);
+}
+
+// ── Hero ─────────────────────────────────────────────────────────────────────
+
+.ts-hero {
+  background: var(--mmc-navy-950);
+  padding: var(--mmc-space-10) var(--mmc-space-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--mmc-space-2);
+}
+
+.ts-logo-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--mmc-orange-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--mmc-space-2);
+  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.45);
+
+  &__letter {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--mmc-neutral-0);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+}
+
+.ts-wordmark {
+  font-size: var(--mmc-text-xl);
+  font-weight: 700;
+  color: var(--mmc-neutral-0);
+  letter-spacing: 0.3px;
+  margin: 0;
+
+  &__accent {
+    color: var(--mmc-orange-500);
+  }
+}
+
+.ts-tagline {
+  font-size: var(--mmc-text-sm);
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.4px;
+  margin: 0;
+}
+
+// ── Body ─────────────────────────────────────────────────────────────────────
+
+.ts-body {
+  background: var(--mmc-bg-card);
+  border-top-left-radius: var(--mmc-radius-2xl);
+  border-top-right-radius: var(--mmc-radius-2xl);
+  padding: var(--mmc-space-8);
+  margin-top: calc(var(--mmc-space-4) * -1);
+  box-shadow: 0 -6px 24px rgba(15, 26, 64, 0.14);
+}
+
+.ts-title {
+  font-size: var(--mmc-text-xl);
+  font-weight: 700;
+  color: var(--mmc-text-primary);
+  margin: 0 0 var(--mmc-space-1);
+}
+
+.ts-subtitle {
+  font-size: var(--mmc-text-sm);
+  color: var(--mmc-text-secondary);
+  margin: 0 0 var(--mmc-space-5);
+}
+
+// ── Loading ───────────────────────────────────────────────────────────────────
+
+.ts-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--mmc-space-8) 0;
+}
+
+// ── Tenant list ───────────────────────────────────────────────────────────────
+
+.ts-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mmc-space-2);
+}
+
+.ts-tenant-card {
+  display: flex;
+  align-items: center;
+  gap: var(--mmc-space-3);
+  width: 100%;
+  padding: var(--mmc-space-3) var(--mmc-space-4);
+  background: var(--mmc-bg-card);
+  border: 1px solid var(--mmc-border);
+  border-radius: var(--mmc-radius-lg);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 100ms ease;
+  text-align: left;
+
+  &:hover:not(:disabled) {
+    background: var(--mmc-bg-card-hover);
+    border-color: var(--mmc-border-strong);
+    box-shadow: var(--mmc-shadow-md);
+    transform: translateY(-1px);
+
+    .ts-chevron {
+      transform: translateX(2px);
+      color: var(--mmc-orange-500);
+    }
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--mmc-orange-400);
+    box-shadow: var(--mmc-shadow-focus);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  &--selecting {
+    border-color: var(--mmc-orange-300);
+    background: var(--mmc-orange-50);
+    opacity: 1;
+  }
+}
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+.ts-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--mmc-radius-md);
+  background: linear-gradient(135deg, var(--mmc-navy-600), var(--mmc-navy-900));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--mmc-text-sm);
+  font-weight: var(--mmc-font-weight-bold);
+  color: var(--mmc-neutral-0);
+  letter-spacing: 0.5px;
+}
+
+// ── Tenant info ───────────────────────────────────────────────────────────────
+
+.ts-tenant-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mmc-space-0-5);
+}
+
+.ts-tenant-name {
+  font-size: var(--mmc-text-sm);
+  font-weight: var(--mmc-font-weight-semibold);
+  color: var(--mmc-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ts-tenant-role {
+  font-size: var(--mmc-text-xs);
+  color: var(--mmc-text-tertiary);
+  font-weight: var(--mmc-font-weight-medium);
+}
+
+// ── Action area ───────────────────────────────────────────────────────────────
+
+.ts-tenant-action {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  color: var(--mmc-text-tertiary);
+}
+
+.ts-chevron {
+  transition: transform 150ms ease, color 150ms ease;
+}
+
+// ── Error ─────────────────────────────────────────────────────────────────────
+
+.ts-error {
+  display: flex;
+  align-items: center;
+  gap: var(--mmc-space-1-5);
+  margin: var(--mmc-space-4) 0 0;
+  padding: var(--mmc-space-3) var(--mmc-space-4);
+  background: var(--mmc-error-light, #FEF2F2);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--mmc-radius-md);
+  font-size: var(--mmc-text-sm);
+  color: var(--mmc-error);
+  font-weight: var(--mmc-font-weight-medium);
+}

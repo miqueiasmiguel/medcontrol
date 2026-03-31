@@ -123,6 +123,83 @@
     padding: var(--mmc-space-3) var(--mmc-space-2);
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--mmc-space-1);
+  }
+
+  &__user-card {
+    display: flex;
+    align-items: center;
+    gap: var(--mmc-space-3);
+    padding: var(--mmc-space-2-5) var(--mmc-space-2);
+    border-radius: var(--mmc-radius-sm);
+    overflow: hidden;
+
+    &--collapsed {
+      justify-content: center;
+      padding: var(--mmc-space-2-5) 0;
+    }
+  }
+
+  &__user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--mmc-radius-full);
+    background: var(--mmc-orange-500);
+    color: var(--mmc-neutral-0);
+    font-size: var(--mmc-text-xs);
+    font-weight: var(--mmc-font-weight-bold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+    user-select: none;
+  }
+
+  &__user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  &__user-name {
+    font-size: var(--mmc-text-sm);
+    font-weight: var(--mmc-font-weight-medium);
+    color: var(--mmc-text-on-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+
+  &__user-tenant {
+    font-size: var(--mmc-text-xs);
+    color: var(--mmc-text-on-dark-subtle);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+  }
+
+  &__user-role {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 1px var(--mmc-space-1-5);
+    background: rgba(249, 115, 22, 0.15);
+    border: 1px solid rgba(249, 115, 22, 0.25);
+    border-radius: var(--mmc-radius-xs);
+    font-size: 10px;
+    font-weight: var(--mmc-font-weight-semibold);
+    color: var(--mmc-orange-400);
+    letter-spacing: 0.2px;
+    line-height: 1.4;
+    margin-top: 2px;
+    white-space: nowrap;
   }
 
   &__logout {

@@ -11,6 +11,7 @@ export interface UserDto {
   globalRole: string;
   lastLoginAt: string | null;
   tenantRole?: string | null;
+  tenantName?: string | null;
 }
 
 export interface UpdateProfileRequest {

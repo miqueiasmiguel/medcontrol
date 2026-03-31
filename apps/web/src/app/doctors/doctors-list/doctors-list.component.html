@@ -23,29 +23,74 @@
     </div>
   }
 
-  <div class="doctors-list__card">
+  <div class="doctors-list__card" [class.doctors-list__card--empty]="doctors().length === 0">
     @if (doctors().length === 0) {
       <div class="doctors-list__empty">
-        <p class="doctors-list__empty-title">Nenhum médico cadastrado ainda</p>
-        <p class="doctors-list__empty-desc">Escolha como deseja começar:</p>
+        <div class="doctors-list__empty-hero">
+          <div class="doctors-list__empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="15" r="8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M4 40c0-8.837 7.163-16 16-16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="36" cy="34" r="9" fill="var(--mmc-bg-card)" stroke="currentColor" stroke-width="2"/>
+              <path d="M36 30v8M32 34h8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2 class="doctors-list__empty-heading">Nenhum médico cadastrado ainda</h2>
+          <p class="doctors-list__empty-subheading">
+            Escolha como deseja começar — você pode mudar de ideia a qualquer momento.
+          </p>
+        </div>
+
         <div class="doctors-list__empty-cards">
-          <div class="doctors-list__empty-card" data-testid="empty-state-card">
+          <div class="doctors-list__empty-card doctors-list__empty-card--featured" data-testid="empty-state-card">
+            <div class="doctors-list__empty-card-header">
+              <div class="doctors-list__empty-card-icon doctors-list__empty-card-icon--primary" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  <path d="M2 8l10 7 10-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="doctors-list__empty-card-badge">Recomendado</span>
+            </div>
             <h3 class="doctors-list__empty-card-title">Cadastrar e convidar</h3>
             <p class="doctors-list__empty-card-desc">
-              Preencha os dados do médico e envie o convite de acesso em um único passo.
-              O médico receberá um e-mail para definir sua conta.
+              Preencha os dados e envie o convite de acesso em um único passo.
             </p>
-            <button class="btn btn--primary btn--sm" (click)="openCreateForm()" type="button">
+            <ol class="doctors-list__empty-card-steps">
+              <li>Preencha os dados do médico</li>
+              <li>Marque a opção <strong>Enviar convite</strong></li>
+              <li>O médico recebe o e-mail e cria sua senha</li>
+            </ol>
+            <button class="btn btn--primary" (click)="openCreateForm()" type="button">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="15" height="15">
+                <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
               Novo médico
             </button>
           </div>
+
           <div class="doctors-list__empty-card" data-testid="empty-state-card">
+            <div class="doctors-list__empty-card-header">
+              <div class="doctors-list__empty-card-icon doctors-list__empty-card-icon--secondary" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
             <h3 class="doctors-list__empty-card-title">Cadastrar agora, vincular depois</h3>
             <p class="doctors-list__empty-card-desc">
-              Crie o cadastro sem associar uma conta. Quando quiser, use o botão
-              <strong>Vincular</strong> para conectar o médico a um membro existente ou enviar convite.
+              Crie o cadastro sem associar uma conta de acesso imediatamente.
             </p>
-            <button class="btn btn--ghost btn--sm" (click)="openCreateForm()" type="button">
+            <ol class="doctors-list__empty-card-steps">
+              <li>Preencha os dados do médico</li>
+              <li>Salve sem enviar convite</li>
+              <li>Use <strong>Vincular</strong> na tabela quando quiser conectar</li>
+            </ol>
+            <button class="btn btn--ghost" (click)="openCreateForm()" type="button">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true" width="15" height="15">
+                <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
               Novo médico
             </button>
           </div>

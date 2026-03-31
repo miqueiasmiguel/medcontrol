@@ -1,0 +1,64 @@
+<div class="ts-page">
+  <div class="ts-card">
+
+    <!-- Hero -->
+    <div class="ts-hero">
+      <div class="ts-logo-badge">
+        <span class="ts-logo-badge__letter">M</span>
+      </div>
+      <p class="ts-wordmark">Med<span class="ts-wordmark__accent">Control</span></p>
+      <p class="ts-tagline">Gestão médica simplificada</p>
+    </div>
+
+    <!-- Content -->
+    <div class="ts-body">
+      <h1 class="ts-title">Selecionar organização</h1>
+      <p class="ts-subtitle">Escolha em qual organização deseja entrar</p>
+
+      @if (loading()) {
+        <div class="ts-loading">
+          <mat-spinner diameter="32" />
+        </div>
+      } @else {
+        <div class="ts-list">
+          @for (tenant of tenants(); track tenant.id) {
+            <button
+              class="ts-tenant-card"
+              [class.ts-tenant-card--selecting]="selectingId() === tenant.id"
+              [disabled]="selectingId() !== null"
+              (click)="selectTenant(tenant.id)"
+            >
+              <div class="ts-avatar">{{ getInitials(tenant.name) }}</div>
+
+              <div class="ts-tenant-info">
+                <span class="ts-tenant-name">{{ tenant.name }}</span>
+                <span class="ts-tenant-role">{{ getRoleLabel(tenant.role) }}</span>
+              </div>
+
+              <div class="ts-tenant-action">
+                @if (selectingId() === tenant.id) {
+                  <mat-spinner diameter="18" />
+                } @else {
+                  <svg class="ts-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                }
+              </div>
+            </button>
+          }
+        </div>
+
+        @if (errorMessage()) {
+          <p class="ts-error">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            {{ errorMessage() }}
+          </p>
+        }
+      }
+    </div>
+
+  </div>
+</div>

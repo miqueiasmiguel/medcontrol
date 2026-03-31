@@ -6,6 +6,7 @@ import {
   Input,
   OnInit,
   Output,
+  computed,
   inject,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -154,6 +155,23 @@ import { CurrentUserService } from '../../core/data-access/current-user.service'
       </div>
 
       <div class="sidebar__footer">
+        <div class="sidebar__user-card" [class.sidebar__user-card--collapsed]="collapsed">
+          <div class="sidebar__user-avatar" [attr.aria-label]="userInitials()">
+            {{ userInitials() }}
+          </div>
+          @if (!collapsed) {
+            <div class="sidebar__user-info">
+              <span class="sidebar__user-name">{{ userName() }}</span>
+              @if (tenantName()) {
+                <span class="sidebar__user-tenant">{{ tenantName() }}</span>
+              }
+              @if (roleLabel()) {
+                <span class="sidebar__user-role">{{ roleLabel() }}</span>
+              }
+            </div>
+          }
+        </div>
+
         <button class="sidebar__logout" (click)="logout()" type="button">
           <svg class="sidebar__icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path
@@ -182,6 +200,31 @@ export class SidebarComponent implements OnInit {
   private readonly currentUserService = inject(CurrentUserService);
 
   readonly isDoctor = this.currentUserService.isDoctor;
+  readonly tenantName = this.currentUserService.tenantName;
+
+  readonly userName = computed(() => {
+    const user = this.currentUserService.currentUser();
+    return user?.displayName ?? user?.email ?? '';
+  });
+
+  readonly userInitials = computed(() => {
+    const name = this.userName();
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  });
+
+  readonly roleLabel = computed(() => {
+    const role = this.currentUserService.currentUser()?.tenantRole;
+    const labels: Record<string, string> = {
+      owner: 'Proprietário',
+      admin: 'Administrador',
+      operator: 'Operador',
+      doctor: 'Médico',
+    };
+    return role ? (labels[role] ?? role) : null;
+  });
 
   ngOnInit() {
     this.currentUserService
