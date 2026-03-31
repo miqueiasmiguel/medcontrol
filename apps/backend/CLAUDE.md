@@ -570,6 +570,7 @@ doctors.MapDoctors();
 | Método | Rota | Auth | Descrição |
 |---|---|---|---|
 | `GET` | `/admin/tenants` | ✅ GlobalAdmin | Lista todos os tenants do sistema; `AdminTenantDto[]` → 200 / 403 |
+| `POST` | `/admin/tenants` | ✅ GlobalAdmin | Cria tenant; body: `{ name, ownerEmail }`; find-or-create user pelo email; envia convite se usuário novo; `AdminTenantDto` → 201 / 400 / 403 |
 | `PATCH` | `/admin/tenants/{id}/status` | ✅ GlobalAdmin | Ativa/desativa tenant; `{ isActive: bool }` → 204 / 403 / 404 |
 | `POST` | `/auth/magic-link/send` | ❌ | Envia magic link; cria usuário se não existir → 204 |
 | `POST` | `/auth/magic-link/verify` | ❌ | Valida token; retorna JWT + refresh token → 200 |
