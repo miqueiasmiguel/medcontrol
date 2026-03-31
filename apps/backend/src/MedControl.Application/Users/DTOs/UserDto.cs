@@ -8,4 +8,5 @@ public sealed record UserDto(
     bool IsEmailVerified,
     string GlobalRole,
     DateTimeOffset? LastLoginAt,
-    string? TenantRole = null);
+    string? TenantRole = null,
+    string? TenantName = null);
