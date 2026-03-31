@@ -184,6 +184,11 @@ pnpm nx serve web                 # http://localhost:4200
 
 ## Armadilhas Conhecidas
 
+### tenantGuard redireciona infinitamente após seleção de organização
+
+- **Problema**: `tenantGuard` sempre redirecionava para `/tenants/select` quando o usuário tinha 2+ tenants, mesmo após ter selecionado um. Além disso, `CurrentUserService` tem cache em memória — após `switchTenant`, o cache ainda tinha o `UserDto` antigo (sem `tenantRole`), então o guard não conseguia detectar que o tenant já havia sido selecionado.
+- **Correto**: (1) o `tenantGuard` verifica `user.tenantRole` antes de redirecionar: se não é nulo, o JWT já tem um tenant selecionado → `return of(true)`; (2) `TenantSelectComponent` chama `currentUserService.invalidate()` após `switchTenant` bem-sucedido, garantindo que a próxima chamada ao guard busque dados frescos do backend com o `tenantRole` correto.
+
 ### Cloudflare Pages _redirects não suporta POST (usar Pages Function)
 - **Problema**: a regra de proxy `status 200` no `_redirects` só encaminha GET. Qualquer `POST` (como `/api/auth/google/callback`) retorna 405, o error handler do Angular redireciona para `/auth/login` — sintoma: tela pisca e volta para o login.
 - **Correto**: usar Cloudflare Pages Function em `functions/api/[[path]].js` (raiz do repo). A Function suporta todos os métodos HTTP e encaminha body, headers e cookies corretamente. O `_redirects` não deve ter regra `/api/*`.

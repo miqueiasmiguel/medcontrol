@@ -7,7 +7,7 @@ import { TenantService, TenantDto } from '../data-access/tenant.service';
 import { CurrentUserService } from '../../core/data-access/current-user.service';
 import { UserDto } from '../../settings/data-access/settings.service';
 
-const regularUser: UserDto = {
+const noTenantUser: UserDto = {
   id: 'user-1',
   email: 'user@test.com',
   displayName: 'User',
@@ -15,10 +15,12 @@ const regularUser: UserDto = {
   isEmailVerified: true,
   globalRole: 'None',
   lastLoginAt: null,
-  tenantRole: 'operator',
+  tenantRole: null,
 };
 
-const adminUser: UserDto = { ...regularUser, globalRole: 'Admin', tenantRole: null };
+const regularUser: UserDto = { ...noTenantUser, tenantRole: 'operator' };
+
+const adminUser: UserDto = { ...noTenantUser, globalRole: 'Admin' };
 
 describe('tenantGuard', () => {
   let tenantService: jest.Mocked<Pick<TenantService, 'getMyTenants' | 'switchTenant'>>;
@@ -93,7 +95,8 @@ describe('tenantGuard', () => {
     expect(result).toBe(true);
   }));
 
-  it('2+ tenants → redirects to /tenants/select', fakeAsync(() => {
+  it('2+ tenants, no tenant selected yet → redirects to /tenants/select', fakeAsync(() => {
+    currentUserService.getMe.mockReturnValue(of(noTenantUser));
     tenantService.getMyTenants.mockReturnValue(of([makeTenant('t1'), makeTenant('t2')]));
     let result: unknown;
 
@@ -106,6 +109,22 @@ describe('tenantGuard', () => {
 
     expect(router.createUrlTree).toHaveBeenCalledWith(['/tenants/select']);
     expect(result).toEqual(['/tenants/select']);
+  }));
+
+  it('2+ tenants, tenant already selected in JWT → allows navigation', fakeAsync(() => {
+    currentUserService.getMe.mockReturnValue(of(regularUser));
+    tenantService.getMyTenants.mockReturnValue(of([makeTenant('t1'), makeTenant('t2')]));
+    let result: unknown;
+
+    TestBed.runInInjectionContext(() => {
+      (tenantGuard({} as never, {} as never) as ReturnType<typeof of>).subscribe((r) => {
+        result = r;
+      });
+    });
+    tick();
+
+    expect(router.createUrlTree).not.toHaveBeenCalledWith(['/tenants/select']);
+    expect(result).toBe(true);
   }));
 
   it('getMyTenants error → redirects to /tenants/new', fakeAsync(() => {

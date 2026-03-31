@@ -29,6 +29,9 @@ export const tenantGuard: CanActivateFn = () => {
             );
           }
 
+          if (user.tenantRole) {
+            return of(true as const);
+          }
           return of(router.createUrlTree(['/tenants/select']));
         }),
       ),

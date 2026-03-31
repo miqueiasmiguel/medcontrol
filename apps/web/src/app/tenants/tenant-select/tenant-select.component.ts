@@ -9,6 +9,7 @@ import {
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TenantService, TenantDto } from '../data-access/tenant.service';
+import { CurrentUserService } from '../../core/data-access/current-user.service';
 
 @Component({
   selector: 'app-tenant-select',
@@ -31,6 +32,7 @@ export class TenantSelectComponent implements OnInit {
   private readonly tenantService = inject(TenantService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly currentUserService = inject(CurrentUserService);
 
   readonly tenants = signal<TenantDto[]>([]);
   readonly errorMessage = signal('');
@@ -50,7 +52,10 @@ export class TenantSelectComponent implements OnInit {
       .switchTenant(tenantId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.router.navigate(['/']),
+        next: () => {
+          this.currentUserService.invalidate();
+          this.router.navigate(['/']);
+        },
         error: () => this.errorMessage.set('Erro ao selecionar organização.'),
       });
   }
