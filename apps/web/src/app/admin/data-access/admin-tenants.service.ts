@@ -19,6 +19,14 @@ export class AdminTenantsService {
     return this.http.get<AdminTenantDto[]>('/api/admin/tenants', { withCredentials: true });
   }
 
+  createTenant(name: string, ownerEmail: string): Observable<AdminTenantDto> {
+    return this.http.post<AdminTenantDto>(
+      '/api/admin/tenants',
+      { name, ownerEmail },
+      { withCredentials: true },
+    );
+  }
+
   setTenantStatus(id: string, isActive: boolean): Observable<void> {
     return this.http.patch<void>(
       `/api/admin/tenants/${id}/status`,
