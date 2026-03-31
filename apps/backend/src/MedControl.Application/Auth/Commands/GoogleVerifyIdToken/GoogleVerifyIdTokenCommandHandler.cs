@@ -21,6 +21,9 @@ public sealed class GoogleVerifyIdTokenCommandHandler(
     private static readonly Error NoTenantAccess =
         Error.Unauthorized("Auth.NoTenantAccess", "Your account is not associated with any tenant. Contact your administrator.");
 
+    private static readonly Error TenantDisabled =
+        Error.Unauthorized("Auth.TenantDisabled", "Your tenant has been disabled. Contact support.");
+
     public async Task<Result<AuthTokenDto>> Handle(GoogleVerifyIdTokenCommand request, CancellationToken ct)
     {
         var googleUserInfo = await googleAuthService.VerifyIdTokenAsync(request.IdToken, ct);
@@ -55,24 +58,34 @@ public sealed class GoogleVerifyIdTokenCommandHandler(
         }
 
         var tenants = await tenantRepository.ListByUserAsync(user.Id, ct);
-        if (tenants.Count == 0)
+        var activeTenants = tenants.Where(t => t.IsActive).ToList();
+
+        if (tenants.Count > 0 && activeTenants.Count == 0)
+        {
+            return Result.Failure<AuthTokenDto>(TenantDisabled);
+        }
+
+        if (tenants.Count == 0 && !user.IsGlobalAdmin())
         {
             return Result.Failure<AuthTokenDto>(NoTenantAccess);
         }
 
-        var primaryTenant = tenants[0];
-        var tenantId = (Guid?)primaryTenant.Id;
+        var primaryTenant = activeTenants.FirstOrDefault();
+        var tenantId = primaryTenant is not null ? (Guid?)primaryTenant.Id : null;
         var roles = new List<string>();
 
-        TenantMember? member = null;
-        foreach (var m in primaryTenant.Members)
+        if (primaryTenant is not null)
         {
-            if (m.UserId == user.Id) { member = m; break; }
-        }
+            TenantMember? member = null;
+            foreach (var m in primaryTenant.Members)
+            {
+                if (m.UserId == user.Id) { member = m; break; }
+            }
 
-        if (member is not null)
-        {
-            roles.Add(member.Role.ToString().ToLowerInvariant());
+            if (member is not null)
+            {
+                roles.Add(member.Role.ToString().ToLowerInvariant());
+            }
         }
 
         var tokenPair = tokenService.GenerateTokenPair(

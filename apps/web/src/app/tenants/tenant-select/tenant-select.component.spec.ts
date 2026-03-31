@@ -3,9 +3,11 @@ import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { TenantSelectComponent } from './tenant-select.component';
 import { TenantService, TenantDto } from '../data-access/tenant.service';
+import { CurrentUserService } from '../../core/data-access/current-user.service';
 
 describe('TenantSelectComponent', () => {
   let tenantService: jest.Mocked<Pick<TenantService, 'getMyTenants' | 'switchTenant'>>;
+  let currentUserService: { invalidate: jest.Mock };
   let navigateSpy: jest.SpyInstance;
 
   const mockTenants: TenantDto[] = [
@@ -19,11 +21,14 @@ describe('TenantSelectComponent', () => {
       switchTenant: jest.fn(),
     };
 
+    currentUserService = { invalidate: jest.fn() };
+
     TestBed.configureTestingModule({
       imports: [TenantSelectComponent],
       providers: [
         provideRouter([]),
         { provide: TenantService, useValue: tenantService },
+        { provide: CurrentUserService, useValue: currentUserService },
       ],
     });
 
@@ -57,6 +62,22 @@ describe('TenantSelectComponent', () => {
     tick();
 
     expect(tenantService.switchTenant).toHaveBeenCalledWith('t1');
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+  }));
+
+  it('invalidates current user cache after successful switchTenant', fakeAsync(() => {
+    setup();
+    tenantService.getMyTenants.mockReturnValue(of(mockTenants));
+    tenantService.switchTenant.mockReturnValue(of(null));
+    const fixture = TestBed.createComponent(TenantSelectComponent);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+
+    fixture.componentInstance.selectTenant('t1');
+    tick();
+
+    expect(currentUserService.invalidate).toHaveBeenCalled();
     expect(navigateSpy).toHaveBeenCalledWith(['/']);
   }));
 

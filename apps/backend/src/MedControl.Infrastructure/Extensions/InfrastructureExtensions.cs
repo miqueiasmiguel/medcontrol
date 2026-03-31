@@ -99,4 +99,10 @@ public static class InfrastructureExtensions
         services.AddScoped<DevDataSeeder>();
         return services;
     }
+
+    public static IServiceCollection AddProdSeed(this IServiceCollection services)
+    {
+        services.AddScoped<ProdDataSeeder>();
+        return services;
+    }
 }

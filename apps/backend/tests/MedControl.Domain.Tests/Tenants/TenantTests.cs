@@ -163,6 +163,40 @@ public class TenantMemberUpdateRoleTests
     }
 }
 
+public class TenantActivateDeactivateTests
+{
+    [Fact]
+    public void Deactivate_SetIsActiveToFalse()
+    {
+        var tenant = Tenant.Create("Clinic").Value;
+
+        tenant.Deactivate();
+
+        tenant.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Activate_WhenInactive_SetIsActiveToTrue()
+    {
+        var tenant = Tenant.Create("Clinic").Value;
+        tenant.Deactivate();
+
+        tenant.Activate();
+
+        tenant.IsActive.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Activate_WhenAlreadyActive_RemainsTrue()
+    {
+        var tenant = Tenant.Create("Clinic").Value;
+
+        tenant.Activate();
+
+        tenant.IsActive.Should().BeTrue();
+    }
+}
+
 public class TenantRemoveMemberTests
 {
     [Fact]

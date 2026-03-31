@@ -15,12 +15,21 @@ builder.Services.AddMediator(Assembly.GetAssembly(typeof(MedControl.Application.
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 builder.Services.AddApiServices(builder.Configuration);
 
+builder.Services.AddProdSeed();
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddDevSeed();
 }
 
 var app = builder.Build();
+
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    using var scope = app.Services.CreateScope();
+    var prodSeeder = scope.ServiceProvider.GetRequiredService<MedControl.Infrastructure.Persistence.Seeding.ProdDataSeeder>();
+    await prodSeeder.SeedAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {

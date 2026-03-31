@@ -3,8 +3,14 @@ import { authGuard } from './auth/guards/auth.guard';
 import { tenantGuard } from './tenants/guards/tenant.guard';
 import { doctorOnboardingGuard } from './core/guards/doctor-onboarding.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { globalAdminGuard } from './core/guards/global-admin.guard';
 
 export const appRoutes: Route[] = [
+  {
+    path: 'admin',
+    canActivate: [authGuard, globalAdminGuard],
+    loadChildren: () => import('./admin/admin.routes').then((m) => m.adminRoutes),
+  },
   {
     path: 'privacy',
     loadChildren: () =>

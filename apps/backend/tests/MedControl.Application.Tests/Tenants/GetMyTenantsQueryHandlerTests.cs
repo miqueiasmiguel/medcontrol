@@ -60,4 +60,44 @@ public sealed class GetMyTenantsQueryHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Type.Should().Be(ErrorType.Unauthorized);
     }
+
+    [Fact]
+    public async Task Handle_WithInactiveTenant_ExcludesItFromResult()
+    {
+        var userId = Guid.NewGuid();
+        _currentUser.UserId.Returns(userId);
+        var active = Tenant.Create("Active Clinic").Value;
+        active.AddMember(userId, TenantRole.Operator);
+        var inactive = Tenant.Create("Inactive Clinic").Value;
+        inactive.AddMember(userId, TenantRole.Operator);
+        inactive.Deactivate();
+        _tenantRepository.ListByUserAsync(userId, Arg.Any<CancellationToken>())
+            .Returns(new List<Tenant> { active, inactive });
+
+        var result = await _sut.Handle(new GetMyTenantsQuery(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(1);
+        result.Value[0].Name.Should().Be("Active Clinic");
+    }
+
+    [Fact]
+    public async Task Handle_AllInactive_ReturnsEmptyList()
+    {
+        var userId = Guid.NewGuid();
+        _currentUser.UserId.Returns(userId);
+        var t1 = Tenant.Create("Clinic A").Value;
+        t1.AddMember(userId, TenantRole.Operator);
+        t1.Deactivate();
+        var t2 = Tenant.Create("Clinic B").Value;
+        t2.AddMember(userId, TenantRole.Admin);
+        t2.Deactivate();
+        _tenantRepository.ListByUserAsync(userId, Arg.Any<CancellationToken>())
+            .Returns(new List<Tenant> { t1, t2 });
+
+        var result = await _sut.Handle(new GetMyTenantsQuery(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+    }
 }

@@ -149,6 +149,7 @@ public sealed class Tenant : BaseAuditableEntity, IAggregateRoot
     public Result AddMember(Guid userId, TenantRole role)                              // validates Enum.IsDefined
     public Result UpdateMemberRole(Guid userId, Guid currentUserId, TenantRole role)   // CannotUpdateOwnRole se userId==currentUserId
     public Result RemoveMember(Guid userId)                                            // OwnerCannotBeRemoved se member.Role==Owner
+    public void Activate()
     public void Deactivate()
 }
 
@@ -457,6 +458,7 @@ DomainEventDispatchInterceptor  → após SaveChanges: coleta eventos de BaseEnt
 UserRepository      : GetByIdAsync, GetByIdsAsync(IEnumerable<Guid>), GetByEmailAsync, AddAsync, UpdateAsync
 TenantRepository    : GetByIdAsync (Include Members), GetBySlugAsync, AddAsync, UpdateAsync
                       ListByUserAsync → usa .IgnoreQueryFilters() para bypass do filtro multi-tenant
+                      ListAllAsync → usa .IgnoreQueryFilters(), inclui Members, ordenado por Name (somente GlobalRole.Admin)
 DoctorRepository    : ExistsByCrmAsync(tenantId, crm, councilState), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
                       → global query filter cuida do escopo de tenant automaticamente no ListAsync
 HealthPlanRepository: ExistsByTissCodeAsync(tenantId, tissCode), AddAsync, ListAsync, GetByIdAsync, UpdateAsync
@@ -567,6 +569,8 @@ doctors.MapDoctors();
 
 | Método | Rota | Auth | Descrição |
 |---|---|---|---|
+| `GET` | `/admin/tenants` | ✅ GlobalAdmin | Lista todos os tenants do sistema; `AdminTenantDto[]` → 200 / 403 |
+| `PATCH` | `/admin/tenants/{id}/status` | ✅ GlobalAdmin | Ativa/desativa tenant; `{ isActive: bool }` → 204 / 403 / 404 |
 | `POST` | `/auth/magic-link/send` | ❌ | Envia magic link; cria usuário se não existir → 204 |
 | `POST` | `/auth/magic-link/verify` | ❌ | Valida token; retorna JWT + refresh token → 200 |
 | `POST` | `/auth/google/callback` | ❌ | Troca code Google por JWT; cria usuário se não existir → 200 |
@@ -644,7 +648,14 @@ _                      → 400
 
 ### JWT
 - Claims: `sub`, `email`, `tenant_id`, `roles`, `global_roles`
-- Troca de tenant: `POST /auth/switch-tenant` re-emite JWT (a implementar)
+- Troca de tenant: `POST /auth/switch-tenant` re-emite JWT
+- `tenant_id` é nullable — global admin sem tenant recebe `null`
+
+### Erros de Auth relevantes
+- `Auth.TenantDisabled` (401) — login bloqueado: tenant do usuário está desativado
+- `Auth.NoTenantAccess` (401) — usuário sem nenhum tenant (apenas no Google OAuth mobile)
+- Filtro aplicado em: `VerifyMagicLinkCommandHandler`, `GoogleVerifyIdTokenCommandHandler`, `SwitchTenantCommandHandler`
+- Global admin (`GlobalRole.Admin`) não é bloqueado por `NoTenantAccess` — faz login sem tenant context
 
 ---
 
@@ -700,8 +711,9 @@ public string Name { get; private set; } = default!;
 | `X-Test-Email` | `email` |
 | `X-Test-TenantId` | `tenant_id` |
 | `X-Test-Roles` | `roles` (um claim por valor; separados por vírgula) |
+| `X-Test-GlobalRoles` | `global_roles` (um claim por valor; separados por vírgula) |
 
-`CreateAuthenticatedClient(userId, email, tenantId?, roles?)` cria um `HttpClient` com esses headers pré-configurados. O `tenantId` é necessário para endpoints que dependem de `ICurrentTenantService`. O `roles` é necessário para endpoints que verificam permissão de admin/owner (ex: `POST/PATCH/DELETE /members`).
+`CreateAuthenticatedClient(userId, email, tenantId?, roles?, globalRoles?)` cria um `HttpClient` com esses headers pré-configurados. O `tenantId` é necessário para endpoints que dependem de `ICurrentTenantService`. O `roles` é necessário para endpoints que verificam permissão de admin/owner. O `globalRoles` é necessário para endpoints admin (`/admin/tenants`).
 
 ### Mocks disponíveis em TestWebApplicationFactory
 

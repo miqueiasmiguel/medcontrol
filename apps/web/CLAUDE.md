@@ -17,10 +17,20 @@ src/app/
 ├── core/
 │   ├── tokens/
 │   │   └── window.token.ts  ← InjectionToken<Window> para mockabilidade em testes
+│   ├── data-access/
+│   │   └── current-user.service.ts ← signals: #user, currentUser, isDoctor, isGlobalAdmin (computed: globalRole === 'Admin')
 │   └── guards/
-│       └── doctor-onboarding.guard.ts ← CanActivateFn; skip se mmc_onboarding_skip no sessionStorage;
-│                                          getMe() → tenantRole=doctor → getDoctorProfile() → null → redirect /onboarding
-│                                          aplicado como canActivateChild no shell route (app.routes.ts)
+│       ├── doctor-onboarding.guard.ts ← CanActivateFn; skip se mmc_onboarding_skip no sessionStorage;
+│       │                                  getMe() → tenantRole=doctor → getDoctorProfile() → null → redirect /onboarding
+│       │                                  aplicado como canActivateChild no shell route (app.routes.ts)
+│       └── global-admin.guard.ts ← CanActivateFn; getMe() → globalRole=Admin → true; outros → redirect /
+├── admin/
+│   ├── admin.routes.ts       ← AdminShellComponent + children: AdminTenantsComponent
+│   ├── admin-shell/          ← AdminShellComponent: layout simples (sem sidebar de tenant)
+│   ├── admin-tenants/        ← AdminTenantsComponent: tabela de tenants com toggle Ativar/Desativar
+│   └── data-access/
+│       └── admin-tenants.service.ts ← listTenants() → GET /api/admin/tenants
+│                                        setTenantStatus(id, isActive) → PATCH /api/admin/tenants/{id}/status
 ├── layout/
 │   ├── shell/
 │   │   └── shell.component.ts   ← ShellComponent: sidebar + <router-outlet>; signal collapsed
@@ -100,8 +110,10 @@ src/app/
 ## Roteamento
 
 ```
+/admin (AdminShellComponent)    ← authGuard + globalAdminGuard
+  └── ''  → AdminTenantsComponent
 / (ShellComponent)              ← authGuard + tenantGuard
-  ├── ''  → redirect /doctors
+  ├── ''  → redirect /payments
   ├── doctors/                  ← DoctorsListComponent (lazy)
   ├── health-plans/             ← HealthPlansListComponent (lazy)
   ├── procedures/               ← ProceduresListComponent (lazy)
@@ -111,6 +123,8 @@ src/app/
 /tenants/**                     ← authGuard
 /**                             → redirect /auth/login
 ```
+
+`tenantGuard`: 0 tenants + globalRole=Admin → redirect `/admin`; 0 tenants regular → redirect `/tenants/new`
 
 ## Autenticação com HttpOnly Cookies
 
@@ -169,6 +183,11 @@ pnpm nx serve web                 # http://localhost:4200
 ```
 
 ## Armadilhas Conhecidas
+
+### tenantGuard redireciona infinitamente após seleção de organização
+
+- **Problema**: `tenantGuard` sempre redirecionava para `/tenants/select` quando o usuário tinha 2+ tenants, mesmo após ter selecionado um. Além disso, `CurrentUserService` tem cache em memória — após `switchTenant`, o cache ainda tinha o `UserDto` antigo (sem `tenantRole`), então o guard não conseguia detectar que o tenant já havia sido selecionado.
+- **Correto**: (1) o `tenantGuard` verifica `user.tenantRole` antes de redirecionar: se não é nulo, o JWT já tem um tenant selecionado → `return of(true)`; (2) `TenantSelectComponent` chama `currentUserService.invalidate()` após `switchTenant` bem-sucedido, garantindo que a próxima chamada ao guard busque dados frescos do backend com o `tenantRole` correto.
 
 ### Cloudflare Pages _redirects não suporta POST (usar Pages Function)
 - **Problema**: a regra de proxy `status 200` no `_redirects` só encaminha GET. Qualquer `POST` (como `/api/auth/google/callback`) retorna 405, o error handler do Angular redireciona para `/auth/login` — sintoma: tela pisca e volta para o login.

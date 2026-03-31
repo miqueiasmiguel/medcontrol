@@ -5,6 +5,7 @@ using MedControl.Domain.Common;
 using MedControl.Domain.Tenants;
 using MedControl.Domain.Users;
 using NSubstitute;
+using GlobalRole = MedControl.Domain.Users.GlobalRole;
 
 namespace MedControl.Application.Tests.Auth;
 
@@ -157,5 +158,60 @@ public sealed class GoogleVerifyIdTokenCommandHandlerTests
         _tokenService.DidNotReceive().GenerateTokenPair(
             Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<Guid?>(),
             Arg.Any<IReadOnlyList<string>>(), Arg.Any<IReadOnlyList<string>>());
+    }
+
+    [Fact]
+    public async Task Handle_UsuarioComTenantInativo_RetornaTenantDisabled()
+    {
+        var email = "user@example.com";
+        var user = User.CreateFromGoogle(email, "User", null).Value;
+        var tenant = Tenant.Create("Clinic").Value;
+        tenant.AddMember(user.Id, TenantRole.Operator);
+        tenant.Deactivate();
+        var googleUserInfo = new GoogleUserInfo(email, "User", null);
+
+        _googleAuthService.VerifyIdTokenAsync("valid-token", Arg.Any<CancellationToken>())
+            .Returns(googleUserInfo);
+        _userRepository.GetByEmailAsync(email, Arg.Any<CancellationToken>())
+            .Returns(user);
+        _tenantRepository.ListByUserAsync(user.Id, Arg.Any<CancellationToken>())
+            .Returns(new List<Tenant> { tenant });
+
+        var result = await _sut.Handle(
+            new GoogleVerifyIdTokenCommand("valid-token"), CancellationToken.None);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Auth.TenantDisabled");
+        result.Error.Type.Should().Be(ErrorType.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Handle_GlobalAdminSemTenant_BypassNoTenantAccess()
+    {
+        var email = "admin@example.com";
+        var user = User.CreateFromGoogle(email, "Admin", null).Value;
+        user.SetGlobalRole(GlobalRole.Admin);
+        var tokenPair = new TokenPair("access", "refresh", DateTimeOffset.UtcNow.AddHours(1));
+        var googleUserInfo = new GoogleUserInfo(email, "Admin", null);
+
+        _googleAuthService.VerifyIdTokenAsync("valid-token", Arg.Any<CancellationToken>())
+            .Returns(googleUserInfo);
+        _userRepository.GetByEmailAsync(email, Arg.Any<CancellationToken>())
+            .Returns(user);
+        // tenantRepository já retorna lista vazia no construtor do fixture
+        _tokenService.GenerateTokenPair(
+                user.Id, email, (Guid?)null,
+                Arg.Any<IReadOnlyList<string>>(),
+                Arg.Is<IReadOnlyList<string>>(r => r.Contains("admin")))
+            .Returns(tokenPair);
+
+        var result = await _sut.Handle(
+            new GoogleVerifyIdTokenCommand("valid-token"), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        _tokenService.Received(1).GenerateTokenPair(
+            user.Id, email, (Guid?)null,
+            Arg.Any<IReadOnlyList<string>>(),
+            Arg.Is<IReadOnlyList<string>>(r => r.Contains("admin")));
     }
 }
