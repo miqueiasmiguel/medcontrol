@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, map, of, switchMap, tap } from 'rxjs';
 import { TenantService } from '../data-access/tenant.service';
 import { CurrentUserService } from '../../core/data-access/current-user.service';
 
@@ -24,6 +24,8 @@ export const tenantGuard: CanActivateFn = () => {
 
           if (tenants.length === 1) {
             return tenantService.switchTenant(tenants[0].id).pipe(
+              tap(() => currentUser.invalidate()),
+              switchMap(() => currentUser.getMe()),
               map(() => true as const),
               catchError(() => of(router.createUrlTree(['/tenants/new']))),
             );
