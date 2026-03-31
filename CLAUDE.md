@@ -11,7 +11,7 @@ MedControl é um SaaS para médicos, clínicas, hospitais e empresas de faturame
 | Módulo | Status | Descrição |
 |---|---|---|
 | **Controle de Pagamento** | ✅ backend + web implementados | Operador registra pagamentos; médico consulta via mobile |
-| **Painel de Admin Global** | ✅ backend + web implementados | GlobalRole.Admin gerencia tenants (ativar/desativar); login bloqueado para membros de tenant inativo |
+| **Painel de Admin Global** | ✅ backend + web implementados | GlobalRole.Admin cria tenants (nome + email do owner) e gerencia status (ativar/desativar); login bloqueado para membros de tenant inativo |
 | Faturamento | 🔜 futuro | Geração de lotes TISS, envio a convênios |
 | Recurso de Glosa | 🔜 futuro | Contestação de pagamentos recusados |
 

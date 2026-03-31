@@ -17,7 +17,7 @@ export const tenantGuard: CanActivateFn = () => {
           if (tenants.length === 0) {
             return of(
               router.createUrlTree(
-                user.globalRole === 'Admin' ? ['/admin'] : ['/tenants/new'],
+                user.globalRole === 'Admin' ? ['/admin'] : ['/auth/login'],
               ),
             );
           }
@@ -27,7 +27,7 @@ export const tenantGuard: CanActivateFn = () => {
               tap(() => currentUser.invalidate()),
               switchMap(() => currentUser.getMe()),
               map(() => true as const),
-              catchError(() => of(router.createUrlTree(['/tenants/new']))),
+              catchError(() => of(router.createUrlTree(['/auth/login']))),
             );
           }
 
@@ -42,7 +42,7 @@ export const tenantGuard: CanActivateFn = () => {
       if (err instanceof HttpErrorResponse && err.status === 401) {
         return of(router.createUrlTree(['/auth/login']));
       }
-      return of(router.createUrlTree(['/tenants/new']));
+      return of(router.createUrlTree(['/auth/login']));
     }),
   );
 };

@@ -1,7 +1,6 @@
 using MedControl.Api.Endpoints.Auth;
 using MedControl.Application.Auth.DTOs;
 using MedControl.Application.Mediator;
-using MedControl.Application.Tenants.Commands.CreateTenant;
 using MedControl.Application.Tenants.Commands.SwitchTenant;
 using MedControl.Application.Tenants.DTOs;
 using MedControl.Application.Tenants.Queries.GetMyTenants;
@@ -17,13 +16,6 @@ public static class TenantEndpoints
              .WithName("GetMyTenants")
              .RequireAuthorization()
              .Produces<IReadOnlyList<TenantDto>>(StatusCodes.Status200OK)
-             .Produces(StatusCodes.Status401Unauthorized);
-
-        group.MapPost("/", CreateTenant)
-             .WithName("CreateTenant")
-             .RequireAuthorization()
-             .Produces(StatusCodes.Status204NoContent)
-             .Produces(StatusCodes.Status400BadRequest)
              .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/switch", SwitchTenant)
@@ -49,24 +41,6 @@ public static class TenantEndpoints
         }
 
         return Results.Ok(result.Value);
-    }
-
-    private static async Task<IResult> CreateTenant(
-        CreateTenantRequest request,
-        HttpContext ctx,
-        IMediator mediator,
-        CancellationToken ct)
-    {
-        var result = await mediator.Send<Result<AuthTokenDto>>(
-            new CreateTenantCommand(request.Name), ct);
-
-        if (!result.IsSuccess)
-        {
-            return ToErrorResult(result.Error);
-        }
-
-        CookieHelper.SetAuthCookies(ctx, result.Value!);
-        return Results.NoContent();
     }
 
     private static async Task<IResult> SwitchTenant(
@@ -95,7 +69,5 @@ public static class TenantEndpoints
         _ => Results.Problem(error.Description, statusCode: 400),
     };
 }
-
-public record CreateTenantRequest(string Name);
 
 public record SwitchTenantRequest(Guid TenantId);

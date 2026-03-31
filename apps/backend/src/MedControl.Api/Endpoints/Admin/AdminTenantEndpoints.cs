@@ -1,3 +1,4 @@
+using MedControl.Application.Admin.Commands.CreateTenant;
 using MedControl.Application.Admin.Commands.SetTenantStatus;
 using MedControl.Application.Admin.DTOs;
 using MedControl.Application.Admin.Queries.ListAllTenants;
@@ -17,6 +18,14 @@ public static class AdminTenantEndpoints
              .Produces(StatusCodes.Status401Unauthorized)
              .Produces(StatusCodes.Status403Forbidden);
 
+        group.MapPost("/", CreateTenant)
+             .WithName("AdminCreateTenant")
+             .RequireAuthorization()
+             .Produces<AdminTenantDto>(StatusCodes.Status201Created)
+             .Produces(StatusCodes.Status400BadRequest)
+             .Produces(StatusCodes.Status401Unauthorized)
+             .Produces(StatusCodes.Status403Forbidden);
+
         group.MapPatch("/{tenantId:guid}/status", SetTenantStatus)
              .WithName("SetTenantStatus")
              .RequireAuthorization()
@@ -26,6 +35,22 @@ public static class AdminTenantEndpoints
              .Produces(StatusCodes.Status404NotFound);
 
         return group;
+    }
+
+    private static async Task<IResult> CreateTenant(
+        AdminCreateTenantRequest request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send<Result<AdminTenantDto>>(
+            new AdminCreateTenantCommand(request.Name, request.OwnerEmail), ct);
+
+        if (!result.IsSuccess)
+        {
+            return ToErrorResult(result.Error);
+        }
+
+        return Results.Created($"/admin/tenants/{result.Value!.Id}", result.Value);
     }
 
     private static async Task<IResult> ListTenants(IMediator mediator, CancellationToken ct)
@@ -75,5 +100,7 @@ public static class AdminTenantEndpoints
         };
     }
 }
+
+internal sealed record AdminCreateTenantRequest(string Name, string OwnerEmail);
 
 internal sealed record SetTenantStatusRequest(bool IsActive);

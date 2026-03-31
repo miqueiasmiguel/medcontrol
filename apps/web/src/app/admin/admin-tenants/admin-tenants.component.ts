@@ -9,12 +9,13 @@ import {
 import { DatePipe } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AdminTenantsService, AdminTenantDto } from '../data-access/admin-tenants.service';
+import { AdminTenantFormComponent } from '../admin-tenant-form/admin-tenant-form.component';
 
 @Component({
   selector: 'app-admin-tenants',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DatePipe, MatProgressSpinnerModule],
+  imports: [DatePipe, MatProgressSpinnerModule, AdminTenantFormComponent],
   template: `
     <div class="at-page">
 
@@ -24,6 +25,14 @@ import { AdminTenantsService, AdminTenantDto } from '../data-access/admin-tenant
           <h1 class="at-title">Organizações</h1>
           <p class="at-subtitle">Gerencie e controle todas as organizações da plataforma</p>
         </div>
+        <button class="at-new-btn" type="button" (click)="openForm()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Nova organização
+        </button>
       </div>
 
       @if (loading()) {
@@ -100,7 +109,10 @@ import { AdminTenantsService, AdminTenantDto } from '../data-access/admin-tenant
                 </svg>
               </div>
               <p class="at-empty__title">Nenhuma organização cadastrada</p>
-              <p class="at-empty__desc">Quando uma organização for criada, ela aparecerá aqui.</p>
+              <p class="at-empty__desc">Crie a primeira organização da plataforma.</p>
+              <button class="at-empty__btn" type="button" (click)="openForm()">
+                Criar organização
+              </button>
             </div>
           } @else {
             <table class="at-table">
@@ -193,6 +205,13 @@ import { AdminTenantsService, AdminTenantDto } from '../data-access/admin-tenant
 
       }
     </div>
+
+    @if (formOpen()) {
+      <app-admin-tenant-form
+        (saved)="onSaved($event)"
+        (closed)="closeForm()"
+      />
+    }
   `,
   styles: [`
     :host {
@@ -208,11 +227,38 @@ import { AdminTenantsService, AdminTenantDto } from '../data-access/admin-tenant
 
     .at-page-header {
       margin-bottom: var(--mmc-space-8);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--mmc-space-4);
 
       &__title-group {
         display: flex;
         flex-direction: column;
         gap: var(--mmc-space-1);
+      }
+    }
+
+    .at-new-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--mmc-space-2);
+      height: 36px;
+      padding: 0 var(--mmc-space-4);
+      font-size: var(--mmc-text-sm);
+      font-weight: var(--mmc-font-weight-medium);
+      background: var(--mmc-action-primary);
+      color: var(--mmc-action-primary-text);
+      border: none;
+      border-radius: var(--mmc-radius-md);
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 150ms ease, box-shadow 150ms ease;
+
+      &:hover {
+        background: var(--mmc-action-primary-hover);
+        box-shadow: var(--mmc-shadow-brand);
       }
     }
 
@@ -360,6 +406,28 @@ import { AdminTenantsService, AdminTenantDto } from '../data-access/admin-tenant
         font-size: var(--mmc-text-sm);
         color: var(--mmc-text-secondary);
         margin: 0;
+      }
+
+      &__btn {
+        margin-top: var(--mmc-space-2);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--mmc-space-2);
+        height: 36px;
+        padding: 0 var(--mmc-space-4);
+        font-size: var(--mmc-text-sm);
+        font-weight: var(--mmc-font-weight-medium);
+        background: var(--mmc-action-primary);
+        color: var(--mmc-action-primary-text);
+        border: none;
+        border-radius: var(--mmc-radius-md);
+        cursor: pointer;
+        transition: background 150ms ease, box-shadow 150ms ease;
+
+        &:hover {
+          background: var(--mmc-action-primary-hover);
+          box-shadow: var(--mmc-shadow-brand);
+        }
       }
     }
 
@@ -574,6 +642,7 @@ export class AdminTenantsComponent implements OnInit {
 
   readonly tenants = signal<AdminTenantDto[]>([]);
   readonly loading = signal(true);
+  readonly formOpen = signal(false);
 
   readonly activeCount = computed(() => this.tenants().filter((t) => t.isActive).length);
   readonly inactiveCount = computed(() => this.tenants().filter((t) => !t.isActive).length);
@@ -589,6 +658,19 @@ export class AdminTenantsComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  openForm(): void {
+    this.formOpen.set(true);
+  }
+
+  closeForm(): void {
+    this.formOpen.set(false);
+  }
+
+  onSaved(tenant: AdminTenantDto): void {
+    this.tenants.update((list) => [tenant, ...list]);
+    this.formOpen.set(false);
   }
 
   toggleStatus(tenant: AdminTenantDto): void {

@@ -27,9 +27,12 @@ src/app/
 ├── admin/
 │   ├── admin.routes.ts       ← AdminShellComponent + children: AdminTenantsComponent
 │   ├── admin-shell/          ← AdminShellComponent: layout simples (sem sidebar de tenant)
-│   ├── admin-tenants/        ← AdminTenantsComponent: tabela de tenants com toggle Ativar/Desativar
+│   ├── admin-tenants/        ← AdminTenantsComponent: tabela de tenants com botão "Nova organização" + toggle Ativar/Desativar
+│   ├── admin-tenant-form/    ← AdminTenantFormComponent: slide-over para criar tenant (nome + ownerEmail)
+│   │                            @Output saved/closed; find-or-create no backend; envia convite se usuário novo
 │   └── data-access/
 │       └── admin-tenants.service.ts ← listTenants() → GET /api/admin/tenants
+│                                        createTenant(name, ownerEmail) → POST /api/admin/tenants → AdminTenantDto
 │                                        setTenantStatus(id, isActive) → PATCH /api/admin/tenants/{id}/status
 ├── layout/
 │   ├── shell/
@@ -98,12 +101,11 @@ src/app/
 │   └── members.component.ts  ← tabela de membros; signals: members, loading, formOpen, selectedMember
 │                                getRoleLabel(role) → mapa: admin/operator/doctor/owner → labels PT-BR
 └── tenants/
-    ├── tenants.routes.ts     ← lazy routes: /new, /select
+    ├── tenants.routes.ts     ← lazy routes: /select (rota /new removida — criação só via admin)
     ├── data-access/
-    │   └── tenant.service.ts ← getMyTenants, createTenant, switchTenant
+    │   └── tenant.service.ts ← getMyTenants, switchTenant (createTenant não é mais usado pela UI)
     ├── guards/
-    │   └── tenant.guard.ts   ← multi-tenant routing logic
-    ├── tenant-new/           ← TenantNewComponent
+    │   └── tenant.guard.ts   ← multi-tenant routing logic; 0 tenants + não-admin → /auth/login
     └── tenant-select/        ← TenantSelectComponent
 ```
 
@@ -124,7 +126,7 @@ src/app/
 /**                             → redirect /auth/login
 ```
 
-`tenantGuard`: 0 tenants + globalRole=Admin → redirect `/admin`; 0 tenants regular → redirect `/tenants/new`
+`tenantGuard`: 0 tenants + globalRole=Admin → redirect `/admin`; 0 tenants regular → redirect `/auth/login` (aguarda convite de admin)
 
 ## Autenticação com HttpOnly Cookies
 

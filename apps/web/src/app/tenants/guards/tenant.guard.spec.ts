@@ -48,7 +48,7 @@ describe('tenantGuard', () => {
     });
   });
 
-  it('0 tenants → redirects to /tenants/new', fakeAsync(() => {
+  it('0 tenants → redirects to /auth/login', fakeAsync(() => {
     tenantService.getMyTenants.mockReturnValue(of([]));
     let result: unknown;
 
@@ -59,8 +59,8 @@ describe('tenantGuard', () => {
     });
     tick();
 
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/tenants/new']);
-    expect(result).toEqual(['/tenants/new']);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/auth/login']);
+    expect(result).toEqual(['/auth/login']);
   }));
 
   it('0 tenants + global admin → redirects to /admin', fakeAsync(() => {
@@ -149,7 +149,7 @@ describe('tenantGuard', () => {
     expect(result).toBe(true);
   }));
 
-  it('getMyTenants error → redirects to /tenants/new', fakeAsync(() => {
+  it('getMyTenants error → redirects to /auth/login', fakeAsync(() => {
     tenantService.getMyTenants.mockReturnValue(throwError(() => new Error('Network error')));
     let result: unknown;
 
@@ -160,8 +160,8 @@ describe('tenantGuard', () => {
     });
     tick();
 
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/tenants/new']);
-    expect(result).toEqual(['/tenants/new']);
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/auth/login']);
+    expect(result).toEqual(['/auth/login']);
   }));
 
   it('getMyTenants 401 → redirects to /auth/login', fakeAsync(() => {
