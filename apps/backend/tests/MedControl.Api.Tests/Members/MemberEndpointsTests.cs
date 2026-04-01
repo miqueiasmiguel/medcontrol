@@ -122,7 +122,7 @@ public sealed class MemberEndpointsTests : IClassFixture<TestWebApplicationFacto
             .GetByIdAsync(tenantId, Arg.Any<CancellationToken>())
             .Returns(tenant);
         _factory.MagicLinkService
-            .GenerateTokenAsync("new-invited@example.com", Arg.Any<CancellationToken>())
+            .GenerateInviteTokenAsync("new-invited@example.com", Arg.Any<CancellationToken>())
             .Returns("test-invitation-token");
 
         var response = await client.PostAsJsonAsync("/members", new

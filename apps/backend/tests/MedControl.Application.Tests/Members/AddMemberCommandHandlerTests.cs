@@ -63,7 +63,7 @@ public sealed class AddMemberCommandHandlerTests
         _currentUser.Roles.Returns(new List<string> { "admin" });
         _userRepository.GetByEmailAsync("new@example.com", Arg.Any<CancellationToken>()).ReturnsNull();
         _tenantRepository.GetByIdAsync(tenantId, Arg.Any<CancellationToken>()).Returns(tenant);
-        _magicLinkService.GenerateTokenAsync("new@example.com", Arg.Any<CancellationToken>()).Returns("invite-token");
+        _magicLinkService.GenerateInviteTokenAsync("new@example.com", Arg.Any<CancellationToken>()).Returns("invite-token");
 
         var result = await _sut.Handle(new AddMemberCommand("new@example.com", "operator"), CancellationToken.None);
 
@@ -73,6 +73,8 @@ public sealed class AddMemberCommandHandlerTests
         await _userRepository.Received(1).AddAsync(
             Arg.Is<User>(u => u.Email == "new@example.com"),
             Arg.Any<CancellationToken>());
+        await _magicLinkService.Received(1).GenerateInviteTokenAsync("new@example.com", Arg.Any<CancellationToken>());
+        await _magicLinkService.DidNotReceive().GenerateTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
         await _emailService.Received(1).SendInvitationAsync(
             "new@example.com",
             Arg.Is<string>(url => url.Contains("invite-token")),

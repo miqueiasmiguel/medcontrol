@@ -103,7 +103,7 @@ public sealed class InviteAndLinkMemberToDoctorCommandHandlerTests
         _doctorRepository.GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>()).Returns(doctor);
         _userRepository.GetByEmailAsync("medico@clinica.com", Arg.Any<CancellationToken>()).ReturnsNull();
         _tenantRepository.GetByIdAsync(tenantId, Arg.Any<CancellationToken>()).Returns(tenant);
-        _magicLinkService.GenerateTokenAsync("medico@clinica.com", Arg.Any<CancellationToken>()).Returns("invite-token");
+        _magicLinkService.GenerateInviteTokenAsync("medico@clinica.com", Arg.Any<CancellationToken>()).Returns("invite-token");
 
         var result = await _sut.Handle(
             new InviteAndLinkMemberToDoctorCommand(doctor.Id, "medico@clinica.com"),
@@ -179,7 +179,7 @@ public sealed class InviteAndLinkMemberToDoctorCommandHandlerTests
         _doctorRepository.GetByIdAsync(doctor.Id, Arg.Any<CancellationToken>()).Returns(doctor);
         _userRepository.GetByEmailAsync("medico@clinica.com", Arg.Any<CancellationToken>()).ReturnsNull();
         _tenantRepository.GetByIdAsync(tenantId, Arg.Any<CancellationToken>()).Returns(tenant);
-        _magicLinkService.GenerateTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns("token");
+        _magicLinkService.GenerateInviteTokenAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns("token");
 
         var result = await _sut.Handle(
             new InviteAndLinkMemberToDoctorCommand(doctor.Id, "medico@clinica.com"),

@@ -13,6 +13,7 @@ public sealed class MagicLinkServiceTests
     private readonly IOptions<MagicLinkSettings> _settings = Options.Create(new MagicLinkSettings
     {
         TokenExpiryMinutes = 15,
+        InviteTokenExpiryHours = 48,
         BaseUrl = "https://app.example.com/auth/verify",
     });
 
@@ -45,6 +46,23 @@ public sealed class MagicLinkServiceTests
         var token2 = await _sut.GenerateTokenAsync("b@example.com");
 
         token1.Should().NotBe(token2);
+    }
+
+    [Fact]
+    public async Task GenerateInviteTokenAsync_StoresEmailWithInviteTtl_ReturnsToken()
+    {
+        var email = "user@example.com";
+        DistributedCacheEntryOptions? capturedOptions = null;
+        await _cache.SetAsync(
+            Arg.Any<string>(),
+            Arg.Any<byte[]>(),
+            Arg.Do<DistributedCacheEntryOptions>(o => capturedOptions = o),
+            Arg.Any<CancellationToken>());
+
+        var token = await _sut.GenerateInviteTokenAsync(email);
+
+        token.Should().NotBeNullOrEmpty();
+        capturedOptions!.AbsoluteExpirationRelativeToNow.Should().Be(TimeSpan.FromHours(48));
     }
 
     [Fact]

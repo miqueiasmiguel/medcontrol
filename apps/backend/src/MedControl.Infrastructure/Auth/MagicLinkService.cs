@@ -27,6 +27,20 @@ internal sealed class MagicLinkService(
         return token;
     }
 
+    public async Task<string> GenerateInviteTokenAsync(string email, CancellationToken ct = default)
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        var token = Base64UrlEncode(bytes);
+
+        var options = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(settings.Value.InviteTokenExpiryHours),
+        };
+
+        await cache.SetStringAsync(CacheKey(token), email, options, ct);
+        return token;
+    }
+
     public async Task<string?> ValidateTokenAsync(string token, CancellationToken ct = default)
     {
         var key = CacheKey(token);
