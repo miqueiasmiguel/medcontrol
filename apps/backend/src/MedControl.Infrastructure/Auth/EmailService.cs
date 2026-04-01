@@ -8,7 +8,7 @@ internal sealed class EmailService(IResend resend) : IEmailService
     public async Task SendMagicLinkAsync(string email, string magicLink, CancellationToken ct = default)
     {
         var message = new EmailMessage();
-        message.From = "noreply@medcontrol.app";
+        message.From = "noreply@fundamentoerp.com.br";
         message.To.Add(email);
         message.Subject = "Your MedControl sign-in link";
         message.HtmlBody = $"""
@@ -23,7 +23,7 @@ internal sealed class EmailService(IResend resend) : IEmailService
     public async Task SendInvitationAsync(string toEmail, string inviteLink, CancellationToken ct = default)
     {
         var message = new EmailMessage();
-        message.From = "noreply@medcontrol.app";
+        message.From = "noreply@fundamentoerp.com.br";
         message.To.Add(toEmail);
         message.Subject = "Você foi convidado para o MedControl";
         message.HtmlBody = $"""
