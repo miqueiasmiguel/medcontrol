@@ -215,7 +215,7 @@ public sealed class AdminTenantEndpointsTests : IClassFixture<TestWebApplication
 
         _factory.UserRepository.GetByEmailAsync("newowner@example.com", Arg.Any<CancellationToken>())
             .ReturnsNull();
-        _factory.MagicLinkService.GenerateTokenAsync("newowner@example.com", Arg.Any<CancellationToken>())
+        _factory.MagicLinkService.GenerateInviteTokenAsync("newowner@example.com", Arg.Any<CancellationToken>())
             .Returns("some-token");
 
         var response = await client.PostAsJsonAsync(

@@ -415,7 +415,7 @@ ITokenService           // GenerateTokenPair(...) → TokenPair(AccessToken, Ref
                         // ValidateRefreshTokenAsync, RevokeRefreshTokenAsync
 IEmailService           // SendMagicLinkAsync(email, link, ct)
                         // SendInvitationAsync(email, inviteLink, ct) — convite para novo usuário adicionado como membro
-IMagicLinkService       // GenerateTokenAsync(email) → token | ValidateTokenAsync(token) → email?
+IMagicLinkService       // GenerateTokenAsync(email) → token (15 min, para login) | GenerateInviteTokenAsync(email) → token (48h, para convites) | ValidateTokenAsync(token) → email?
 IGoogleAuthService      // ExchangeCodeAsync(code, redirectUri) → GoogleUserInfo? { Email, DisplayName, AvatarUrl }
 ```
 
@@ -427,8 +427,9 @@ Definida em Application (não Infrastructure) para que os handlers possam refere
 public sealed class MagicLinkSettings
 {
     public const string SectionName = "MagicLink";
-    public string BaseUrl { get; init; }        // URL base do frontend para o link
-    public int TokenExpiryMinutes { get; init; } = 15;
+    public string BaseUrl { get; init; }             // URL base do frontend para o link
+    public int TokenExpiryMinutes { get; init; } = 15;   // TTL para magic links de login
+    public int InviteTokenExpiryHours { get; init; } = 48; // TTL para links de convite de membro/tenant
 }
 ```
 

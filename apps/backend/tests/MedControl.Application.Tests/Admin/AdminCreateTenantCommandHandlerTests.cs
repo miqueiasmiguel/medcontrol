@@ -83,7 +83,7 @@ public sealed class AdminCreateTenantCommandHandlerTests
         _currentUser.HasGlobalRole("admin").Returns(true);
         _userRepository.GetByEmailAsync("new@example.com", Arg.Any<CancellationToken>())
             .ReturnsNull();
-        _magicLinkService.GenerateTokenAsync("new@example.com", Arg.Any<CancellationToken>())
+        _magicLinkService.GenerateInviteTokenAsync("new@example.com", Arg.Any<CancellationToken>())
             .Returns("invite-token");
 
         var result = await _sut.Handle(

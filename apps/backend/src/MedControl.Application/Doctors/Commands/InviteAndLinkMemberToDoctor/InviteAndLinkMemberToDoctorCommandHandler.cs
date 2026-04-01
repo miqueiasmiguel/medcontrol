@@ -98,7 +98,7 @@ public sealed class InviteAndLinkMemberToDoctorCommandHandler(
 
         if (invited)
         {
-            var token = await magicLinkService.GenerateTokenAsync(request.Email, ct);
+            var token = await magicLinkService.GenerateInviteTokenAsync(request.Email, ct);
             var url = $"{magicLinkSettings.Value.BaseUrl}?token={token}";
             await emailService.SendInvitationAsync(request.Email, url, ct);
         }

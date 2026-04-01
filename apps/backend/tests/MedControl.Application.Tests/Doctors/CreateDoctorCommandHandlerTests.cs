@@ -112,7 +112,7 @@ public sealed class CreateDoctorCommandHandlerTests
         _userRepository.GetByEmailAsync("medico@clinica.com", Arg.Any<CancellationToken>()).ReturnsNull();
         _tenantRepository.GetByIdAsync(tenantId, Arg.Any<CancellationToken>()).Returns(tenant);
         _doctorRepository.ExistsByCrmAsync(tenantId, "123456", "SP", Arg.Any<CancellationToken>()).Returns(false);
-        _magicLinkService.GenerateTokenAsync("medico@clinica.com", Arg.Any<CancellationToken>()).Returns("invite-token");
+        _magicLinkService.GenerateInviteTokenAsync("medico@clinica.com", Arg.Any<CancellationToken>()).Returns("invite-token");
 
         var command = new CreateDoctorCommand("Dr. João", "123456", "SP", "Cardiologia", "medico@clinica.com");
         var result = await _sut.Handle(command, CancellationToken.None);

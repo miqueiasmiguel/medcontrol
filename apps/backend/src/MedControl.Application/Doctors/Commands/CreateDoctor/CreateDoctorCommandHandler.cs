@@ -110,7 +110,7 @@ public sealed class CreateDoctorCommandHandler(
 
         if (invited)
         {
-            var token = await magicLinkService.GenerateTokenAsync(request.InviteEmail!, ct);
+            var token = await magicLinkService.GenerateInviteTokenAsync(request.InviteEmail!, ct);
             var url = $"{magicLinkSettings.Value.BaseUrl}?token={token}";
             await emailService.SendInvitationAsync(request.InviteEmail!, url, ct);
         }

@@ -71,7 +71,7 @@ public sealed class AddMemberCommandHandler(
 
         if (invited)
         {
-            var token = await magicLinkService.GenerateTokenAsync(user.Email, ct);
+            var token = await magicLinkService.GenerateInviteTokenAsync(user.Email, ct);
             var url = $"{magicLinkSettings.Value.BaseUrl}?token={token}";
             await emailService.SendInvitationAsync(user.Email, url, ct);
         }
